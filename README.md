@@ -1,5 +1,6 @@
 # FHIR Extinguisher
 
+## Goal 
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
 of the hierarchical structure into a flat list for analysing R DataFrames.
 
