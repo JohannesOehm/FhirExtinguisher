@@ -10,7 +10,7 @@ class ResultTable() {
         columns.add(column)
 
         if (column.listProcessingMode == "flatten") {
-            val value = data.toString();
+            val value = if (data.size == 1) data[0] else data.toString()
             this.data.add(List(currentLength) { value }) // just one element
 
         } else if (column.listProcessingMode.startsWith("join")) {
@@ -22,7 +22,7 @@ class ResultTable() {
             this.data.add(listOf(data.joinToString(separator)))
         } else if (column.listProcessingMode == "explode") {
             if (data.size == 1) {
-                this.data.add(List(currentLength) { data.toString() })
+                this.data.add(List(currentLength) { data[0].toString() })
             } else if (data.isEmpty()) {
                 this.data.add(List(currentLength) { data.toString() })
             } else {

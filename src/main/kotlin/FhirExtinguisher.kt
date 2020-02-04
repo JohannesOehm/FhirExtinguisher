@@ -1,22 +1,86 @@
 import ca.uhn.fhir.context.FhirContext
+import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import fi.iki.elonen.NanoHTTPD
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.context.SimpleWorkerContext
-import org.hl7.fhir.r4.model.Bundle
+import org.hl7.fhir.r4.model.*
 import org.hl7.fhir.r4.model.Enumeration
-import org.hl7.fhir.r4.model.ExpressionNode
 import org.hl7.fhir.r4.utils.FHIRPathEngine
 import java.net.URLDecoder
+import java.util.*
 
 private val log = KotlinLogging.logger {}
 
-class FhirExtinguisher(portname: Int, private val fhirServerUrl: String) : NanoHTTPD(portname) {
-
-    val fhirCtxt = FhirContext.forR4()
+class FhirExtinguisher(
+    portname: Int,
+    private val fhirServerUrl: String,
+    private val fhirContext: FhirContext,
+    private val interceptors: List<IClientInterceptor>
+) : NanoHTTPD(portname) {
 
     private val fhirPathEngine = FHIRPathEngine(SimpleWorkerContext())
+    val fhirClient = fhirContext.newRestfulGenericClient(fhirServerUrl)
+
+    init {
+
+        fhirPathEngine.hostServices = object : FHIRPathEngine.IEvaluationContext {
+            override fun resolveFunction(functionName: String?): FHIRPathEngine.IEvaluationContext.FunctionDetails {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): Base {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun checkFunction(
+                appContext: Any?,
+                functionName: String?,
+                parameters: MutableList<TypeDetails>?
+            ): TypeDetails {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun log(argument: String?, focus: MutableList<Base>?): Boolean {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun resolveReference(appContext: Any?, url: String): Base? {
+                log.info { "Resolving reference $url" }
+                return try {
+                    val type = url.split("/", limit = 2)[0] //TODO: There must be a better way to do this
+                    val requiredClass: Class<IBaseResource> =
+                        fhirContext.getResourceDefinition(type).implementingClass as Class<IBaseResource>
+                    fhirClient.fetchResourceFromUrl(requiredClass, url) as Base
+                } catch (e: Exception) {
+                    log.error(e) { "Cannot resolve reference $url!" }
+                    null
+                }
+            }
+
+            override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun resolveValueSet(appContext: Any?, url: String?): ValueSet {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun executeFunction(
+                appContext: Any?,
+                functionName: String?,
+                parameters: MutableList<MutableList<Base>>?
+            ): MutableList<Base> {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+        }
+    }
 
     data class MyParams(
         val csvFormat: String,
@@ -41,7 +105,7 @@ class FhirExtinguisher(portname: Int, private val fhirServerUrl: String) : NanoH
             log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
 
             val sb = StringBuilder()
-            var printer = CSVPrinter(sb, CSVFormat.EXCEL)
+            val printer = CSVPrinter(sb, CSVFormat.EXCEL)
 
             if (myParams.columns != null) {
                 processWithColumns(uri, fhirParams, myParams, printer, myParams.columns)
@@ -55,8 +119,6 @@ class FhirExtinguisher(portname: Int, private val fhirServerUrl: String) : NanoH
 
     }
 
-    private val fhirClient = fhirCtxt.newRestfulGenericClient(fhirServerUrl)
-
     private fun processWithColumns(
         uri: String?,
         fhirParams: String,
@@ -67,10 +129,14 @@ class FhirExtinguisher(portname: Int, private val fhirServerUrl: String) : NanoH
 
         printer.printRecord(columns.map { it.name })
 
-        var count = 0;
+
+        interceptors.forEach { fhirClient.registerInterceptor(it) }
+
+        var count = 0
         var nextUrl: String? = "$uri?$fhirParams"
 
         myloop@ do {
+            log.debug { "Loading Bundle from $nextUrl" }
             val bundle = fhirClient.fetchResourceFromUrl(Bundle::class.java, nextUrl)
             nextUrl = bundle.link.find { it.relation == "next" }?.url
             for (bundleEntry in bundle.entry) {
@@ -96,6 +162,9 @@ class FhirExtinguisher(portname: Int, private val fhirServerUrl: String) : NanoH
                 table.addColumn(column, result.map {
                     when (it) {
                         is Enumeration<*> -> it.code
+                        is Quantity -> ("${it.value} ${it.unit}")
+                        is DecimalType -> Objects.toString(it.value)
+                        is CodeableConcept -> if (it.text != null) it.text else it.coding.joinToString { it.code }
                         else -> it.toString()
                     }
                 })
