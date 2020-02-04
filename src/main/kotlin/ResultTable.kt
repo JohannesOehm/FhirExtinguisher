@@ -50,7 +50,7 @@ class ResultTable() {
         repeat(times) {
             list.addAll(col)
         }
-        return list;
+        return list
     }
 
 

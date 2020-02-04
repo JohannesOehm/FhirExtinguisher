@@ -9,7 +9,12 @@ import org.apache.commons.cli.Options
 fun main(args: Array<String>) {
     val options = Options()
         .addOption("f", "fhirServer", true, "The endpoint URL of the FHIR server to call.")
-        .addOption("v", "fhirVersion", true, "The FHIR (D)STU/R version to use. Must be either DSTU2, DSTU3, R4 or R5")
+        .addOption(
+            "v",
+            "fhirVersion",
+            true,
+            "The FHIR (D)STU/R version to use. Must be either DSTU2, DSTU3, R4 or R5"
+        )
         .addOption(
             "a",
             "authorization",
@@ -45,6 +50,4 @@ fun main(args: Array<String>) {
     val fhirExtinguisher = FhirExtinguisher(portnumber, fhirServerUrl, FhirContext.forR4(), interceptors)
 
     ServerRunner.executeInstance(fhirExtinguisher)
-
-
 }
