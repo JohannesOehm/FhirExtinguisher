@@ -1,6 +1,8 @@
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import fi.iki.elonen.NanoHTTPD
+import fi.iki.elonen.NanoHTTPD.newChunkedResponse
+import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -15,11 +17,10 @@ import java.util.*
 private val log = KotlinLogging.logger {}
 
 class FhirExtinguisher(
-    portname: Int,
     private val fhirServerUrl: String,
     private val fhirContext: FhirContext,
     private val interceptors: List<IClientInterceptor>
-) : NanoHTTPD(portname) {
+) {
 
     private val fhirPathEngine = FHIRPathEngine(SimpleWorkerContext())
     val fhirClient = fhirContext.newRestfulGenericClient(fhirServerUrl)
@@ -94,8 +95,9 @@ class FhirExtinguisher(
         val listProcessingMode: String
     )
 
-    override fun serve(session: IHTTPSession): Response {
-        val uri = session.uri
+    fun serve(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
+        val uri = session.uri.drop("/fhir/".length)
+
         log.debug { "uri = ${session.uri}" }
         log.debug { "queryParams = " + session.queryParameterString }
 
@@ -112,9 +114,9 @@ class FhirExtinguisher(
             }
 
             //TODO: Abort when user cancels request
-            return newChunkedResponse(Response.Status.OK, "text/csv", sb.toString().byteInputStream())
+            return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream())
         } catch (e: Exception) {
-            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Error: " + e.message)
+            return newFixedLengthResponse(NanoHTTPD.Response.Status.INTERNAL_ERROR, "text/plain", "Error: " + e.message)
         }
 
     }
@@ -175,7 +177,7 @@ class FhirExtinguisher(
         table.print(printer)
     }
 
-    private fun processQueryParams(session: IHTTPSession): Pair<String, MyParams> {
+    private fun processQueryParams(session: NanoHTTPD.IHTTPSession): Pair<String, MyParams> {
         if (session.queryParameterString != null) {
             val (myParams, passThruParams) = session.queryParameterString
                 .split('&')

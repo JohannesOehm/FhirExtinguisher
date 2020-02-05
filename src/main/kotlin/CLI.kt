@@ -30,10 +30,20 @@ fun main(args: Array<String>) {
 
     val cmd = DefaultParser().parse(options, args)
 
-    val portnumber = cmd.getOptionValue("portNumber").toInt()
-    val fhirServerUrl = cmd.getOptionValue("fhirServer").dropLastWhile { it == '/' }
+    val portnumber: Int? = cmd.getOptionValue("portNumber")?.toInt()
+    val fhirServerUrl: String? = cmd.getOptionValue("fhirServer").dropLastWhile { it == '/' }
     val fhirVersion: String? = cmd.getOptionValue("fhirVersion")
     val authorization: String? = cmd.getOptionValue("authorization")
+
+    if (portnumber == null) {
+        println("Please provide a portnumber for the local server to start")
+        return
+    }
+
+    if (fhirServerUrl == null) {
+        println("Please provide a URL for the FHIR server to connect")
+        return
+    }
 
     if (fhirVersion != null) {
         println("FHIRVersion parameter is not yet supported! Only R4 is supported!")
@@ -47,7 +57,8 @@ fun main(args: Array<String>) {
 
     //TODO: Validate FHIR server URL
 
-    val fhirExtinguisher = FhirExtinguisher(portnumber, fhirServerUrl, FhirContext.forR4(), interceptors)
+    val instanceConfiguration = InstanceConfiguration(fhirServerUrl, FhirContext.forR4(), interceptors)
+    val fhirExtinguisher = MyRouters(portnumber, instanceConfiguration)
 
     ServerRunner.executeInstance(fhirExtinguisher)
 }
