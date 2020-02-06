@@ -1,11 +1,16 @@
 import 'bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 import * as monaco from 'monaco-editor';
+import * as $ from 'jquery';
 
 import Vue from 'vue';
 import {URLCompletionItemProvider} from "./url-completionitemprovider";
+import BootstrapVue, {IconsPlugin, ModalPlugin} from "bootstrap-vue";
 
+Vue.use(BootstrapVue);
+Vue.use(IconsPlugin);
+Vue.use(ModalPlugin);
 
 type Column = { name: string, type: string, expression: string }
 
@@ -19,16 +24,66 @@ Vue.config.errorHandler = (err, vm, info) => {
     console.log({err, vm, info});
 };
 
-let columnsView = new Vue({
+let columnsListVue = new Vue({
     data: myModel,
-    el: "#columnsView"
+    el: "#columnsView",
+    methods: {
+        removeColumn: function (index: number) {
+            myModel.columns.splice(index, 1)
+        },
+        editColumn: function (index: number) {
+            let target = columnsModalVue.$data;
+            let src = myModel.columns[index];
+            target.name = src.name;
+            target.type = src.type;
+            target.expression = src.expression;
+            target.$modalType = "edit";
+            target.$editIdx = index;
+            (<any>$('#addColumn')).modal('show');
+        }
+    }
+});
+let columnsModalData: Column & { $modalType: "add" | "edit", $editIdx: number } = {
+    name: null,
+    type: null,
+    expression: null,
+    $modalType: "add",
+    $editIdx: 0
+};
+let columnsModalVue = new Vue({
+    data: columnsModalData,
+    el: '#addColumnForm'
 });
 
 (<any>window).myModel = myModel;
 
 
+(<any>window).newColumn = function () {
+    (<any>$('#addColumn')).modal('show');
+    $('#addColumn').on('shown.bs.modal', function (e) {
+        $("#addColumnName").focus();
+        //TODO Load Monaco?
+    });
+
+    columnsModalData.name = null;
+    columnsModalData.type = null;
+    columnsModalData.expression = null;
+    columnsModalData.$modalType = "add";
+};
+
 (<any>window).handleAddColumn = function () {
-    console.log("hello woooorld!!!");
+    (<any>$('#addColumn')).modal('hide');
+    let result = {
+        name: columnsModalData.name,
+        type: columnsModalData.type,
+        expression: columnsModalData.expression,
+    };
+    if (columnsModalData.$modalType === "add") {
+        myModel.columns.push(result);
+    } else {
+        Vue.set(myModel.columns, columnsModalData.$editIdx, result);
+    }
+
 };
 
 (<any>window).loadFhirPathMonaco = function () {
@@ -55,7 +110,7 @@ let columnsView = new Vue({
         // lineNumbersMinChars: 0
     });
     (<any>window).fhirPathEditor = fhirPathEditor;
-    var myBinding = fhirPathEditor.addCommand(monaco.KeyCode.Enter,
+    let myBinding = fhirPathEditor.addCommand(monaco.KeyCode.Enter,
         function () {
             console.log("Enter was suppressed!")
         });

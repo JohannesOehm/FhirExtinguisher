@@ -26,8 +26,8 @@
                 <div id="columnsView">
                     <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                         <span>Columns</span>
-                        <a class="d-flex align-items-center text-muted" data-target="#addColumn" data-toggle="modal"
-                           href="#">
+                        <a class="d-flex align-items-center text-muted" href="#"
+                           onclick="newColumn();"> <!-- data-target="#addColumn" data-toggle="modal"-->
                             <svg class="feather feather-plus-circle" fill="none" height="24" stroke="currentColor"
                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"
                                  width="24" xmlns="http://www.w3.org/2000/svg">
@@ -39,13 +39,13 @@
                     </h6>
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item d-flex justify-content-between align-items-center"
-                            v-for="column in columns">
-                            <a class="nav-link" href="#">
+                            v-for="(column, idx) in columns">
+                            <a class="nav-link" href="#" v-on:dblclick="editColumn(idx)">
                                 <span>{{column.name}}</span><span class="text-muted">@{{column.type}}</span>
                                 <br>
                                 <span class="text-muted">{{column.expression}}</span>
                             </a>
-                            <a class="d-flex align-items-center text-muted" href="#">
+                            <a class="d-flex align-items-center text-muted" href="#" v-on:click="removeColumn(idx)">
                                 <svg class="feather feather-plus-circle" fill="none" height="24" stroke="currentColor"
                                      stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                      viewBox="0 0 448 512"
@@ -63,6 +63,7 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
                 <h1 class="h2">Results</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
+                    <b-button :pressed-sync="myToggle">Raw</b-button>
                     <div class="btn-group mr-2">
                         <button class="btn btn-sm btn-outline-secondary">Link</button>
                         <button class="btn btn-sm btn-outline-secondary">Download</button>
@@ -70,7 +71,133 @@
                     <button class="btn btn-sm btn-outline-secondary">Preview Limit: 10</button>
                 </div>
             </div>
-
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Header</th>
+                        <th>Header</th>
+                        <th>Header</th>
+                        <th>Header</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>1,001</td>
+                        <td>Lorem</td>
+                        <td>ipsum</td>
+                        <td>dolor</td>
+                        <td>sit</td>
+                    </tr>
+                    <tr>
+                        <td>1,002</td>
+                        <td>amet</td>
+                        <td>consectetur</td>
+                        <td>adipiscing</td>
+                        <td>elit</td>
+                    </tr>
+                    <tr>
+                        <td>1,003</td>
+                        <td>Integer</td>
+                        <td>nec</td>
+                        <td>odio</td>
+                        <td>Praesent</td>
+                    </tr>
+                    <tr>
+                        <td>1,003</td>
+                        <td>libero</td>
+                        <td>Sed</td>
+                        <td>cursus</td>
+                        <td>ante</td>
+                    </tr>
+                    <tr>
+                        <td>1,004</td>
+                        <td>dapibus</td>
+                        <td>diam</td>
+                        <td>Sed</td>
+                        <td>nisi</td>
+                    </tr>
+                    <tr>
+                        <td>1,005</td>
+                        <td>Nulla</td>
+                        <td>quis</td>
+                        <td>sem</td>
+                        <td>at</td>
+                    </tr>
+                    <tr>
+                        <td>1,006</td>
+                        <td>nibh</td>
+                        <td>elementum</td>
+                        <td>imperdiet</td>
+                        <td>Duis</td>
+                    </tr>
+                    <tr>
+                        <td>1,007</td>
+                        <td>sagittis</td>
+                        <td>ipsum</td>
+                        <td>Praesent</td>
+                        <td>mauris</td>
+                    </tr>
+                    <tr>
+                        <td>1,008</td>
+                        <td>Fusce</td>
+                        <td>nec</td>
+                        <td>tellus</td>
+                        <td>sed</td>
+                    </tr>
+                    <tr>
+                        <td>1,009</td>
+                        <td>augue</td>
+                        <td>semper</td>
+                        <td>porta</td>
+                        <td>Mauris</td>
+                    </tr>
+                    <tr>
+                        <td>1,010</td>
+                        <td>massa</td>
+                        <td>Vestibulum</td>
+                        <td>lacinia</td>
+                        <td>arcu</td>
+                    </tr>
+                    <tr>
+                        <td>1,011</td>
+                        <td>eget</td>
+                        <td>nulla</td>
+                        <td>Class</td>
+                        <td>aptent</td>
+                    </tr>
+                    <tr>
+                        <td>1,012</td>
+                        <td>taciti</td>
+                        <td>sociosqu</td>
+                        <td>ad</td>
+                        <td>litora</td>
+                    </tr>
+                    <tr>
+                        <td>1,013</td>
+                        <td>torquent</td>
+                        <td>per</td>
+                        <td>conubia</td>
+                        <td>nostra</td>
+                    </tr>
+                    <tr>
+                        <td>1,014</td>
+                        <td>per</td>
+                        <td>inceptos</td>
+                        <td>himenaeos</td>
+                        <td>Curabitur</td>
+                    </tr>
+                    <tr>
+                        <td>1,015</td>
+                        <td>sodales</td>
+                        <td>ligula</td>
+                        <td>in</td>
+                        <td>libero</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -86,20 +213,23 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form>
+                <form id="addColumnForm">
                     <div class="form-group">
                         <label for="addColumnName">Name</label>
                         <input aria-describedby="emailHelp" class="form-control" id="addColumnName"
-                               placeholder="Enter column name" type="text">
+                               placeholder="Enter column name" type="text" v-model="name">
                     </div>
                     <div class="form-group">
                         <label for="addColumnType">Type</label>
-                        <input class="form-control" id="addColumnType" type="text" value='join(", ")'>
+                        <input class="form-control" id="addColumnType" placeholder='explode or join(" ")' type="text"
+                               v-model="type">
                     </div>
                     <div class="form-group">
                         <label>FHIRPath</label>
-                        <div class="border" id="fhirPathEditor" style="min-height:38px;"><span
-                                onclick="loadFhirPathMonaco();">Patient.name.first().given.first()</span></div>
+                        <!-- div class="border" id="fhirPathEditor" style="min-height:38px;"><span
+                                onclick="loadFhirPathMonaco();">Patient.name.first().given.first()</span></div -->
+                        <input class="form-control" id="addColumnExpression" type="text" v-model="expression"
+                               value='join(", ")'>
                         <small class="form-text text-muted" id="emailHelp"><a class="text-muted"
                                                                               href="http://hl7.org/fhirpath/"
                                                                               target="_blank">Open FHIRPath
@@ -114,6 +244,7 @@
         </div>
     </div>
 </div>
+
 
 <script src="bundle.js"></script>
 </body>
