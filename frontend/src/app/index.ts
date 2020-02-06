@@ -16,7 +16,7 @@ type Column = { name: string, type: string, expression: string }
 
 let myModel: { columns: Column[] } = {
     columns: [
-        {name: "name", type: "explode", expression: "Patient.name"}
+        {name: "name", type: "explode", expression: "Patient.name[0].given[0]"}
     ]
 };
 
@@ -32,23 +32,34 @@ let columnsListVue = new Vue({
             myModel.columns.splice(index, 1)
         },
         editColumn: function (index: number) {
-            let target = columnsModalVue.$data;
+            let target = columnsModalVue.$data.data;
             let src = myModel.columns[index];
             target.name = src.name;
             target.type = src.type;
             target.expression = src.expression;
-            target.$modalType = "edit";
-            target.$editIdx = index;
+
+            columnsModalVue.$data.title = "Edit Column";
+
+            console.log("index", index);
+
+            columnsModalVue.$data.callback = (result: Column | null) => {
+                console.log("myIndex", index);
+                if(result != null) {
+                   myModel.columns.splice(index,1, result);
+                }
+            };
             (<any>$('#addColumn')).modal('show');
         }
     }
 });
-let columnsModalData: Column & { $modalType: "add" | "edit", $editIdx: number } = {
-    name: null,
-    type: null,
-    expression: null,
-    $modalType: "add",
-    $editIdx: 0
+let columnsModalData: {data: Column, title: string, callback: (result: Column | null) => void}  = {
+    data: {
+        name: null,
+        type: null,
+        expression: null
+    },
+    title: "Column Editor",
+    callback: it => null
 };
 let columnsModalVue = new Vue({
     data: columnsModalData,
@@ -65,25 +76,30 @@ let columnsModalVue = new Vue({
         //TODO Load Monaco?
     });
 
-    columnsModalData.name = null;
-    columnsModalData.type = null;
-    columnsModalData.expression = null;
-    columnsModalData.$modalType = "add";
+    columnsModalVue.$data.title = "Add Column";
+    Vue.set(columnsModalVue.$data, 'data', {
+        name: null, type: null, expression: null
+    });
+
+    columnsModalVue.$data.callback = (result: Column | null) => {
+        myModel.columns.push(result);
+    };
 };
 
 (<any>window).handleAddColumn = function () {
     (<any>$('#addColumn')).modal('hide');
     let result = {
-        name: columnsModalData.name,
-        type: columnsModalData.type,
-        expression: columnsModalData.expression,
+        name: columnsModalVue.$data.data.name,
+        type: columnsModalVue.$data.data.type,
+        expression: columnsModalVue.$data.data.expression,
     };
-    if (columnsModalData.$modalType === "add") {
-        myModel.columns.push(result);
-    } else {
-        Vue.set(myModel.columns, columnsModalData.$editIdx, result);
-    }
 
+    columnsModalVue.$data.callback(result);
+};
+
+(<any>window).handleAddColumnAbort = function () {
+    (<any>$('#addColumn')).modal('hide');
+    columnsModalVue.$data.callback(null);
 };
 
 (<any>window).loadFhirPathMonaco = function () {

@@ -204,42 +204,44 @@
 
 
 <div class="modal" id="addColumn" role="dialog" tabindex="-1">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog" role="document" id="addColumnForm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Column</h5>
+                <h5 class="modal-title">{{title}}</h5>
                 <button aria-label="Close" class="close" data-dismiss="modal" type="button">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form id="addColumnForm">
+                <form>
                     <div class="form-group">
                         <label for="addColumnName">Name</label>
                         <input aria-describedby="emailHelp" class="form-control" id="addColumnName"
-                               placeholder="Enter column name" type="text" v-model="name">
+                               placeholder="Enter column name" type="text" v-model="data.name">
                     </div>
                     <div class="form-group">
                         <label for="addColumnType">Type</label>
                         <input class="form-control" id="addColumnType" placeholder='explode or join(" ")' type="text"
-                               v-model="type">
+                               v-model="data.type">
                     </div>
                     <div class="form-group">
                         <label>FHIRPath</label>
                         <!-- div class="border" id="fhirPathEditor" style="min-height:38px;"><span
                                 onclick="loadFhirPathMonaco();">Patient.name.first().given.first()</span></div -->
-                        <input class="form-control" id="addColumnExpression" type="text" v-model="expression"
+                        <input class="form-control" id="addColumnExpression" type="text" v-model="data.expression"
                                value='join(", ")'>
-                        <small class="form-text text-muted" id="emailHelp"><a class="text-muted"
-                                                                              href="http://hl7.org/fhirpath/"
-                                                                              target="_blank">Open FHIRPath
-                            Specification...</a></small>
+                        <small class="form-text">
+                            <a class="text-muted" href="http://hl7.org/fhirpath/"
+                               target="_blank">Open FHIRPath Specification...</a>
+                        </small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" onclick="handleAddColumn();" type="button">Save changes</button>
-                <button class="btn btn-secondary" data-dismiss="modal" type="button">Abort</button>
+                <button class="btn btn-secondary" onclick="handleAddColumnAbort();" data-dismiss="modal" type="button">
+                    Abort
+                </button>
             </div>
         </div>
     </div>

@@ -2,6 +2,7 @@ const path = require('path');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const webpack = require("webpack");
 
 module.exports = {
     entry: './src/app/index.ts',
@@ -32,7 +33,11 @@ module.exports = {
         new CopyPlugin([
             {from: 'src/public', to: ''},
             {from: 'src/style', to: ''},
-        ])
+        ]),
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery"
+        })
     ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
