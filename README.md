@@ -32,5 +32,7 @@ use `gradlew shadowJar` to compile the project. The resulting .jar file will be 
 
 ## Running 
 Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server 
-on your local machine and connects to the public FHIR R4 server.
+on your local machine and connects to the public FHIR R4 server. 
+
+By default, FhirExtinguisher assumes, the server is R4. If you want to connect with a (D)STU3 server, please add `-v stu3` to the command line arguments.
 
