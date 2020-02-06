@@ -1,3 +1,5 @@
+package wrappers
+
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
@@ -186,7 +188,7 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
 
     private fun convertToString(it: BaseR3): String =
         when (it) {
-            is EnumerationSTU3<*> -> it.toString()
+            is EnumerationSTU3<*> -> it.value.name
             is QuantitySTU3 -> ("${it.value} ${it.unit}")
             is DecimalTypeSTU3 -> Objects.toString(it.value)
             is CodeableConceptSTU3 -> if (it.text != null) it.text else it.coding.joinToString { it.code }
