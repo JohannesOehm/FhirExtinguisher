@@ -1,4 +1,5 @@
 import ca.uhn.fhir.context.FhirContext
+import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.newChunkedResponse
@@ -6,13 +7,9 @@ import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
-import org.hl7.fhir.instance.model.api.IBaseResource
-import org.hl7.fhir.r4.context.SimpleWorkerContext
-import org.hl7.fhir.r4.model.*
-import org.hl7.fhir.r4.model.Enumeration
-import org.hl7.fhir.r4.utils.FHIRPathEngine
+import wrappers.*
+
 import java.net.URLDecoder
-import java.util.*
 
 private val log = KotlinLogging.logger {}
 
@@ -22,65 +19,17 @@ class FhirExtinguisher(
     private val interceptors: List<IClientInterceptor>
 ) {
 
-    private val fhirPathEngine = FHIRPathEngine(SimpleWorkerContext())
     val fhirClient = fhirContext.newRestfulGenericClient(fhirServerUrl)
 
+    private val fhirPathEngine = if (fhirContext.version.version == FhirVersionEnum.DSTU3) {
+        FhirPathEngineWrapperSTU3(fhirContext, fhirClient)
+    } else {
+        FhirPathEngineWrapperR4(fhirContext, fhirClient)
+    }
+
     init {
+        interceptors.forEach { fhirClient.registerInterceptor(it) }
 
-        fhirPathEngine.hostServices = object : FHIRPathEngine.IEvaluationContext {
-            override fun resolveFunction(functionName: String?): FHIRPathEngine.IEvaluationContext.FunctionDetails {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): Base {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun checkFunction(
-                appContext: Any?,
-                functionName: String?,
-                parameters: MutableList<TypeDetails>?
-            ): TypeDetails {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun log(argument: String?, focus: MutableList<Base>?): Boolean {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun resolveReference(appContext: Any?, url: String): Base? {
-                log.info { "Resolving reference $url" }
-                return try {
-                    val type = url.split("/", limit = 2)[0] //TODO: There must be a better way to do this
-                    val requiredClass: Class<IBaseResource> =
-                        fhirContext.getResourceDefinition(type).implementingClass as Class<IBaseResource>
-                    fhirClient.fetchResourceFromUrl(requiredClass, url) as Base
-                } catch (e: Exception) {
-                    log.error(e) { "Cannot resolve reference $url!" }
-                    null
-                }
-            }
-
-            override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun resolveValueSet(appContext: Any?, url: String?): ValueSet {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun executeFunction(
-                appContext: Any?,
-                functionName: String?,
-                parameters: MutableList<MutableList<Base>>?
-            ): MutableList<Base> {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-        }
     }
 
     data class MyParams(
@@ -91,7 +40,7 @@ class FhirExtinguisher(
 
     data class Column(
         val name: String,
-        val expression: ExpressionNode,
+        val expression: ExpressionWrapper,
         val listProcessingMode: String
     )
 
@@ -116,6 +65,7 @@ class FhirExtinguisher(
             //TODO: Abort when user cancels request
             return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream())
         } catch (e: Exception) {
+            log.error(e) { "An error occured while serving $uri !" }
             return newFixedLengthResponse(NanoHTTPD.Response.Status.INTERNAL_ERROR, "text/plain", "Error: " + e.message)
         }
 
@@ -131,17 +81,19 @@ class FhirExtinguisher(
 
         printer.printRecord(columns.map { it.name })
 
-
-        interceptors.forEach { fhirClient.registerInterceptor(it) }
-
         var count = 0
         var nextUrl: String? = "$uri?$fhirParams"
 
+        val bundleDefintion = fhirContext.getResourceDefinition("Bundle")
+        val bundleClass = bundleDefintion.implementingClass
+
+
         myloop@ do {
             log.debug { "Loading Bundle from $nextUrl" }
-            val bundle = fhirClient.fetchResourceFromUrl(Bundle::class.java, nextUrl)
-            nextUrl = bundle.link.find { it.relation == "next" }?.url
-            for (bundleEntry in bundle.entry) {
+            val bundle = fhirClient.fetchResourceFromUrl(bundleClass, nextUrl)
+            val bundleWrapper = BundleWrapper(bundleDefintion, bundle)
+            nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
+            for (bundleEntry in bundleWrapper.entry) {
                 processResource(columns, bundleEntry, printer)
                 count++;
                 if (myParams.limit != null && count >= myParams.limit) {
@@ -154,22 +106,14 @@ class FhirExtinguisher(
 
     private fun processResource(
         columns: List<Column>,
-        bundleEntry: Bundle.BundleEntryComponent,
+        bundleEntry: BundleEntryComponentWrapper,
         printer: CSVPrinter
     ) {
-        var table = ResultTable()
+        val table = ResultTable()
         for (column in columns) {
             try {
-                val result = fhirPathEngine.evaluate(bundleEntry.resource, column.expression)
-                table.addColumn(column, result.map {
-                    when (it) {
-                        is Enumeration<*> -> it.code
-                        is Quantity -> ("${it.value} ${it.unit}")
-                        is DecimalType -> Objects.toString(it.value)
-                        is CodeableConcept -> if (it.text != null) it.text else it.coding.joinToString { it.code }
-                        else -> it.toString()
-                    }
-                })
+                val result = fhirPathEngine.evaluateToStringList(bundleEntry.resource!!, column.expression)
+                table.addColumn(column, result)
             } catch (e: Exception) {
                 table.addColumn(column, listOf(e.message ?: "ERROR"))
             }
@@ -214,7 +158,7 @@ class FhirExtinguisher(
                 val expressionStr = URLDecoder.decode(it[1])
 
                 val expression = try {
-                    fhirPathEngine.parse(expressionStr) //TODO: Thread-Safe?
+                    fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
                 } catch (e: Exception) {
                     throw RuntimeException(e)
                 }

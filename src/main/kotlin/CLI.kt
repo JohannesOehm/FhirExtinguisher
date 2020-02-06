@@ -45,15 +45,25 @@ fun main(args: Array<String>) {
         return
     }
 
-    if (fhirVersion != null) {
-        println("FHIRVersion parameter is not yet supported! Only R4 is supported!")
-        return
+
+
+    val fhirContext = if (fhirVersion != null) {
+        if (fhirVersion == "r4") {
+            FhirContext.forR4()
+        } else if (fhirVersion == "stu3" || fhirVersion == "dstu3") {
+            FhirContext.forDstu3()
+        } else {
+            FhirContext.forR4()
+        }
+    } else {
+        FhirContext.forR4()
     }
 
     val interceptors = if (authorization != null) {
         val (username, passwd) = authorization.split(':', limit = 2)
         listOf(BasicAuthInterceptor(username, passwd))
     } else emptyList<IClientInterceptor>()
+
 
     //TODO: Validate FHIR server URL
 
