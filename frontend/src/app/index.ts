@@ -32,13 +32,15 @@ let columnsView = new Vue({
 };
 
 (<any>window).loadFhirPathMonaco = function () {
+    monaco.languages.register({id: 'fhirpath'});
+
 
     let element = document.getElementById("fhirPathEditor");
     let value = element.innerText;
     element.innerHTML = "";
     let fhirPathEditor = monaco.editor.create(element, {
         value: value,
-        language: "json",
+        language: "fhirpath",
         minimap: {
             enabled: false
         },
