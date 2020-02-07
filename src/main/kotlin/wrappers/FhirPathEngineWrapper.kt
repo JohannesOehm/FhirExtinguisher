@@ -26,6 +26,7 @@ import org.hl7.fhir.r4.model.Enumeration as EnumerationR4
 import org.hl7.fhir.r4.model.ExpressionNode as ExpressionNodeR4
 import org.hl7.fhir.r4.model.Quantity as QuantityR4
 import org.hl7.fhir.r4.utils.FHIRPathEngine as FHIRPathEngineR4
+import org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext.FunctionDetails as FunctionDetailsR4
 
 private val log = KotlinLogging.logger {}
 
@@ -77,8 +78,12 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
     init {
         engine.hostServices = object : org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext {
-            override fun resolveFunction(functionName: String?): org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext.FunctionDetails {
-                TODO("not implemented")
+            override fun resolveFunction(functionName: String?): FunctionDetailsR4? {
+                return when (functionName) {
+                    "idPart" -> FunctionDetailsR4("Tries to string the id to a more human-readable string.", 0, 0)
+                    else -> null
+                }
+
             }
 
             override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): BaseR4 =
@@ -104,8 +109,13 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
             override fun executeFunction(
                 appContext: Any?, functionName: String?, parameters: MutableList<MutableList<BaseR4>>?
-            ): MutableList<org.hl7.fhir.r4.model.Base> =
-                TODO("not implemented")
+            ): MutableList<org.hl7.fhir.r4.model.Base> {
+                when (functionName) {
+                    "idPart" -> println(parameters)
+                }
+                return parameters!![0]
+            }
+
         }
 
     }

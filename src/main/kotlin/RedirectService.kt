@@ -1,27 +1,40 @@
 import fi.iki.elonen.NanoHTTPD
 import mu.KotlinLogging
 import org.apache.http.StatusLine
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.methods.HttpGet
-import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.HttpClientBuilder
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
+
 private val log = KotlinLogging.logger {}
 
-class RedirectService(private val urlPrefix: String) {
+class RedirectService(private val urlPrefix: String, private val auth: BasicAuthData?) {
     fun serve(req: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val client = HttpClients.createDefault()
+        val clientBuilder = HttpClientBuilder.create()
+        if (auth != null) {
+            val provider: CredentialsProvider = BasicCredentialsProvider()
+            provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(auth.username, auth.password))
+            clientBuilder.setDefaultCredentialsProvider(provider)
+        }
+        val client = clientBuilder.build()
+
         val targetUrl = urlPrefix + "/" + req.uri.drop("/redirect/".length) + "?" + req.queryParameterString
 
         log.info { "Redirecting request to targetUrl = $targetUrl" }
 
-        val response = client.execute(HttpGet(targetUrl))
+        val request = HttpGet(targetUrl)
+        val response = client.execute(request)
 
         val contentType = response.getFirstHeader("Content-Type").value
         val status = convertStatus(response.statusLine)
         val content = inputStreamToString(response.entity.content)
         response.close()
-
+        client.close()
         return NanoHTTPD.newFixedLengthResponse(status, contentType, content)
     }
 

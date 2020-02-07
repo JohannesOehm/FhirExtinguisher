@@ -5,11 +5,11 @@ class MyRouters(portnumber: Int, private val instanceConfiguration: InstanceConf
     var fhirExtinguisher = FhirExtinguisher(
         instanceConfiguration.fhirServerUrl,
         instanceConfiguration.fhirVersion,
-        instanceConfiguration.fhirInterceptors
+        instanceConfiguration.interceptors
     )
     var staticPageHandler = StaticPageHandler()
 
-    var redirectService = RedirectService(instanceConfiguration.fhirServerUrl)
+    var redirectService = RedirectService(instanceConfiguration.fhirServerUrl, instanceConfiguration.authData)
     var infoService = InfoService(instanceConfiguration)
 
     override fun serve(session: IHTTPSession): Response {

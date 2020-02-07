@@ -59,15 +59,15 @@ fun main(args: Array<String>) {
         FhirContext.forR4()
     }
 
-    val interceptors = if (authorization != null) {
+    val (interceptors, basicAuth) = if (authorization != null) {
         val (username, passwd) = authorization.split(':', limit = 2)
-        listOf(BasicAuthInterceptor(username, passwd))
-    } else emptyList<IClientInterceptor>()
+        listOf(BasicAuthInterceptor(username, passwd)) to BasicAuthData(username, passwd)
+    } else emptyList<IClientInterceptor>() to null
 
 
     //TODO: Validate FHIR server URL
 
-    val instanceConfiguration = InstanceConfiguration(fhirServerUrl, FhirContext.forR4(), interceptors)
+    val instanceConfiguration = InstanceConfiguration(fhirServerUrl, FhirContext.forR4(), basicAuth, interceptors)
     val fhirExtinguisher = MyRouters(portnumber, instanceConfiguration)
 
     ServerRunner.executeInstance(fhirExtinguisher)

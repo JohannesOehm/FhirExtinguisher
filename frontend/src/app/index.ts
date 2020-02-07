@@ -21,12 +21,13 @@ type Column = { name: string, type: string, expression: string }
 let myModel: { columns: Column[] } = {
     columns: [
         {name: "id", type: 'join(" ")', expression: "Patient.id"},
-        {name: "name", type: 'join(" ")', expression: "Patient.name[0].given"},
         {
             name: "ssn",
             type: 'join(" ")',
             expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
         },
+        {name: "name", type: 'join(" ")', expression: "Patient.name[0].given"},
+
     ]
 };
 
