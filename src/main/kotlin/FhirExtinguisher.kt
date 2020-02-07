@@ -29,7 +29,6 @@ class FhirExtinguisher(
 
     init {
         interceptors.forEach { fhirClient.registerInterceptor(it) }
-
     }
 
     data class MyParams(
@@ -45,30 +44,44 @@ class FhirExtinguisher(
     )
 
     fun serve(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val uri = session.uri.drop("/fhir/".length)
+        val sb = StringBuilder()
+        val printer = CSVPrinter(sb, CSVFormat.EXCEL)
+        val (fhirParams, myParams) = processQueryParams(session)
+        log.debug { "uri = '${session.uri}'; queryParams = ${session.queryParameterString}" }
+        log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
+        //TODO: Abort when user cancels request
 
-        log.debug { "uri = ${session.uri}" }
-        log.debug { "queryParams = " + session.queryParameterString }
-
-        try {
-            val (fhirParams, myParams) = processQueryParams(session)
-
-            log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
-
-            val sb = StringBuilder()
-            val printer = CSVPrinter(sb, CSVFormat.EXCEL)
-
-            if (myParams.columns != null) {
-                processWithColumns(uri, fhirParams, myParams, printer, myParams.columns)
+        if (session.method === NanoHTTPD.Method.POST) {
+            val body = getBody(session)
+            val resource = fhirContext.newJsonParser().parseResource(body)
+            val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
+            val bundleWrapper = BundleWrapper(bundleDefinition, resource)
+            printer.printRecord(myParams.columns!!.map { it.name })
+            for (bundleEntry in bundleWrapper.entry) {
+                processBundleEntry(myParams.columns, bundleEntry, printer)
             }
-
-            //TODO: Abort when user cancels request
-            return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream())
-        } catch (e: Exception) {
-            log.error(e) { "An error occured while serving $uri !" }
-            return newFixedLengthResponse(NanoHTTPD.Response.Status.INTERNAL_ERROR, "text/plain", "Error: " + e.message)
+        } else {
+            val bundleUrl = session.uri.drop("/fhir/".length)
+            try {
+                if (myParams.columns != null) {
+                    processWithColumns(bundleUrl, fhirParams, myParams, printer, myParams.columns)
+                }
+            } catch (e: Exception) {
+                log.error(e) { "An error occured while serving $bundleUrl !" }
+                return newFixedLengthResponse(
+                    NanoHTTPD.Response.Status.INTERNAL_ERROR,
+                    "text/plain",
+                    "Error: " + e.message
+                )
+            }
         }
+        return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream())
+    }
 
+    private fun getBody(session: NanoHTTPD.IHTTPSession): String? {
+        val foo = HashMap<String, String>()
+        session.parseBody(foo)
+        return foo["postData"]
     }
 
     private fun processWithColumns(
@@ -94,7 +107,7 @@ class FhirExtinguisher(
             val bundleWrapper = BundleWrapper(bundleDefintion, bundle)
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
             for (bundleEntry in bundleWrapper.entry) {
-                processResource(columns, bundleEntry, printer)
+                processBundleEntry(columns, bundleEntry, printer)
                 count++;
                 if (myParams.limit != null && count >= myParams.limit) {
                     break@myloop;
@@ -104,7 +117,8 @@ class FhirExtinguisher(
 
     }
 
-    private fun processResource(
+
+    private fun processBundleEntry(
         columns: List<Column>,
         bundleEntry: BundleEntryComponentWrapper,
         printer: CSVPrinter

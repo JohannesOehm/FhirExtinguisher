@@ -8,6 +8,8 @@ import * as $ from 'jquery';
 import Vue from 'vue';
 import {URLCompletionItemProvider} from "./url-completionitemprovider";
 import BootstrapVue, {IconsPlugin, ModalPlugin} from "bootstrap-vue";
+
+import * as CSV from './csv.js'
 import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 Vue.use(BootstrapVue);
@@ -18,13 +20,26 @@ type Column = { name: string, type: string, expression: string }
 
 let myModel: { columns: Column[] } = {
     columns: [
-        {name: "name", type: "explode", expression: "Patient.name[0].given[0]"}
+        {name: "id", type: 'join(" ")', expression: "Patient.id"},
+        {name: "name", type: 'join(" ")', expression: "Patient.name[0].given"},
+        {
+            name: "ssn",
+            type: 'join(" ")',
+            expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
+        },
     ]
 };
 
 Vue.config.errorHandler = (err, vm, info) => {
     console.log({err, vm, info});
 };
+
+fetch("/info")
+    .then(res => res.json())
+    .then(res => {
+        document.getElementById("fhirServerUrl").innerText = res.server + "/";
+        (<HTMLAnchorElement>document.getElementById("fhirServerUrl")).href = res.server;
+    });
 
 
 let columnsListVue = new Vue({
@@ -47,8 +62,8 @@ let columnsListVue = new Vue({
 
             columnsModalVue.$data.callback = (result: Column | null) => {
                 console.log("myIndex", index);
-                if(result != null) {
-                   myModel.columns.splice(index,1, result);
+                if (result != null) {
+                    myModel.columns.splice(index, 1, result);
                 }
             };
             (<any>$('#addColumn')).modal('show');
@@ -57,7 +72,7 @@ let columnsListVue = new Vue({
 });
 
 
-let columnsModalData: {data: Column, title: string, callback: (result: Column | null) => void}  = {
+let columnsModalData: { data: Column, title: string, callback: (result: Column | null) => void } = {
     data: {
         name: null,
         type: null,
@@ -71,6 +86,11 @@ let columnsModalVue = new Vue({
     el: '#addColumnForm'
 });
 
+function columnsToString(columns: Column[]) {
+    //TODO: Do the correct escapings...
+    return columns.map(it => `${it.name}@${it.type}:${it.expression}`).join(",");
+}
+
 let tableOrRawVue = new Vue({
     el: '#tableOrRaw',
     data: {
@@ -83,10 +103,9 @@ let tableOrRawVue = new Vue({
     methods: {
         editLimit: function () {
             let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
-            try {
-                this.limit = parseInt(newLimit);
-            } catch (e) {
-                alert(`Cannot parse '${newLimit}' as integer!`)
+            let newValue = parseInt(newLimit);
+            if (!isNaN(newValue)) {
+                this.limit = newValue;
             }
         },
         toggleRaw: function () {
@@ -95,6 +114,16 @@ let tableOrRawVue = new Vue({
         reEvaluateHighlighting() {
             monaco.editor.colorize(this.rawData, 'json', {})
                 .then(it => this.rawDataWithHighlighting = it);
+        },
+        loadTableData() {
+            let params = `__limit=${this.limit}&__columns=${columnsToString(columnsListVue.$data.columns)}`;
+            fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
+                .then(res => res.text())
+                .then(csvString => {
+                    (<any>CSV).fetch({
+                        data: csvString
+                    }).done((it: { records: string[][], fields: string[], metadata: any }) => this.tableData = it)
+                });
         }
     },
     watch: {
@@ -102,6 +131,7 @@ let tableOrRawVue = new Vue({
             this.rawDataWithHighlighting = "Loading Highlighter...";
             this.reEvaluateHighlighting();
             this.tableData = null;
+            this.loadTableData();
         }
     }
 });
@@ -215,6 +245,9 @@ let searchEditor: IStandaloneCodeEditor = (function () {
 (<any>window).downloadRaw = function () {
     fetch("/redirect/" + searchEditor.getValue())
         .then(res => res.text())
-        .then(res => tableOrRawVue.$data.rawData = res);
+        .then(res => {
+            tableOrRawVue.$data.rawData = res;
+        });
 };
+
 

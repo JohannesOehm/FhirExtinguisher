@@ -10,13 +10,13 @@
 </head>
 <body>
 <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">http://fhirtest.uhn.ca/baseR4</a>
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#" id="fhirServerUrl" target="_blank">http://url/to/fhir/endpoint</a>
     <div aria-label="Search" class="form-control form-control-dark w-100" id="searchbar" style="padding:0;margin:2px;">
         SearchBar
     </div>
     <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap">
-            <a class="nav-link" href="#" onclick="downloadRaw()">Go</a>
+            <a class="nav-link" href="#" onclick="downloadRaw()">GET</a>
         </li>
     </ul>
 </nav>
@@ -64,11 +64,13 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
                 <h1 class="h2">Results</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <button class="btn btn-sm btn-outline-secondary" v-bind:class="{ active: showRaw }"
-                            v-on:click="toggleRaw">Raw
-                    </button>
                     <div class="btn-group mr-2">
-                        <button class="btn btn-sm btn-outline-secondary">Link</button>
+                        <button class="btn btn-sm btn-outline-secondary" v-bind:class="{ active: showRaw }"
+                                v-on:click="toggleRaw">Raw View
+                        </button>
+                    </div>
+                    <div class="btn-group mr-2">
+                        <button class="btn btn-sm btn-outline-secondary">Copy Link</button>
                         <button class="btn btn-sm btn-outline-secondary">Download</button>
                     </div>
                     <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Download Limit: {{limit}}
@@ -76,131 +78,21 @@
                 </div>
             </div>
             <div class="table-responsive" v-if="!showRaw">
-                <table class="table table-striped table-sm">
+                <table class="table table-striped table-sm" v-if="tableData != null">
                     <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Header</th>
-                        <th>Header</th>
-                        <th>Header</th>
-                        <th>Header</th>
+                        <th v-for="fieldName in tableData.fields">{{fieldName}}</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>1,001</td>
-                        <td>Lorem</td>
-                        <td>ipsum</td>
-                        <td>dolor</td>
-                        <td>sit</td>
-                    </tr>
-                    <tr>
-                        <td>1,002</td>
-                        <td>amet</td>
-                        <td>consectetur</td>
-                        <td>adipiscing</td>
-                        <td>elit</td>
-                    </tr>
-                    <tr>
-                        <td>1,003</td>
-                        <td>Integer</td>
-                        <td>nec</td>
-                        <td>odio</td>
-                        <td>Praesent</td>
-                    </tr>
-                    <tr>
-                        <td>1,003</td>
-                        <td>libero</td>
-                        <td>Sed</td>
-                        <td>cursus</td>
-                        <td>ante</td>
-                    </tr>
-                    <tr>
-                        <td>1,004</td>
-                        <td>dapibus</td>
-                        <td>diam</td>
-                        <td>Sed</td>
-                        <td>nisi</td>
-                    </tr>
-                    <tr>
-                        <td>1,005</td>
-                        <td>Nulla</td>
-                        <td>quis</td>
-                        <td>sem</td>
-                        <td>at</td>
-                    </tr>
-                    <tr>
-                        <td>1,006</td>
-                        <td>nibh</td>
-                        <td>elementum</td>
-                        <td>imperdiet</td>
-                        <td>Duis</td>
-                    </tr>
-                    <tr>
-                        <td>1,007</td>
-                        <td>sagittis</td>
-                        <td>ipsum</td>
-                        <td>Praesent</td>
-                        <td>mauris</td>
-                    </tr>
-                    <tr>
-                        <td>1,008</td>
-                        <td>Fusce</td>
-                        <td>nec</td>
-                        <td>tellus</td>
-                        <td>sed</td>
-                    </tr>
-                    <tr>
-                        <td>1,009</td>
-                        <td>augue</td>
-                        <td>semper</td>
-                        <td>porta</td>
-                        <td>Mauris</td>
-                    </tr>
-                    <tr>
-                        <td>1,010</td>
-                        <td>massa</td>
-                        <td>Vestibulum</td>
-                        <td>lacinia</td>
-                        <td>arcu</td>
-                    </tr>
-                    <tr>
-                        <td>1,011</td>
-                        <td>eget</td>
-                        <td>nulla</td>
-                        <td>Class</td>
-                        <td>aptent</td>
-                    </tr>
-                    <tr>
-                        <td>1,012</td>
-                        <td>taciti</td>
-                        <td>sociosqu</td>
-                        <td>ad</td>
-                        <td>litora</td>
-                    </tr>
-                    <tr>
-                        <td>1,013</td>
-                        <td>torquent</td>
-                        <td>per</td>
-                        <td>conubia</td>
-                        <td>nostra</td>
-                    </tr>
-                    <tr>
-                        <td>1,014</td>
-                        <td>per</td>
-                        <td>inceptos</td>
-                        <td>himenaeos</td>
-                        <td>Curabitur</td>
-                    </tr>
-                    <tr>
-                        <td>1,015</td>
-                        <td>sodales</td>
-                        <td>ligula</td>
-                        <td>in</td>
-                        <td>libero</td>
+                    <tr v-for="row in tableData.records">
+                        <td v-for="rowElem in row">{{rowElem}}</td>
                     </tr>
                     </tbody>
                 </table>
+                <div v-else>
+                    Tabledata is not available.
+                </div>
             </div>
             <div id="rawView" v-else>
                 <div v-html="rawDataWithHighlighting">

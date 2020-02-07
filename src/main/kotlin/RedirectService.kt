@@ -11,9 +11,9 @@ private val log = KotlinLogging.logger {}
 class RedirectService(private val urlPrefix: String) {
     fun serve(req: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
         val client = HttpClients.createDefault()
-        val targetUrl = urlPrefix + "/" + req.uri.drop("/redirect/".length)
+        val targetUrl = urlPrefix + "/" + req.uri.drop("/redirect/".length) + "?" + req.queryParameterString
 
-        log.info { "redirecting request to targetUrl = $targetUrl" }
+        log.info { "Redirecting request to targetUrl = $targetUrl" }
 
         val response = client.execute(HttpGet(targetUrl))
 
@@ -35,14 +35,15 @@ class RedirectService(private val urlPrefix: String) {
         }
     }
 
-    private fun inputStreamToString(inputStream: InputStream): String {
-        val result = ByteArrayOutputStream()
-        val buffer = ByteArray(1024)
-        var length: Int = -1
-        while (inputStream.read(buffer).also({ length = it }) != -1) {
-            result.write(buffer, 0, length)
-        }
-        return result.toString("UTF-8")
-    }
 
+}
+
+fun inputStreamToString(inputStream: InputStream): String {
+    val result = ByteArrayOutputStream()
+    val buffer = ByteArray(1024)
+    var length: Int = -1
+    while (inputStream.read(buffer).also({ length = it }) != -1) {
+        result.write(buffer, 0, length)
+    }
+    return result.toString("UTF-8")
 }
