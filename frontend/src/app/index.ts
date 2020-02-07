@@ -2,11 +2,13 @@ import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import * as monaco from 'monaco-editor';
+import {editor} from 'monaco-editor';
 import * as $ from 'jquery';
 
 import Vue from 'vue';
 import {URLCompletionItemProvider} from "./url-completionitemprovider";
 import BootstrapVue, {IconsPlugin, ModalPlugin} from "bootstrap-vue";
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
@@ -23,6 +25,7 @@ let myModel: { columns: Column[] } = {
 Vue.config.errorHandler = (err, vm, info) => {
     console.log({err, vm, info});
 };
+
 
 let columnsListVue = new Vue({
     data: myModel,
@@ -52,6 +55,8 @@ let columnsListVue = new Vue({
         }
     }
 });
+
+
 let columnsModalData: {data: Column, title: string, callback: (result: Column | null) => void}  = {
     data: {
         name: null,
@@ -66,7 +71,44 @@ let columnsModalVue = new Vue({
     el: '#addColumnForm'
 });
 
+let tableOrRawVue = new Vue({
+    el: '#tableOrRaw',
+    data: {
+        limit: 100,
+        showRaw: true,
+        rawData: "",
+        rawDataWithHighlighting: "",
+        tableData: ""
+    },
+    methods: {
+        editLimit: function () {
+            let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
+            try {
+                this.limit = parseInt(newLimit);
+            } catch (e) {
+                alert(`Cannot parse '${newLimit}' as integer!`)
+            }
+        },
+        toggleRaw: function () {
+            this.showRaw = !this.showRaw;
+        },
+        reEvaluateHighlighting() {
+            monaco.editor.colorize(this.rawData, 'json', {})
+                .then(it => this.rawDataWithHighlighting = it);
+        }
+    },
+    watch: {
+        rawData: function (newData, oldData) {
+            this.rawDataWithHighlighting = "Loading Highlighter...";
+            this.reEvaluateHighlighting();
+            this.tableData = null;
+        }
+    }
+});
+
+
 (<any>window).myModel = myModel;
+(<any>window).tableOrRawVue = tableOrRawVue;
 
 
 (<any>window).newColumn = function () {
@@ -132,15 +174,14 @@ let columnsModalVue = new Vue({
         });
 };
 
-
-(function () {
+let searchEditor: IStandaloneCodeEditor = (function () {
     monaco.languages.register({id: 'url'});
 
     monaco.languages.registerCompletionItemProvider("url", new URLCompletionItemProvider());
 
     let element = document.getElementById("searchbar");
     element.innerHTML = "";
-    let searchEditor = monaco.editor.create(element, {
+    searchEditor = monaco.editor.create(element, {
         value: "Patient?",
         language: "url",
         minimap: {
@@ -160,12 +201,20 @@ let columnsModalVue = new Vue({
     });
     (<any>window).searchEditor = searchEditor;
     var myBinding = searchEditor.addCommand(monaco.KeyCode.Enter,
-        function () {
-            console.log("Enter was suppressed!")
+        function (args) {
+            console.log("Enter was suppressed!", args)
         });
 
 
     // monaco.languages.setTokensProvider("url", )
 
+    return searchEditor;
 })();
+
+
+(<any>window).downloadRaw = function () {
+    fetch("/redirect/" + searchEditor.getValue())
+        .then(res => res.text())
+        .then(res => tableOrRawVue.$data.rawData = res);
+};
 

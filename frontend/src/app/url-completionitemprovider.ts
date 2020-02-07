@@ -27,7 +27,10 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         let suggestions: CompletionItem[];
         if (textUntilPosition.indexOf("?") !== -1) {
             console.log("Suggestions for QueryParams");
-            if (textUntilPosition.lastIndexOf(":") > Math.max(textUntilPosition.lastIndexOf("&"), textUntilPosition.lastIndexOf("?"))) {
+            let lastParameterStart = Math.max(textUntilPosition.lastIndexOf("&"), textUntilPosition.lastIndexOf("?"));
+            if (textUntilPosition.lastIndexOf("=") > lastParameterStart) {
+                suggestions = this.paramValueSuggestions(model, position, textUntilPosition);
+            } else if (textUntilPosition.lastIndexOf(":") > lastParameterStart) {
                 suggestions = this.modifierSuggestions(model, position, textUntilPosition);
             } else {
                 suggestions = this.searchParamSuggestions(model, position, textUntilPosition);
@@ -127,7 +130,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                 label: "_summary",
                 range: range,
                 kind: CompletionItemKind.Operator,
-                insertText: "_summary=true",
+                insertText: "_summary=",
                 documentation: "true | text | data | count | false"
             },
             {
@@ -313,15 +316,94 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             label: "missing",
             range: range,
             kind: CompletionItemKind.Operator,
-            insertText: "missing=true",
+            insertText: "missing=",
             detail: "true | false",
-            documentation: "Searching for gender:missing=true will return all the resources that don't have a value for " +
-                "the gender parameter (which usually equates to not having the relevant element in the resource). Searching " +
-                "for gender:missing=false will return all the resources that have a value for the gender parameter. For simple " +
-                "data type elements, :missing=true will match on all elements where either the underlying element is omitted or" +
-                " where the element is present with extensions but no @value is specified."
+            documentation: `Searching for ${paramName}:missing=true will return all the resources that don't have a value for ` +
+                `the ${paramName} parameter (which usually equates to not having the relevant element in the resource). Searching ` +
+                `for ${paramName}:missing=false will return all the resources that have a value for the gender parameter. \n\nFor simple ` +
+                `data type elements, :missing=true will match on all elements where either the underlying element is omitted or` +
+                ` where the element is present with extensions but no @value is specified.`
         };
         return additionalParams.concat([missing]);
 
+    }
+
+    private paramValueSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string): CompletionItem[] {
+        let paramKey = textUntilPosition.substring(
+            Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
+            textUntilPosition.lastIndexOf("=")
+        );
+        let [paramName, paramModifier] = paramKey.split(":", 2);
+        console.log(`paramName = `, paramName, " paramModifier = ", paramModifier);
+
+        let word = model.getWordAtPosition(position);
+
+        let range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word != null ? word.startColumn : position.column,
+            endColumn: position.column
+        };
+
+        if (paramName === "_summary") {
+            return [
+                {
+                    label: "true",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "true",
+                    documentation: "Return a limited subset of elements from the resource. This subset SHOULD consist " +
+                        "solely of all supported elements that are marked as \"summary\" in the base definition of the " +
+                        "resource(s) (see ElementDefinition.isSummary)"
+                },
+                {
+                    label: "text",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "text",
+                    documentation: "Return only the \"text\" element, the 'id' element, the 'meta' element, and only" +
+                        " top-level mandatory elements"
+                },
+                {
+                    label: "data",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "data",
+                    documentation: "Remove the text element"
+                },
+                {
+                    label: "count",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "count",
+                    documentation: "Search only: just return a count of the matching resources, without returning the actual matches"
+                },
+                {
+                    label: "false",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "false",
+                    documentation: "Return all parts of the resource(s)"
+                },
+            ]
+        }
+
+        if (paramModifier === "missing") {
+            return [
+                {
+                    label: "true",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "true"
+                },
+                {
+                    label: "false",
+                    range: range,
+                    kind: CompletionItemKind.Value,
+                    insertText: "false"
+                },
+            ]
+        }
+        return [];
     }
 }
