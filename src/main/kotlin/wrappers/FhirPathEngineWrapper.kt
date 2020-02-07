@@ -7,6 +7,7 @@ import org.hl7.fhir.dstu3.model.Base
 import org.hl7.fhir.dstu3.utils.FHIRPathEngine
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.instance.model.api.IBaseResource
+import org.hl7.fhir.r4.model.IdType
 import org.hl7.fhir.r4.model.TypeDetails
 import org.hl7.fhir.r4.model.ValueSet
 import java.util.*
@@ -25,6 +26,7 @@ import org.hl7.fhir.r4.model.DecimalType as DecimalTypeR4
 import org.hl7.fhir.r4.model.Enumeration as EnumerationR4
 import org.hl7.fhir.r4.model.ExpressionNode as ExpressionNodeR4
 import org.hl7.fhir.r4.model.Quantity as QuantityR4
+import org.hl7.fhir.r4.model.StringType as StringTypeR4
 import org.hl7.fhir.r4.utils.FHIRPathEngine as FHIRPathEngineR4
 import org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext.FunctionDetails as FunctionDetailsR4
 
@@ -80,7 +82,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
         engine.hostServices = object : org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext {
             override fun resolveFunction(functionName: String?): FunctionDetailsR4? {
                 return when (functionName) {
-                    "idPart" -> FunctionDetailsR4("Tries to string the id to a more human-readable string.", 0, 0)
+                    "getIdPart" -> FunctionDetailsR4("Tries to string the id to a more human-readable string.", 1, 1)
                     else -> null
                 }
 
@@ -108,12 +110,12 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
 
             override fun executeFunction(
-                appContext: Any?, functionName: String?, parameters: MutableList<MutableList<BaseR4>>?
-            ): MutableList<org.hl7.fhir.r4.model.Base> {
-                when (functionName) {
-                    "idPart" -> println(parameters)
+                appContext: Any?, functionName: String, parameters: MutableList<MutableList<BaseR4>>
+            ): MutableList<BaseR4> {
+                return when (functionName) {
+                    "getIdPart" -> parameters[0].map { StringTypeR4((it as IdType).idPart) }.toMutableList()
+                    else -> mutableListOf<BaseR4>()
                 }
-                return parameters!![0]
             }
 
         }

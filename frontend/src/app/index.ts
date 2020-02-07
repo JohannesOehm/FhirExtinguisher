@@ -20,7 +20,7 @@ type Column = { name: string, type: string, expression: string }
 
 let myModel: { columns: Column[] } = {
     columns: [
-        {name: "id", type: 'join(" ")', expression: "Patient.id"},
+        {name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
         {
             name: "ssn",
             type: 'join(" ")',
