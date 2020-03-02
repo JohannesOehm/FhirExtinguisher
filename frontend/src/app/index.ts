@@ -1,33 +1,27 @@
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import * as monaco from 'monaco-editor';
 import {editor} from 'monaco-editor';
-import * as $ from 'jquery';
 
 import Vue from 'vue';
-import {URLCompletionItemProvider} from "./url-completionitemprovider";
+import App from './vue/my-app.vue';
 import BootstrapVue, {IconsPlugin, ModalPlugin} from "bootstrap-vue";
-
-import * as CSV from './csv.js'
-import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 Vue.use(ModalPlugin);
 
+
+new Vue({
+    render: h => h(App)
+}).$mount("#app");
+
+
 type Column = { name: string, type: string, expression: string }
 
+/*
 let myModel: { columns: Column[] } = {
     columns: [
-        {name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
-        {
-            name: "ssn",
-            type: 'join(" ")',
-            expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
-        },
-        {name: "name", type: 'join(" ")', expression: "Patient.name[0].given"},
-
     ]
 };
 
@@ -102,30 +96,7 @@ let tableOrRawVue = new Vue({
         tableData: ""
     },
     methods: {
-        editLimit: function () {
-            let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
-            let newValue = parseInt(newLimit);
-            if (!isNaN(newValue)) {
-                this.limit = newValue;
-            }
-        },
-        toggleRaw: function () {
-            this.showRaw = !this.showRaw;
-        },
-        reEvaluateHighlighting() {
-            monaco.editor.colorize(this.rawData, 'json', {})
-                .then(it => this.rawDataWithHighlighting = it);
-        },
-        loadTableData() {
-            let params = `__limit=${this.limit}&__columns=${columnsToString(columnsListVue.$data.columns)}`;
-            fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
-                .then(res => res.text())
-                .then(csvString => {
-                    (<any>CSV).fetch({
-                        data: csvString
-                    }).done((it: { records: string[][], fields: string[], metadata: any }) => this.tableData = it)
-                });
-        }
+
     },
     watch: {
         rawData: function (newData, oldData) {
@@ -205,42 +176,6 @@ let tableOrRawVue = new Vue({
         });
 };
 
-let searchEditor: IStandaloneCodeEditor = (function () {
-    monaco.languages.register({id: 'url'});
-
-    monaco.languages.registerCompletionItemProvider("url", new URLCompletionItemProvider());
-
-    let element = document.getElementById("searchbar");
-    element.innerHTML = "";
-    searchEditor = monaco.editor.create(element, {
-        value: "Patient?",
-        language: "url",
-        minimap: {
-            enabled: false
-        },
-        lineNumbers: 'off',
-        glyphMargin: false,
-        folding: false,
-        scrollbar: {
-            vertical: "auto",
-            horizontal: "auto"
-        },
-        fontSize: 16,
-        theme: "vscode-dark"
-        // lineDecorationsWidth: 0,
-        // lineNumbersMinChars: 0
-    });
-    (<any>window).searchEditor = searchEditor;
-    var myBinding = searchEditor.addCommand(monaco.KeyCode.Enter,
-        function (args) {
-            console.log("Enter was suppressed!", args)
-        });
-
-
-    // monaco.languages.setTokensProvider("url", )
-
-    return searchEditor;
-})();
 
 
 (<any>window).downloadRaw = function () {
@@ -252,3 +187,4 @@ let searchEditor: IStandaloneCodeEditor = (function () {
 };
 
 
+*/

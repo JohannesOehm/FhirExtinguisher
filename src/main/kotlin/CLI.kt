@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
         )
         .addOption("p", "portNumber", true, "The port number for this server to use.")
 
-    if (args.size == 0) {
+    if (args.isEmpty()) {
         HelpFormatter().printHelp("FhirExtinguisher", options)
         return
     }

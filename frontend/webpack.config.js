@@ -11,15 +11,18 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.vue$/,
+                loader: 'vue-loader'
+            }, {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
+                loader: 'ts-loader',
                 exclude: /node_modules/,
+                options: {
+                    appendTsSuffixTo: [/\.vue$/]
+                }
             }, {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader']
-            }, {
-                test: /\.vue$/,
-                loader: 'vue-loader'
             }, {
                 test: /\.ttf$/,
                 use: ['file-loader']
@@ -37,14 +40,20 @@ module.exports = {
         new webpack.ProvidePlugin({
             $: "jquery",
             jQuery: "jquery"
-        })
+        }),
+        new VueLoaderPlugin()
     ],
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: ['.tsx', '.ts', '.js', '.vue'],
         alias: {vue: 'vue/dist/vue.esm.js'} //runtime rendering
     },
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
+    },
+    devServer: {
+        contentBase: path.join(__dirname, "dist"),
+        compress: true,
+        port: 9000
     }
 };

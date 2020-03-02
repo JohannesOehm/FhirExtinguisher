@@ -3,9 +3,19 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "noImplicitAny": true,
-    "module": "commonjs",
+    "module": "es2015",
+    "moduleResolution": "node",
     "target": "es5",
-    "jsx": "react",
-    "allowJs": true
-  }
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "plugins": [
+      {
+        "name": "ts-vue-plugin"
+      }
+    ]
+  },
+  "include": [
+    "./src/app/**/*"
+  ]
 }
