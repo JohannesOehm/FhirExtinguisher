@@ -31,8 +31,15 @@ Please escape `@join(", ")` as `@join("%2C ")`and `@join(":")` as `@join("%3A")`
 Use `gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
 
 To compile the frontend, you need to have `npm` (node package manager) installed. Please run `npm install` (and 
-eventually `npm install --only=dev`) in the frontend folder, the gradle build script will invoke webpack and copy the 
+eventually `npm install --only=dev`) in the frontend folder, the gradle build script will only invoke webpack and copy the 
 files into the .jar file. If something goes wrong, execute `./node_modules/.bin/webpack` in the `/frontend` folder. 
+
+### Frontend Development
+You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend. Note 
+that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is quite nice.
+
+If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 
+error message
 
 ## Running 
 Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server 

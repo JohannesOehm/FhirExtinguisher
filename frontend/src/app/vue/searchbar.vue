@@ -1,6 +1,6 @@
 <template>
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-        <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#" id="fhirServerUrl" target="_blank">http://url/to/fhir/endpoint</a>
+        <a :href="endpointUrl" class="navbar-brand col-sm-3 col-md-2 mr-0" href="#" id="fhirServerUrl" target="_blank">{{endpointUrl}}</a>
         <div aria-label="Search" class="form-control form-control-dark w-100" id="searchbar"
              style="padding:0;margin:2px;">
             SearchBar
@@ -21,6 +21,7 @@
 
     export default {
         name: 'Searchbar',
+        props: ['endpointUrl'],
         mounted: function () {
             this.editor = (function () {
                 monaco.languages.register({id: 'url'});

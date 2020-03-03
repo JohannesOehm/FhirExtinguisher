@@ -51,7 +51,6 @@
 
     type Column = { name: string, type: string, expression: string }
 
-
     export default {
         name: "DialogColumn",
         data: function () {

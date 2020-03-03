@@ -12,7 +12,10 @@ module.exports = {
         rules: [
             {
                 test: /\.vue$/,
-                loader: 'vue-loader'
+                loader: 'vue-loader',
+                options: {
+                    esModule: true
+                }
             }, {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
@@ -41,7 +44,10 @@ module.exports = {
             $: "jquery",
             jQuery: "jquery"
         }),
-        new VueLoaderPlugin()
+        new VueLoaderPlugin(),
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1,
+        })
     ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.vue'],

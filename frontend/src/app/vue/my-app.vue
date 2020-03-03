@@ -1,6 +1,6 @@
 <template>
     <div id="app">
-        <Searchbar @startRequest="handleRequest"/>
+        <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest"/>
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-2 d-none d-md-block bg-light sidebar">
@@ -10,7 +10,7 @@
                     </div>
                 </div>
                 <div class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4" id="tableOrRaw" role="main">
-                    <ContentView :limit="limit" :rawData="rawData"/>
+                    <ContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
                 </div>
             </div>
         </div>
@@ -21,10 +21,10 @@
 
 
 <script lang="ts">
-    import Searchbar from './searchbar.vue'
-    import ColumnsView from './columns-view.vue'
-    import DialogColumn from "./dialog-column.vue";
-    import ContentView from './content-view.vue'
+    import Searchbar from './searchbar.vue';
+    import ColumnsView from './columns-view.vue';
+    import DialogColumn from './dialog-column.vue';
+    import ContentView from './content-view.vue';
 
     type Column = { name: string, type: string, expression: string };
     type DialogConfig = {
@@ -33,7 +33,7 @@
 
     export default {
         name: "MyApp",
-        data: function (): { columns: any[], limit: number, rawData: string, dialog: DialogConfig } {
+        data: function (): { columns: any[], limit: number, rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string } {
             return {
                 columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
                     {
@@ -41,10 +41,13 @@
                         type: 'join(" ")',
                         expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
                     },
-                    {name: "name", type: 'join(" ")', expression: "Patient.name[0].given"}
+                    {name: "name.first", type: 'join(" ")', expression: "Patient.name[0].given"},
+                    {name: "name.last", type: 'join(" ")', expression: "Patient.name[0].family"}
                 ],
                 limit: 50,
-                rawData: "",
+                rawData: null,
+                endpointUrl: "http://url/to/fhir/endpoint",
+                fhirQuery: "",
                 dialog: {
                     visible: false,
                     title: "",
@@ -93,6 +96,7 @@
                 }
             },
             handleRequest: function (url: string) {
+                this.fhirQuery = url;
                 fetch("/redirect/" + url)
                     .then(res => res.text())
                     .then(res => {
@@ -100,6 +104,14 @@
                         console.log(res);
                     });
             }
+        },
+        mounted: function () {
+            fetch("/info")
+                .then(res => res.json())
+                .then(res => {
+                    this.endpointUrl = res.server + "/";
+                });
+
         }
     }
 </script>
