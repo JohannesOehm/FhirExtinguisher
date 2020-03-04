@@ -33,7 +33,7 @@
 
     export default {
         name: "MyApp",
-        data: function (): { columns: any[], limit: number, rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string } {
+        data: function (): { columns: any[], limit: number, rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
             return {
                 columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
                     {
@@ -47,6 +47,7 @@
                 limit: 50,
                 rawData: null,
                 endpointUrl: "http://url/to/fhir/endpoint",
+                fhirVersion: "r4"
                 fhirQuery: "",
                 dialog: {
                     visible: false,
@@ -110,6 +111,7 @@
                 .then(res => res.json())
                 .then(res => {
                     this.endpointUrl = res.server + "/";
+                    this.fhirVersion = res.version;
                 });
 
         }

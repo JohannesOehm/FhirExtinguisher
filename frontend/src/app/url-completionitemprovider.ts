@@ -106,6 +106,13 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     "which can contain a comma-separated list of sort rules in priority order. A '-' prefix inverts order"
             },
             {
+                label: "_has",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_has:",
+                documentation: "TODO"
+            },
+            {
                 label: "_count",
                 range: range,
                 kind: CompletionItemKind.Operator,
