@@ -13,13 +13,27 @@
                         <div class="form-group">
                             <label for="addColumnName">Name</label>
                             <input aria-describedby="emailHelp" class="form-control" id="addColumnName"
-                                   placeholder="Enter column name" type="text" v-model="data.name">
+                                   placeholder="Enter column name" type="text" v-model="name">
                         </div>
                         <div class="form-group">
-                            <label for="addColumnType">Type</label>
-                            <input class="form-control" id="addColumnType" placeholder='explode or join(" ")'
-                                   type="text"
-                                   v-model="data.type">
+                            <label>Type</label>
+                            <div class="form-control">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-inline" id="join" type="radio" v-model="type"
+                                           value="join"/>
+                                    <label class="form-check-label" for="join">join("<input :disabled="type !== 'join'"
+                                                                                            size="3" type="text"
+                                                                                            v-model="joinStr"/>")</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-inline" id="explode" type="radio" v-model="type"
+                                           value="explode"/>
+                                    <label class="form-check-label" for="explode">explode</label>
+                                </div>
+                            </div>
+                            <!--                            <input class="form-control" id="addColumnType" placeholder='explode or join(" ")'-->
+                            <!--                                   type="text"-->
+                            <!--                                   v-model="data.type">-->
                         </div>
                         <div class="form-group">
                             <label for="addColumnExpression">FHIRPath</label>
@@ -36,7 +50,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary" type="button" v-on:click="$emit('clicked-okay', data)">Save
+                    <button class="btn btn-primary" type="button" v-on:click="$emit('clicked-okay', getData())">Save
                         changes
                     </button>
                     <button class="btn btn-secondary" type="button" v-on:click="$emit('clicked-abort')">Abort</button>
@@ -54,9 +68,22 @@
     export default {
         name: "DialogColumn",
         data: function () {
-            return {}
+            return {
+                name: "",
+                type: "join",
+                joinStr: ", ",
+                expression: ""
+            }
         },
-        methods: {},
+        methods: {
+            getData: function (): Column {
+                return {
+                    name: this.name,
+                    type: this.type === "join" ? "join(\"" + this.joinStr + "\")" : this.type,
+                    expression: this.expression
+                }
+            }
+        },
         watch: {
             visible: function (newData: boolean, oldData: boolean) {
                 if (newData === true) {
@@ -64,6 +91,12 @@
                 } else {
                     (<any>$('#addColumn')).modal('hide');
                 }
+            },
+            data: function (newData: Column, oldData: Column) {
+                this.name = newData.name;
+                this.type = newData.type.startsWith("join") ? "join" : "explode";
+                this.joinStr = newData.type.startsWith("join(\"") ? /join\(\s*"([^"])*"\s*\)/.exec(newData.type)[1] : "";
+                this.expression = newData.expression;
             }
         },
         props: ['visible', 'data', 'title']
