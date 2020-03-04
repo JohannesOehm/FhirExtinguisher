@@ -16,6 +16,8 @@ This project is a simple WebServer, that connects to a FHIR server and forwards 
 This way you can use all the FHIR filtering options provided by the server. For each resource in the resulting bundle, 
 a FHIRPath expression is evaluated.
 
+![image](img/Concept.png)
+
 All parameters are forwarded as they are, except: 
 * `__columns` Must be `name:expression,name2:expression2`. Name might be followed by options like `@join(" ")` and `@explode`, 
 which control how to handle multiple returned results by the FHIR path expression. `@join` concats the strings into a single cell with a delimiter of your choice,
