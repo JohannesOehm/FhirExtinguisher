@@ -55,7 +55,7 @@
 <script type="ts">
     import * as CSV from '../csv.js'
 
-    type TableData = { records: string[][], fields: string[], metadata: any };
+    // type TableData = { records: string[][], fields: string[], metadata: any };
 
     function columnsToString(columns) {
         return columns.map(it => `${it.name}@${it.type.replace(",", "%2C").replace(":", "%3A")}:${it.expression}`).join(",");

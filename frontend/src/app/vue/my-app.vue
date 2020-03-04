@@ -47,7 +47,7 @@
                 limit: 50,
                 rawData: null,
                 endpointUrl: "http://url/to/fhir/endpoint",
-                fhirVersion: "r4"
+                fhirVersion: "r4",
                 fhirQuery: "",
                 dialog: {
                     visible: false,
