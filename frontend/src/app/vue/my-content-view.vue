@@ -52,18 +52,23 @@
     </div>
 </template>
 
-<script type="ts">
+<script lang="ts">
+    import * as CSV from '../csv.js';
+    import * as monaco from "monaco-editor";
+
 
     type TableData = { records: string[][], fields: string[], metadata: any };
+    type Column = { name: string, type: string, expression: string };
 
-    function columnsToString(columns) {
-        return columns.map(it => `${it.name}@${it.type.replace(",", "%2C").replace(":", "%3A")}:${it.expression}`).join(",");
+
+    function columnsToString(columns: Column[]) {
+        return columns.map((it: Column) => `${it.name}@${it.type.replace(",", "%2C").replace(":", "%3A")}:${it.expression}`).join(",");
     }
 
 
     export default {
         name: "ContentView",
-        data: function () {
+        data: function (): { showRaw: boolean, tableData: TableData, rawDataWithHighlighting: string } {
             return {
                 showRaw: true,
                 tableData: null,
@@ -71,48 +76,48 @@
             }
         },
         props: ['limit', 'rawData', 'columns', 'fhirQuery'],
-        // methods: {
-        //     toggleRaw: function () {
-        //         this.showRaw = !this.showRaw;
-        //     },
-        //     editLimit: function () {
-        //         let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
-        //         let newValue = parseInt(newLimit);
-        //         if (!isNaN(newValue)) {
-        //             this.limit = newValue;
-        //         }
-        //     },
-        //     reEvaluateHighlighting: function () {
-        //         monaco.editor.colorize(this.rawData, 'json', {})
-        //             .then(it => this.rawDataWithHighlighting = it);
-        //     },
-        //     loadTableData: function () {
-        //         let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-        //         fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
-        //             .then(res => res.text())
-        //             .then(csvString => {
-        //                 CSV.fetch({
-        //                     data: csvString
-        //                 }).done(it => this.tableData = it)
-        //             });
-        //     },
-        //     copyToClipboard: function (str) {
-        //         let stringToCopy = window.location.host + str;
-        //
-        //         const el = document.createElement('textarea');
-        //         el.value = stringToCopy;
-        //         el.setAttribute('readonly', '');
-        //         el.style.position = 'absolute';
-        //         el.style.left = '-9999px';
-        //         document.body.appendChild(el);
-        //         el.select();
-        //         document.execCommand('copy');
-        //         document.body.removeChild(el);
-        //     },
-        //     openUrl: function (url) {
-        //         window.open(url);
-        //     }
-        // },
+        methods: {
+            toggleRaw: function () {
+                this.showRaw = !this.showRaw;
+            },
+            editLimit: function () {
+                let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
+                let newValue = parseInt(newLimit);
+                if (!isNaN(newValue)) {
+                    this.limit = newValue;
+                }
+            },
+            reEvaluateHighlighting: function () {
+                monaco.editor.colorize(this.rawData, 'json', {})
+                    .then((it: string) => this.rawDataWithHighlighting = it);
+            },
+            loadTableData: function () {
+                let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
+                fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
+                    .then(res => res.text())
+                    .then(csvString => {
+                        (<any>CSV).fetch({
+                            data: csvString
+                        }).done((it: TableData) => this.tableData = it)
+                    });
+            },
+            copyToClipboard: function (str: string) {
+                let stringToCopy = window.location.host + str;
+
+                const el = document.createElement('textarea');
+                el.value = stringToCopy;
+                el.setAttribute('readonly', '');
+                el.style.position = 'absolute';
+                el.style.left = '-9999px';
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+            },
+            openUrl: function (url: string) {
+                window.open(url);
+            }
+        },
         computed: {
             downloadUrl: function () {
                 let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
@@ -126,16 +131,16 @@
 
             }
         },
-        // watch: {
-        //     rawData: function (newData, oldData) {
-        //         this.rawDataWithHighlighting = "Loading Highlighter...";
-        //         this.reEvaluateHighlighting();
-        //         this.tableData = null;
-        //         this.loadTableData();
-        //     },
-        //     columns: function (newData, oldData) {
-        //         this.loadTableData();
-        //     }
-        // }
+        watch: {
+            rawData: function (newData: string, oldData: string) {
+                this.rawDataWithHighlighting = "Loading Highlighter...";
+                this.reEvaluateHighlighting();
+                this.tableData = null;
+                this.loadTableData();
+            },
+            columns: function (newData: Column[], oldData: Column[]) {
+                this.loadTableData();
+            }
+        }
     }
 </script>

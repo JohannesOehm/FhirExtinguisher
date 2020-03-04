@@ -10,7 +10,8 @@
                     </div>
                 </div>
                 <div class="col-md-8 ml-sm-auto col-lg-9 pt-3 px-4" id="tableOrRaw" role="main">
-                    <ContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
+                    <!--                    <ContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>-->
+                    <MyContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
                 </div>
             </div>
         </div>
@@ -21,10 +22,11 @@
 
 
 <script lang="ts">
+    // import ContentView from './content-view.vue';
     import Searchbar from './searchbar.vue';
     import ColumnsView from './columns-view.vue';
     import DialogColumn from './dialog-column.vue';
-    import ContentView from './content-view.vue';
+    import MyContentView from './my-content-view.vue';
 
     type Column = { name: string, type: string, expression: string };
     type DialogConfig = {
@@ -62,7 +64,7 @@
                 }
             }
         },
-        components: {DialogColumn, Searchbar, ColumnsView, ContentView},
+        components: {DialogColumn, Searchbar, ColumnsView, MyContentView},
         methods: {
             handleAddColumn: function () {
                 this.dialog.visible = true;

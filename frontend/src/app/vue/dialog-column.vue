@@ -99,6 +99,11 @@
                 this.expression = newData.expression;
             }
         },
+        mounted: function () {
+            $('#addColumn').on('hidden.bs.modal', () => {
+                this.visible = false;
+            });
+        },
         props: ['visible', 'data', 'title']
     }
 </script>

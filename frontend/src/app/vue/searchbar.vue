@@ -19,6 +19,9 @@
     import {URLCompletionItemProvider} from "../url-completionitemprovider";
     import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
+    type TableData = { records: string[][], fields: string[], metadata: any };
+
+
     export default {
         name: 'Searchbar',
         props: ['endpointUrl'],
