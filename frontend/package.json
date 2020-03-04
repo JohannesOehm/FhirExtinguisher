@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@ahryman40k/ts-fhir-types": "^4.0.25",
+    "@types/fhir": "0.0.31",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.4.0",
     "jquery": "^3.4.1",

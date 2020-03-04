@@ -1,7 +1,6 @@
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import {editor} from 'monaco-editor';
 
 import Vue from 'vue';
 import App from './vue/my-app.vue';
@@ -17,7 +16,7 @@ new Vue({
 }).$mount("#app");
 
 
-type Column = { name: string, type: string, expression: string }
+export type Column = { name: string, type: string, expression: string }
 
 /*
 let myModel: { columns: Column[] } = {

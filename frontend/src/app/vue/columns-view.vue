@@ -2,17 +2,26 @@
     <div id="columnsView">
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
             <span>Columns</span>
-            <a class="d-flex align-items-center text-muted" href="#"
-               v-on:click="$emit('addColumn')">
-                <svg class="feather feather-plus-circle" fill="none" height="24"
-                     stroke="currentColor"
-                     stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                     viewBox="0 0 24 24"
-                     width="24" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="12" x2="12" y1="0" y2="24"/>
-                    <line x1="0" x2="24" y1="12" y2="12"/>
-                </svg>
-            </a>
+            <div class="d-flex align-items-center" style="display: inline;">
+                <a class="text-muted" href="#" title="Import default settings for a specific resource type"
+                   v-b-modal.modal-resource>
+                    RESSOURCE
+                </a>&nbsp;
+                <a class="text-muted" href="#" title="Make QuestionaireResponses flat" v-b-modal.modal-questionnaire>
+                    QUESTIONAIRE
+                </a>&nbsp;
+                <a class="text-muted" href="#"
+                   title="Add Column..." v-on:click="$emit('addColumn')">
+                    <svg class="feather feather-plus-circle" fill="none" height="24"
+                         stroke="currentColor"
+                         stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                         viewBox="0 0 24 24"
+                         width="24" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="12" x2="12" y1="0" y2="24"/>
+                        <line x1="0" x2="24" y1="12" y2="12"/>
+                    </svg>
+                </a>
+            </div>
         </h6>
         <div class="container-fluid">
             <ul class="nav flex-column mb-2">
