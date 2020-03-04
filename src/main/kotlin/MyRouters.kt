@@ -1,4 +1,8 @@
 import fi.iki.elonen.NanoHTTPD
+import mu.KotlinLogging
+
+private val log = KotlinLogging.logger {}
+
 
 class MyRouters(portnumber: Int, private val instanceConfiguration: InstanceConfiguration) : NanoHTTPD(portnumber) {
 
@@ -13,6 +17,18 @@ class MyRouters(portnumber: Int, private val instanceConfiguration: InstanceConf
     var infoService = InfoService(instanceConfiguration)
 
     override fun serve(session: IHTTPSession): Response {
+        val clientIp = session.headers["remote-addr"] ?: session.headers["http-client-ip"]
+        if (clientIp != "127.0.0.1" && instanceConfiguration.blockExternalRequests) {
+            log.info("Request blocked. clientIp = $clientIp")
+            return newFixedLengthResponse(
+                Response.Status.FORBIDDEN,
+                "text/plain",
+                "Request blocked because it must come from the localhost (127.0.0.1) IP, but got '$clientIp' instead!"
+            )
+        }
+
+
+
         if (session.uri.startsWith("/fhir/")) {
             return fhirExtinguisher.serve(session)
         } else if (session.uri.startsWith("/redirect/")) {

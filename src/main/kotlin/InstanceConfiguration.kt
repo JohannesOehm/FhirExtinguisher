@@ -5,5 +5,6 @@ data class InstanceConfiguration(
     val fhirServerUrl: String,
     val fhirVersion: FhirContext,
     val authData: BasicAuthData?,
-    val interceptors: List<IClientInterceptor>
+    val interceptors: List<IClientInterceptor>,
+    val blockExternalRequests: Boolean
 )

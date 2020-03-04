@@ -22,6 +22,12 @@ fun main(args: Array<String>) {
             "Basic Authorization required to connect to the FHIR server (if any). \"username:password\"!"
         )
         .addOption("p", "portNumber", true, "The port number for this server to use.")
+        .addOption(
+            "ext",
+            "allowExternalConnection",
+            false,
+            "Allow external (non-localhost) connections (might be a security issue)"
+        )
 
     if (args.isEmpty()) {
         HelpFormatter().printHelp("FhirExtinguisher", options)
@@ -34,6 +40,7 @@ fun main(args: Array<String>) {
     val fhirServerUrl: String? = cmd.getOptionValue("fhirServer").dropLastWhile { it == '/' }
     val fhirVersion: String? = cmd.getOptionValue("fhirVersion")
     val authorization: String? = cmd.getOptionValue("authorization")
+    val external: Boolean = cmd.hasOption("allowExternalConnection")
 
     if (portnumber == null) {
         println("Please provide a portnumber for the local server to start")
@@ -67,7 +74,8 @@ fun main(args: Array<String>) {
 
     //TODO: Validate FHIR server URL
 
-    val instanceConfiguration = InstanceConfiguration(fhirServerUrl, FhirContext.forR4(), basicAuth, interceptors)
+    val instanceConfiguration =
+        InstanceConfiguration(fhirServerUrl, FhirContext.forR4(), basicAuth, interceptors, !external)
     val fhirExtinguisher = MyRouters(portnumber, instanceConfiguration)
 
     ServerRunner.executeInstance(fhirExtinguisher)
