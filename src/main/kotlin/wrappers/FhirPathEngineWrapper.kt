@@ -3,13 +3,9 @@ package wrappers
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
-import org.hl7.fhir.dstu3.model.Base
-import org.hl7.fhir.dstu3.utils.FHIRPathEngine
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.instance.model.api.IBaseResource
-import org.hl7.fhir.r4.model.IdType
-import org.hl7.fhir.r4.model.TypeDetails
-import org.hl7.fhir.r4.model.ValueSet
+import org.hl7.fhir.instance.model.api.IPrimitiveType
 import java.util.*
 import org.hl7.fhir.dstu3.context.SimpleWorkerContext as SimpleWorkerContextSTU3
 import org.hl7.fhir.dstu3.model.Base as BaseR3
@@ -25,10 +21,9 @@ import org.hl7.fhir.r4.model.CodeableConcept as CodeableConceptR4
 import org.hl7.fhir.r4.model.DecimalType as DecimalTypeR4
 import org.hl7.fhir.r4.model.Enumeration as EnumerationR4
 import org.hl7.fhir.r4.model.ExpressionNode as ExpressionNodeR4
+import org.hl7.fhir.r4.model.HumanName as HumanNameR4
 import org.hl7.fhir.r4.model.Quantity as QuantityR4
-import org.hl7.fhir.r4.model.StringType as StringTypeR4
 import org.hl7.fhir.r4.utils.FHIRPathEngine as FHIRPathEngineR4
-import org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext.FunctionDetails as FunctionDetailsR4
 
 private val log = KotlinLogging.logger {}
 
@@ -139,8 +134,24 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             is QuantityR4 -> ("${it.value} ${it.unit}")
             is DecimalTypeR4 -> Objects.toString(it.value)
             is CodeableConceptR4 -> if (it.text != null) it.text else it.coding.joinToString { it.code }
+            is IPrimitiveType<*> -> it.valueAsString
+            is HumanNameR4 -> getNameAsString(it)
             else -> it.toString()
         }
+
+    private fun getNameAsString(it: org.hl7.fhir.r4.model.HumanName): String {
+        if (it.hasText()) {
+            return it.text
+        } else {
+            return listOf(
+                it.prefix.joinToString(" "),
+                it.given.joinToString(" "),
+                if (it.hasFamily()) it.family else "",
+                it.suffix.joinToString(" ")
+            ).joinToString(" ") + (if (it.hasUse()) " (${it.use.display})" else "")
+        }
+
+    }
 }
 
 class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericClient) :
