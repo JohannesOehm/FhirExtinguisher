@@ -111,8 +111,14 @@
                         console.log(res);
                     });
             },
-            updateColumns: function (columns: Column[]) {
-                this.columns = columns;
+            updateColumns: function (columns: Column[], replace: Boolean) {
+                if (replace) {
+                    this.columns = columns;
+                } else {
+                    for (let column of columns) {
+                        this.columns.push(column);
+                    }
+                }
             }
         },
         mounted: function () {

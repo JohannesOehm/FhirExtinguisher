@@ -5,10 +5,10 @@
             <div class="d-flex align-items-center" style="display: inline;">
                 <a class="text-muted" href="#" title="Import default settings for a specific resource type"
                    v-b-modal.modal-resource>
-                    RESSOURCE
+                    RESOURCE
                 </a>&nbsp;
                 <a class="text-muted" href="#" title="Make QuestionaireResponses flat" v-b-modal.modal-questionnaire>
-                    QUESTIONAIRE
+                    QUESTIONNAIRE
                 </a>&nbsp;
                 <a class="text-muted" href="#"
                    title="Add Column..." v-on:click="$emit('addColumn')">

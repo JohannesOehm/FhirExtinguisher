@@ -133,11 +133,16 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             is EnumerationR4<*> -> it.code
             is QuantityR4 -> ("${it.value} ${it.unit}")
             is DecimalTypeR4 -> Objects.toString(it.value)
-            is CodeableConceptR4 -> if (it.text != null) it.text else it.coding.joinToString { it.code }
+            is CodeableConceptR4 -> getCodableConceptAsString(it)
             is IPrimitiveType<*> -> it.valueAsString
             is HumanNameR4 -> getNameAsString(it)
+            is org.hl7.fhir.r4.model.Identifier -> getIdentifierAsString(it)
+            //TODO: Support all of http://hl7.org/fhir/datatypes.html#
             else -> it.toString()
         }
+
+    private fun getCodableConceptAsString(it: org.hl7.fhir.r4.model.CodeableConcept) =
+        if (it.text != null) it.text else it.coding.joinToString { it.code }
 
     private fun getNameAsString(it: org.hl7.fhir.r4.model.HumanName): String {
         if (it.hasText()) {
@@ -148,9 +153,26 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                 it.given.joinToString(" "),
                 if (it.hasFamily()) it.family else "",
                 it.suffix.joinToString(" ")
-            ).joinToString(" ") + (if (it.hasUse()) " (${it.use.display})" else "")
+            ).joinToString(" ") + (if (it.hasUse()) " (${it.use.toCode()})" else "")
         }
+    }
 
+    private fun getIdentifierAsString(identifier: org.hl7.fhir.r4.model.Identifier): String {
+        val idPart = (if (identifier.hasSystem()) identifier.system else "") + "|" + identifier.value
+
+        val bracketPart = if (identifier.hasType() && identifier.hasUse()) {
+            " (${getCodableConceptAsString(identifier.type)}, ${identifier.use.toCode()})"
+        } else if (identifier.hasUse()) {
+            " (${identifier.use.toCode()})"
+        } else if (identifier.hasType()) {
+            " (${getCodableConceptAsString(identifier.type)})"
+        } else {
+            ""
+        }
+        val period = if (identifier.hasPeriod()) " [" + identifier.period + "]" else "" //TODO: period.toString() ?
+        val assigner =
+            if (identifier.hasAssigner()) " {" + identifier.assigner + "}" else "" // TODO: identifier.assginer.toString()
+        return idPart + bracketPart + period + assigner
     }
 }
 

@@ -20,6 +20,12 @@
                     </option>
                 </select>
             </div>
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    <input class="custom-control-input" id="addOrReplace" type="checkbox" v-model="replace">
+                    <label class="custom-control-label" for="addOrReplace">Replace existing columns</label>
+                </div>
+            </div>
         </form>
     </b-modal>
 </template>
@@ -32,15 +38,16 @@
         props: ["fhirVersion"],
         data: function () {
             return {
-                resourceNames: ["Hallo", "Welt", "Ich", "bin", "noch", "nicht", "fertig"],
-                resourceName: "Hallo",
+                resourceNames: [],
+                resourceName: null,
                 columnNames: [],
-                columnsSelected: []
+                columnsSelected: [],
+                replace: true
             }
         },
         methods: {
             handleOk: function () {
-                this.$emit("update-columns", this.columnsSelected);
+                this.$emit("update-columns", this.columnsSelected, this.replace);
             },
             handleChange: function (e) {
                 if (e.target.files.length !== 0) {

@@ -40,7 +40,7 @@
                             <!-- div class="border" id="fhirPathEditor" style="min-height:38px;"><span
                                     onclick="loadFhirPathMonaco();">Patient.name.first().given.first()</span></div -->
                             <input class="form-control" id="addColumnExpression" type="text"
-                                   v-model="data.expression"
+                                   v-model="expression"
                                    value='join(", ")'>
                             <small class="form-text">
                                 <a class="text-muted" href="http://hl7.org/fhirpath/"
