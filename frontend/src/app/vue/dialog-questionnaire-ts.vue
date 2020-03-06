@@ -28,17 +28,22 @@
     </b-modal>
 </template>
 
-<script type="ts">
-    // type QuestionnaireSummary = {
-    //     id: string,
-    //     url: string,
-    //     title: string,
-    //     fullUrl: string
-    // }
+
+<script lang="ts">
+
+    type Foo = { bar: string };
+
+    type QuestionnaireSummary = {
+        id: string,
+        url: string,
+        title: string,
+        fullUrl: string
+    }
+
 
     export default {
-        name: "DialogQuestionnaire",
-        data: function () {
+        name: "DialogQuestionnaireTs",
+        data: function (): { questionnaires: QuestionnaireSummary[], questionnaireSelected: string } {
             return {
                 questionnaires: [],
                 questionnaireSelected: null
@@ -46,7 +51,7 @@
         },
         methods: {
             handleOk: function () {
-                let input = document.getElementById("questionnaireFile");
+                let input = <HTMLInputElement>document.getElementById("questionnaireFile");
                 if (input.files.length !== 0) {
                     let reader = new FileReader();
                     reader.onload = function () {
@@ -58,18 +63,18 @@
                     };
                     reader.readAsText(input.files[0]);
                 } else {
-                    let questionnaireId = document.getElementById("questionnaireId").value;
+                    let questionnaireId = (<HTMLInputElement>document.getElementById("questionnaireId")).value;
                     fetch("/redirect/Questionnaire/" + questionnaireId + "?_format=json", {headers: {"Accept": "application/fhir+json"}})
                         .then(res => res.json())
                         .then(res => console.log(res))
-                        .catch(e => {
+                        .catch((e: any) => {
                             alert("Could not retrieve resource from server: " + e);
                             console.log(e);
                         });
 
                 }
             },
-            handleChange: function (e) {
+            handleChange: function (e: any) {
                 if (e.target.files.length !== 0) {
                     document.getElementById("questionnaireFileLabel").innerText = e.target.files[0].name;
                 } else {
@@ -78,14 +83,14 @@
             },
             handleAbort: function () {
                 this.questionnaireSelected = null;
-                document.getElementById("questionnaireFile").value = null;
+                (<HTMLInputElement>document.getElementById("questionnaireFile")).value = null;
             }
         },
         mounted: function () {
             fetch("/redirect/Questionnaire?_summary=true")
                 .then(res => res.json())
                 .then(res => {
-                    this.questionnaires = res.entry.map(it => ({
+                    this.questionnaires = res.entry.map((it: any) => ({
                         id: it.resource.id,
                         url: it.resource.url,
                         title: it.resource.title,
@@ -94,4 +99,5 @@
                 });
         }
     }
+
 </script>

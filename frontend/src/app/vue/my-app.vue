@@ -17,20 +17,20 @@
         </div>
         <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
                       @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
-        <DialogQuestionnaire/>
+        <DialogQuestionnaireTs/>
         <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
     </div>
 </template>
 
 
 <script lang="ts">
-    // import ContentView from './content-view.vue';
     import Searchbar from './searchbar.vue';
     import ColumnsView from './columns-view.vue';
     import DialogColumn from './dialog-column.vue';
     import MyContentView from './my-content-view.vue';
-    import DialogQuestionnaire from './dialog-questionnaire.vue';
+    import DialogQuestionnaireTs from './dialog-questionnaire-ts.vue';
     import DialogResource from './dialog-resource.vue';
+
 
     type Column = { name: string, type: string, expression: string };
     type DialogConfig = {
@@ -68,7 +68,7 @@
                 }
             }
         },
-        components: {DialogColumn, Searchbar, ColumnsView, MyContentView, DialogQuestionnaire, DialogResource},
+        components: {DialogColumn, Searchbar, ColumnsView, MyContentView, DialogQuestionnaireTs, DialogResource},
         methods: {
             handleAddColumn: function () {
                 this.dialog.visible = true;

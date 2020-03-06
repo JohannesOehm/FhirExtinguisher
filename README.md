@@ -13,14 +13,14 @@ into a flatter format. But the result is still a JSON, and the GraphQL API must 
 
 ## How does this work?
 This project is a simple WebServer, that connects to a FHIR server and forwards the requests.
-This way you can use all the FHIR filtering options provided by the server. For each resource in the resulting bundle, 
-a FHIRPath expression is evaluated.
+This way you can use all the FHIR REST API filtering options provided by the server. For each resource in the resulting bundle, 
+a [FHIRPath](http://hl7.org/fhirpath/) expression is evaluated.
 
 ![image](img/Concept.png)
 
 All parameters are forwarded as they are, except: 
 * `__columns` Must be `name:expression,name2:expression2`. Name might be followed by options like `@join(" ")` and `@explode`, 
-which control how to handle multiple returned results by the FHIR path expression. `@join` concats the strings into a single cell with a delimiter of your choice,
+which control how to handle multiple returned results by the FHIRPath expression. `@join` concats the strings into a single cell with a delimiter of your choice,
 while explode will create multiple rows for the element.
 * `__limit` By default, the FhirExtinguisher automatically fetches the next bundle. This way you can limit the number of resources processed.
 * `__csvFormat` Is not implemented yet. Change the output format.
@@ -30,18 +30,19 @@ The returned bundles are taken and evaluated against multiple FHIR path expressi
 Please escape `@join(", ")` as `@join("%2C ")`and `@join(":")` as `@join("%3A")`!
 
 ## Building
-Use `gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
+Requirements: Java 8, npm 6.13.x
 
-To compile the frontend, you need to have `npm` (node package manager) installed. Please run `npm install` (and 
-eventually `npm install --only=dev`) in the frontend folder, the gradle build script will only invoke webpack and copy the 
-files into the .jar file. If something goes wrong, execute `./node_modules/.bin/webpack` in the `/frontend` folder. 
+Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
+
+At the first time, to compile the frontend, please run `npm install` (and eventually `npm install --only=dev`) in the 
+frontend folder, since the gradle build script will only invoke webpack and copy the files into the .jar file. 
+
+If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 
+webpack error message.
 
 ### Frontend Development
 You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend. Note 
 that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is quite nice.
-
-If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 
-error message
 
 ## Running 
 Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server 
