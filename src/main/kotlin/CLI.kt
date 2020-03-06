@@ -3,6 +3,8 @@ import fi.iki.elonen.util.ServerRunner
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
+import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
+import ca.uhn.fhir.rest.client.api.IClientInterceptor
 
 fun main(args: Array<String>) {
     val options = Options()
