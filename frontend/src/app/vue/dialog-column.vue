@@ -23,6 +23,7 @@
                                            value="join"/>
                                     <label class="form-check-label" for="join">join("<input :disabled="type !== 'join'"
                                                                                             size="3" type="text"
+                                                                                            style="max-height: 25px;"
                                                                                             v-model="joinStr"/>")</label>
                                 </div>
                                 <div class="form-check form-check-inline">
