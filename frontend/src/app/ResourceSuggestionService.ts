@@ -36,7 +36,7 @@ export class ResourceSuggestionService {
             if (element.path === resourceName) {
                 continue;
             }
-            if (expression === resourceName + ".id" || (element.type.length === 1 && element.type[0].code === "Reference")) {
+            if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
                 expression = `getIdPart(${expression})`;
             }
 

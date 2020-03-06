@@ -3,13 +3,14 @@
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
             <span>Columns</span>
             <div class="d-flex align-items-center" style="display: inline;">
+                <span class="text-muted">IMPORT</span>&nbsp;
                 <a class="text-muted" href="#" title="Import default settings for a specific resource type"
                    v-b-modal.modal-resource>
-                    RESOURCE
+                    RESOURCE...
                 </a>&nbsp;
                 <a class="text-muted" href="#" title="Make QuestionaireResponses flat" v-b-modal.modal-questionnaire>
-                    QUESTIONNAIRE
-                </a>&nbsp;
+                    QUESTIONNAIRE...
+                </a>&nbsp;&nbsp;&nbsp;&nbsp;
                 <a class="text-muted" href="#"
                    title="Add Column..." v-on:click="$emit('addColumn')">
                     <svg class="feather feather-plus-circle" fill="none" height="24"

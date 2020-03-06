@@ -1,6 +1,6 @@
 <template>
     <div id="app">
-        <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest"/>
+        <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest" ref="searchbar"/>
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-3 d-none d-md-block bg-light sidebar">
@@ -17,7 +17,7 @@
         </div>
         <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
                       @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
-        <DialogQuestionnaireTs/>
+        <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
         <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
     </div>
 </template>
@@ -119,6 +119,9 @@
                         this.columns.push(column);
                     }
                 }
+            },
+            updateUrl: function (url: string) {
+                this.$refs.searchbar.setQueryUrl(url);
             }
         },
         mounted: function () {

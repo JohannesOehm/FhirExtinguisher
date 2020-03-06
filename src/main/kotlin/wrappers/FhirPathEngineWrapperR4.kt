@@ -10,15 +10,25 @@ import org.hl7.fhir.r4.model.Enumeration
 import org.hl7.fhir.r4.utils.FHIRPathEngine
 import java.util.*
 
+class ExpressionR4(val expression: ExpressionNode) : ExpressionWrapper() {
+    override fun toString(): String {
+        return expression.toString()
+    }
+}
+
 class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClient) :
     FhirPathEngineWrapper(fhirContext, fhirClient) {
     val engine = FHIRPathEngine(SimpleWorkerContext())
 
     init {
         engine.hostServices = object : org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext {
-            override fun resolveFunction(functionName: String?): FunctionDetails? {
+            override fun resolveFunction(functionName: String?): org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext.FunctionDetails? {
                 return when (functionName) {
-                    "getIdPart" -> FunctionDetails("Tries to string the id to a more human-readable string.", 1, 1)
+                    "getIdPart" -> FHIRPathEngine.IEvaluationContext.FunctionDetails(
+                        "Tries to string the id to a more human-readable string.",
+                        1,
+                        1
+                    )
                     else -> null
                 }
 
@@ -77,28 +87,39 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             is CodeableConcept -> getCodableConceptAsString(it)
             is IPrimitiveType<*> -> it.valueAsString
             is HumanName -> getNameAsString(it)
-            is org.hl7.fhir.r4.model.Identifier -> getIdentifierAsString(it)
+            is Identifier -> getIdentifierAsString(it)
+            is Reference -> getReferenceAsString(it)
             //TODO: Support all of http://hl7.org/fhir/datatypes.html#
             else -> it.toString()
         }
 
-    private fun getCodableConceptAsString(it: org.hl7.fhir.r4.model.CodeableConcept) =
+    private fun getCodableConceptAsString(it: CodeableConcept) =
         if (it.text != null) it.text else it.coding.joinToString { it.code }
 
-    private fun getNameAsString(it: org.hl7.fhir.r4.model.HumanName): String {
-        if (it.hasText()) {
-            return it.text
+    private fun getNameAsString(name: HumanName): String {
+        if (name.hasText()) {
+            return name.text
         } else {
             return listOf(
-                it.prefix.joinToString(" "),
-                it.given.joinToString(" "),
-                if (it.hasFamily()) it.family else "",
-                it.suffix.joinToString(" ")
-            ).joinToString(" ") + (if (it.hasUse()) " (${it.use.toCode()})" else "")
+                name.prefix.joinToString(" "),
+                name.given.joinToString(" "),
+                if (name.hasFamily()) name.family else "",
+                name.suffix.joinToString(" ")
+            ).joinToString(" ") + (if (name.hasUse()) " (${name.use.toCode()})" else "")
         }
     }
 
-    private fun getIdentifierAsString(identifier: org.hl7.fhir.r4.model.Identifier): String {
+    private fun getReferenceAsString(reference: Reference): String {
+        if (reference.hasReference()) {
+            return reference.reference
+        } else if (reference.hasIdentifier()) {
+            return getIdentifierAsString(reference.identifier)
+        } else {
+            return reference.display
+        }
+    }
+
+    private fun getIdentifierAsString(identifier: Identifier): String {
         val idPart = (if (identifier.hasSystem()) identifier.system else "") + "|" + identifier.value
 
         val bracketPart = if (identifier.hasType() && identifier.hasUse()) {
@@ -117,6 +138,3 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
     }
 }
 
-class ExpressionR4(val expression: ExpressionNode) : ExpressionWrapper() {
-
-}

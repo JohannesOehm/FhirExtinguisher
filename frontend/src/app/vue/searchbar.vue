@@ -57,11 +57,15 @@
                         console.log("Enter was suppressed!", args)
                     });
 
-
                 // monaco.languages.setTokensProvider("url", )
 
                 return searchEditor;
             })();
+        },
+        methods: {
+            setQueryUrl: function (url: string) {
+                this.editor.setValue(url);
+            }
         }
     }
 

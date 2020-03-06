@@ -1,6 +1,4 @@
 import ca.uhn.fhir.context.FhirContext
-import ca.uhn.fhir.rest.client.api.IClientInterceptor
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
 import fi.iki.elonen.util.ServerRunner
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
@@ -13,7 +11,7 @@ fun main(args: Array<String>) {
             "v",
             "fhirVersion",
             true,
-            "The FHIR (D)STU/R version to use. Must be either DSTU2, DSTU3, R4 or R5"
+            "The FHIR (D)STU/R version to use. Must be either dstu3 or r4."
         )
         .addOption(
             "a",
@@ -75,7 +73,7 @@ fun main(args: Array<String>) {
     //TODO: Validate FHIR server URL
 
     val instanceConfiguration =
-        InstanceConfiguration(fhirServerUrl, FhirContext.forR4(), basicAuth, interceptors, !external)
+        InstanceConfiguration(fhirServerUrl, fhirContext, basicAuth, interceptors, !external)
     val fhirExtinguisher = MyRouters(portnumber, instanceConfiguration)
 
     ServerRunner.executeInstance(fhirExtinguisher)

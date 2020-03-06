@@ -24,14 +24,23 @@
                     </select>
                 </div>
             </div>
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    <input class="custom-control-input" id="addOrReplace" type="checkbox" v-model="replace">
+                    <label class="custom-control-label" for="addOrReplace">Replace existing columns</label>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input class="custom-control-input" id="changeUrl" type="checkbox" v-model="changeQuery">
+                    <label class="custom-control-label" for="changeUrl">Change query URL</label>
+                </div>
+            </div>
         </form>
     </b-modal>
 </template>
 
 
 <script lang="ts">
-
-    type Foo = { bar: string };
+    import {Column} from "../index";
 
     type QuestionnaireSummary = {
         id: string,
@@ -40,13 +49,35 @@
         fullUrl: string
     }
 
+    function getItems(items: any[], path: string[]): Column[] {
+        let result: Column[] = [];
+        for (let item of items) {
+            if (item.type && item.type !== "group" && item.type !== "display") {
+                let fullPath = path.concat(item.linkId);
+                result.push({
+                    name: "items/" + fullPath.join("/"),
+                    type: 'join(", ")',
+                    expression: "QuestionnaireResponse." + (fullPath.map(it => `item.where(linkId='${it}')`).join(".")) + ".answer.value"
+                });
+            }
+            if (item.item) {
+                let results2 = getItems(item.item, path.concat(item.linkId));
+                for (let result2 of results2) { //TODO: addAll()
+                    result.push(result2);
+                }
+            }
+        }
+        return result;
+    }
 
     export default {
         name: "DialogQuestionnaireTs",
-        data: function (): { questionnaires: QuestionnaireSummary[], questionnaireSelected: string } {
+        data: function (): { questionnaires: QuestionnaireSummary[], questionnaireSelected: string, replace: boolean, changeQuery: boolean } {
             return {
                 questionnaires: [],
-                questionnaireSelected: null
+                questionnaireSelected: null,
+                replace: true,
+                changeQuery: true
             };
         },
         methods: {
@@ -54,9 +85,11 @@
                 let input = <HTMLInputElement>document.getElementById("questionnaireFile");
                 if (input.files.length !== 0) {
                     let reader = new FileReader();
-                    reader.onload = function () {
-                        let text = reader.result;
+                    reader.onload = (e: any) => {
+                        let text = e.target.result;
                         console.log(text);
+                        let parsedQuestionnaire = JSON.parse(text);
+                        this.convertQuestionnaire(parsedQuestionnaire);
                     };
                     reader.onerror = function () {
                         alert("Error while loading file.");
@@ -66,7 +99,10 @@
                     let questionnaireId = (<HTMLInputElement>document.getElementById("questionnaireId")).value;
                     fetch("/redirect/Questionnaire/" + questionnaireId + "?_format=json", {headers: {"Accept": "application/fhir+json"}})
                         .then(res => res.json())
-                        .then(res => console.log(res))
+                        .then(res => {
+                            console.log(res);
+                            this.convertQuestionnaire(res);
+                        })
                         .catch((e: any) => {
                             alert("Could not retrieve resource from server: " + e);
                             console.log(e);
@@ -84,6 +120,23 @@
             handleAbort: function () {
                 this.questionnaireSelected = null;
                 (<HTMLInputElement>document.getElementById("questionnaireFile")).value = null;
+            },
+            convertQuestionnaire: function (questionnaire: any) {
+                let result: Column[] = getItems(questionnaire.item, []);
+                result.unshift(
+                    {name: "id", type: 'join("")', expression: "getIdPart(QuestionnaireResponse.id)"},
+                    {name: "basedOn", type: 'join(" ")', expression: "QuestionnaireResponse.basedOn"},
+                    {name: "status", type: 'join(" ")', expression: "QuestionnaireResponse.status"},
+                    {name: "subject", type: 'join(" ")', expression: "QuestionnaireResponse.subject"},
+                    {name: "authored", type: 'join(" ")', expression: "QuestionnaireResponse.authored"},
+                );
+
+                this.$emit("update-columns", result, this.replace);
+                if (this.changeQuery) {
+                    let url = `QuestionnaireResponse?questionnaire=${questionnaire.id}`;
+                    this.$emit("update-url", url);
+                    this.$emit("start-request", url);
+                }
             }
         },
         mounted: function () {
