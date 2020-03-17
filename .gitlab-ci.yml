@@ -13,7 +13,7 @@ variables:
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
-  - sudo apt-get install npm
+  - apk add --update nodejs npm
 
 build:
   stage: build
