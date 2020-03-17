@@ -14,8 +14,8 @@ variables:
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 #  - apt-get update
-  - apt-get install nodejs npm
-  - apt-get install gradle
+  - sudo apt-get install nodejs npm
+  - sudo apt-get install gradle
 
 build:
   stage: build
