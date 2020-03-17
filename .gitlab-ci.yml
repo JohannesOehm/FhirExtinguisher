@@ -17,7 +17,7 @@ before_script:
   - sudo apt-get install nodejs npm
   - sudo apt-get install gradle
 
-build:
+.build:
   stage: build
   script: gradle shadowJar
   cache:
@@ -27,7 +27,7 @@ build:
       - build
       - .gradle
 
-test:
+.test:
   stage: test
   script: gradle check
   cache:
