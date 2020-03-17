@@ -2,24 +2,28 @@ import {Column} from "./index";
 
 export class ResourceSuggestionService {
 
-    structureDefinitions: any;
+    structureDefinitionsResource: any;
+    structureDefinitionsTypes: any;
 
     constructor(fhirVersion: string) {
         fetch(`/structuredefinitions/${fhirVersion}/profiles-resources.json`)
             .then(res => res.json())
-            .then(it => this.structureDefinitions = it);
+            .then(it => this.structureDefinitionsResource = it);
+        fetch(`/structuredefinitions/${fhirVersion}/profiles-types.json`)
+            .then(res => res.json())
+            .then(it => this.structureDefinitionsTypes = it);
     }
 
 
     getResourceNames(): string[] {
-        return this.structureDefinitions.entry
+        return this.structureDefinitionsResource.entry
             .filter((it: any) => it.resource.resourceType === "StructureDefinition")
             // .filter((it:any) => it.resource.type )
             .map((it: any) => it.resource.name)
     }
 
     getResourceFields(resourceName: string): Column[] {
-        let resources = this.structureDefinitions.entry
+        let resources = this.structureDefinitionsResource.entry
             .filter((it: any) => it.resource.resourceType === "StructureDefinition")
             .filter((it: any) => it.resource.name == resourceName);
 
@@ -27,21 +31,53 @@ export class ResourceSuggestionService {
             console.log("Invalid resource name: " + resourceName);
             return [];
         }
-        var result = [];
+        let result = [];
         for (let element of resources[0].resource.snapshot.element) {
-            let firstIndexOfDot = element.path.indexOf(".");
-            let name = firstIndexOfDot !== -1 ? element.path.substring(firstIndexOfDot + 1) : element.path;
-
             let expression = element.path;
+            let name = this.removeResourceName(expression);
+
             if (element.path === resourceName) {
                 continue;
             }
-            if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
-                expression = `getIdPart(${expression})`;
+            let dataType = element.type.length === 1 ? this.getDataType(element.type[0].code) : null;
+            if (dataType === null || dataType.type === "primitive-type") {
+                result.push({name: name, type: 'join(" ")', expression: expression});
+            } else {
+                if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
+                    expression = `getIdPart(${expression})`;
+                } else {
+                    result.push({name: name, type: 'join(" ")', expression: expression});
+                    if (dataType.snapshot) {
+                        for (let element2 of dataType.snapshot.element) {
+                            let subpath = this.removeResourceName(element2.path);
+
+                            if (element2.path !== dataType.id) {
+                                let expression3 = expression + "." + subpath;
+                                result.push({name: this.removeResourceName(expression3), type: 'join(" ")', expression: expression3})
+                            }
+                        }
+                    }
+                }
             }
 
-            result.push({name: name, type: 'join(" ")', expression: expression});
         }
-        return result;
+        return result.filter((it: Column) => !it.expression.includes("extension") && !it.expression.includes("modifierExtension"));
+    }
+
+    private removeResourceName(expression: string): string {
+        let firstIndexOfDot = expression.indexOf(".");
+        let name = firstIndexOfDot !== -1 ? expression.substring(firstIndexOfDot + 1) : expression;
+        return name;
+    }
+
+    getDataType(datatypeName: string): any | null {
+        let result = this.structureDefinitionsTypes.entry
+            .filter((it: any) => it.resource.resourceType === "StructureDefinition")
+            .filter((it: any) => it.resource.name === datatypeName);
+        if (result.length === 1) {
+            return result[0].resource;
+        } else {
+            return null;
+        }
     }
 }
