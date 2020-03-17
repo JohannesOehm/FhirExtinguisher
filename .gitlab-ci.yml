@@ -13,7 +13,7 @@ variables:
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
-  - apt-get update -yqq
+  - apt-get update
   - apt-get install nodejs npm
   - apt-get install gradle
 
