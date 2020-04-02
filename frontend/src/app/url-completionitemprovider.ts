@@ -4,7 +4,7 @@ import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 
 export class URLCompletionItemProvider implements languages.CompletionItemProvider {
-    triggerCharacters = ["?", "&", ":"];
+    triggerCharacters = ["?", "&", ":", "="];
 
     private conformanceStatement: R4.ICapabilityStatement = undefined;
 
@@ -110,28 +110,28 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                 range: range,
                 kind: CompletionItemKind.Operator,
                 insertText: "_has:",
-                documentation: "TODO"
+                // documentation: "TODO"
             },
             {
                 label: "_count",
                 range: range,
                 kind: CompletionItemKind.Operator,
                 insertText: "_count=",
-                documentation: "TODO"
+                documentation: "How many resources should be returned in one page?"
             },
             {
                 label: "_include",
                 range: range,
                 kind: CompletionItemKind.Operator,
-                insertText: "_include=",
-                documentation: "TODO"
+                insertText: "_include",
+                // documentation: "TODO"
             },
             {
                 label: "_revinclude",
                 range: range,
                 kind: CompletionItemKind.Operator,
-                insertText: "_revinclude=",
-                documentation: "TODO"
+                insertText: "_revinclude",
+                // documentation: "TODO"
             },
             {
                 label: "_summary",
@@ -152,7 +152,91 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                 range: range,
                 kind: CompletionItemKind.Operator,
                 insertText: "_elements=",
-                documentation: "TODO"
+                // documentation: "TODO"
+            },
+            {
+                label: "_format",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_format=",
+                // documentation: "TODO"
+            },
+            {
+                label: "_pretty",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_pretty=",
+                // documentation: "TODO"
+            },
+            {
+                label: "_query",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_query=",
+                // documentation: "TODO"
+            },
+            {
+                label: "_filter",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_filter=",
+                // documentation: "TODO"
+            },
+            {
+                label: "_contained",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_contained=",
+                documentation: "Whether to return resources contained in other resources in the search matches"
+            },
+            {
+                label: "_containedType",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_containedType=",
+                documentation: "If returning contained resources, whether to return the contained or container resources"
+            },
+            {
+                label: "_text",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_text",
+                documentation: "Text search against the narrative"
+            },
+            {
+                label: "_content",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_content",
+                documentation: "Text search against the entire resource"
+            },
+            {
+                label: "_security",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_security=",
+                documentation: "Search by a security label"
+            },
+            {
+                label: "_profile",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_profile=",
+                documentation: "Search for all resources tagged with a profile"
+            },
+            {
+                label: "_tag",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_tag=",
+                documentation: "Search by a resource tag"
+            },
+            {
+                label: "_lastUpdated",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "_lastUpdated=",
+                documentation: "Date last updated. Server has discretion on the boundary precision"
             }
         ];
 
@@ -197,6 +281,60 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             startColumn: word != null ? word.startColumn : position.column,
             endColumn: position.column
         };
+
+        if (paramName === "_include" || paramName === "_revinclude") {
+            return [
+                {
+                    label: "iterate",
+                    range: range,
+                    kind: CompletionItemKind.Operator,
+                    insertText: "iterate=",
+                    // documentation: "TODO"
+                }
+            ]
+        }
+        if (paramName.startsWith("_has")) {
+            let [, resourceNameTgt, joinField, attribute] = paramName.split(":");
+            if (!resourceNameTgt) {
+                return this.getAllResourceTypes().map(it => (
+                    {
+                        label: it,
+                        kind: CompletionItemKind.Class,
+                        range: range,
+                        insertText: it + ":"
+                    }
+                ));
+            } else if (resourceNameTgt && !joinField) {
+                let definition = this.getDefintionForResourceName(resourceNameTgt);
+                return definition.searchParam
+                    .filter(it => it.type === "reference") //TODO This makes only sense on references, doesn't it?
+                    .map(it => (
+                        {
+                            label: it.name,
+                            kind: CompletionItemKind.Function,
+                            range: range,
+                            detail: it.type,
+                            insertText: it.name+":",
+                            documentation: it.documentation
+                        }
+                    ));
+            } else if(resourceNameTgt && joinField) {
+                let definition = this.getDefintionForResourceName(resourceNameTgt);
+                return definition.searchParam
+                    .map(it => (
+                        {
+                            label: it.name,
+                            kind: CompletionItemKind.Function,
+                            range: range,
+                            detail: it.type,
+                            insertText: it.name+"=",
+                            documentation: it.documentation
+                        }
+                    ));
+            }
+        }
+
+
 
         let paramDefinition = definition.searchParam.filter(it => it.name === paramName);
         let additionalParams: CompletionItem[] = [];
@@ -340,8 +478,9 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
             textUntilPosition.lastIndexOf("=")
         );
+        let paramValue = textUntilPosition.substring(textUntilPosition.lastIndexOf("=") + 1);
         let [paramName, paramModifier] = paramKey.split(":", 2);
-        console.log(`paramName = `, paramName, " paramModifier = ", paramModifier);
+        console.log(`paramName = `, paramName, " paramModifier = ", paramModifier, " paramValue = " + paramValue);
 
         let word = model.getWordAtPosition(position);
 
@@ -395,7 +534,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             ]
         }
 
-        if (paramModifier === "missing") {
+        if (paramName === "_pretty" || paramModifier === "missing") {
             return [
                 {
                     label: "true",
@@ -408,9 +547,68 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     range: range,
                     kind: CompletionItemKind.Value,
                     insertText: "false"
-                },
-            ]
+                }
+            ];
         }
+        if (paramName === "_format") {
+            return ["xml", "text/xml", "application/xml", "application/fhir+xml", "json", "application/json",
+                "application/fhir+json", "ttl", "application/fhir+turtle", "text/turtle",
+                "html", "text/html"].map(it => ({
+                label: it,
+                range: range,
+                kind: CompletionItemKind.Value,
+                insertText: it
+            }));
+        }
+
+
+        let resourceName = this.getResourceName(textUntilPosition);
+        if (paramName === "_include") {
+            if (paramValue === "") {
+                return [{
+                    label: resourceName,
+                    range: range,
+                    kind: CompletionItemKind.Class,
+                    insertText: resourceName + ":"
+                }];
+            }
+        } else if (paramName === "_revinclude") {
+            if (paramValue === "") {
+                let types = this.getAllResourceTypes();
+                return types.map(it => (
+                    {
+                        label: it,
+                        kind: CompletionItemKind.Class,
+                        range: range,
+                        insertText: it + ":"
+                    }
+                ));
+            }
+        }
+        if (paramName === "_include" || paramName === "_revinclude" && paramValue.includes(":")) {
+            let paramValueResourceName = paramValue.substring(0, paramValue.indexOf(":"));
+            let definition = this.getDefintionForResourceName(paramValueResourceName);
+            if (definition) {
+                return definition.searchParam
+                    .filter(it => it.type === "reference") //TODO This makes only sense on references, doesn't it?
+                    .map(it => (
+                        {
+                            label: it.name,
+                            kind: CompletionItemKind.Function,
+                            range: range,
+                            detail: it.type,
+                            insertText: it.name,
+                            documentation: it.documentation
+                        }
+                    ));
+            }
+        }
+
+
         return [];
+    }
+
+    private getAllResourceTypes() {
+        return this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource)[0].map(it => it.type);
     }
 }
