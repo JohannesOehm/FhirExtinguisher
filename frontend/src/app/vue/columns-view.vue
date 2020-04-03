@@ -28,9 +28,7 @@
             <ul class="nav flex-column mb-2">
                 <li class="nav-item d-flex justify-content-between align-items-center"
                     v-for="(column, idx) in columns">
-                    <div class="container-fluid">
-                        <div class="row align-items-center">
-                            <a class="nav-link col-sm" href="#" v-on:click="$emit('editColumn', idx)">
+                            <a class="nav-link" style="flex: 1 1 auto;" href="#" v-on:click="$emit('editColumn', idx)">
                                 <div class="">
                                     <span>{{column.name}}</span><span class="text-muted">@{{column.type}}</span>
                                     <br>
@@ -38,20 +36,18 @@
                                 </div>
                             </a>
 
-                            <div class="col col-sm-2">
-                                <a class="d-flex align-items-center align-content-end text-muted" href="#"
-                                   v-on:click="removeColumn(idx)">
-                                    <svg class="feather feather-plus-circle" fill="none" height="24"
-                                         stroke="currentColor"
-                                         stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                         viewBox="0 0 448 512"
-                                         width="24" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
-                                              fill="currentColor"></path>
-                                    </svg>
+                    <div style="flex: 0 0 auto;">
+                        <a class="d-flex align-items-center align-content-end text-muted" href="#"
+                           v-on:click="removeColumn(idx)">
+                            <svg class="feather feather-plus-circle" fill="none" height="24"
+                                 stroke="currentColor"
+                                 stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                 viewBox="0 0 448 512"
+                                 width="24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
+                                      fill="currentColor"></path>
+                            </svg>
                                 </a></div>
-                        </div>
-                    </div>
                 </li>
             </ul>
         </div>

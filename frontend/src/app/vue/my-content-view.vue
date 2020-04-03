@@ -1,8 +1,8 @@
 <template>
     <div>
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <div style="display: flex; justify-content: space-between; align-items: center" class=" border-bottom">
             <h1 class="h2">Results</h1>
-            <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-toolbar">
                 <div class="btn-group mr-2">
                     <button class="btn btn-sm btn-outline-secondary" v-bind:class="{ active: showRaw }"
                             v-on:click="toggleRaw">Raw View
