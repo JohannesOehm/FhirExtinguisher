@@ -1,3 +1,4 @@
+import {KeyCode} from "monaco-editor";
 <template>
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
         <a :href="endpointUrl" class="navbar-brand col-sm-3 col-md-3 mr-0" href="#" id="fhirServerUrl" target="_blank">{{endpointUrl}}</a>
@@ -15,7 +16,7 @@
 
 <script lang="ts">
     import * as monaco from "monaco-editor";
-    import {editor} from "monaco-editor";
+    import {editor, IKeyboardEvent, KeyCode} from "monaco-editor";
     import {URLCompletionItemProvider} from "../url-completionitemprovider";
     import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
@@ -26,6 +27,7 @@
         name: 'Searchbar',
         props: ['endpointUrl'],
         mounted: function () {
+            let that = this;
             this.editor = (function () {
                 monaco.languages.register({id: 'url'});
 
@@ -52,10 +54,30 @@
                     // lineNumbersMinChars: 0
                 });
                 (<any>window).searchEditor = searchEditor;
-                var myBinding = searchEditor.addCommand(monaco.KeyCode.Enter,
-                    function (args) {
-                        console.log("Enter was suppressed!", args)
-                    });
+                window.addEventListener("resize", function () {
+                    (<any>window).searchEditor.layout();
+                });
+                // let myBinding = searchEditor.addCommand(monaco.KeyCode.Enter,
+                //     function (args) {
+                //         if((<any>searchEditor)._contentWidgets["editor.widget.suggestWidget"].widget.state === 3){
+                //
+                //         } else {
+                //             that.$emit('startRequest', searchEditor.getValue());
+                //         }
+                //     });
+                searchEditor.onKeyDown(function (e: IKeyboardEvent) {
+                    if (e.keyCode === KeyCode.Enter) {
+                        //TODO: Maybe there is a public API for this?
+                        if ((<any>searchEditor)._contentWidgets["editor.widget.suggestWidget"].widget.state !== 3) {
+                            that.$emit('startRequest', searchEditor.getValue());
+                            e.stopPropagation();
+                            e.preventDefault();
+                        } else {
+
+                        }
+                    }
+
+                });
 
                 // monaco.languages.setTokensProvider("url", )
 

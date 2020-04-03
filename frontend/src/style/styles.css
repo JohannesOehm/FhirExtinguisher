@@ -33,7 +33,7 @@ body {
 }
 
 #separator {
-    background-color: #333333;
+    background-color: #00000000;
     flex: 0 0 5px;
     cursor: col-resize;
 }
@@ -115,4 +115,9 @@ body {
 
 .myDisabled {
     background-color: #e9ecef !important;
+}
+
+/* monaco tries to support screen readers, but this destroys the layout */
+.monaco-aria-container {
+    display: none;
 }
