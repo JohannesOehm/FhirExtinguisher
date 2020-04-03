@@ -1,19 +1,20 @@
 <template>
-    <div id="app">
-        <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest" ref="searchbar"/>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-3 d-none d-md-block bg-light sidebar">
-                    <div class="sidebar-sticky">
-                        <ColumnsView :columns="columns" @addColumn="handleAddColumn"
-                                     @editColumn="handleEditColumn"/>
-                    </div>
-                </div>
-                <div class="col-md-8 ml-sm-auto col-lg-9 pt-3 px-4" id="tableOrRaw" role="main">
-                    <!--                    <ContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>-->
-                    <MyContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
+    <div id="app" style="display: flex;flex-direction: column;height:100%; max-height: 100%;">
+        <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest" ref="searchbar" style="flex: 0 0 auto;"/>
+        <!--        <div class="container-fluid">-->
+        <div id="content" style="flex: 1 0 auto; overflow: hidden;max-height: calc(100% - 40px);">
+            <div class="bg-light sidebar" id="sidebar" style="width: 500px;">
+                <div class="sidebar-sticky" style="">
+                    <ColumnsView :columns="columns" @addColumn="handleAddColumn"
+                                 @editColumn="handleEditColumn"/>
                 </div>
             </div>
+            <div id="separator" draggable="true"></div>
+            <div id="tableOrRaw" role="main">
+                <!--                    <ContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>-->
+                <MyContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
+            </div>
+            <!--            </div>-->
         </div>
         <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
                       @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
@@ -30,6 +31,11 @@
     import MyContentView from './my-content-view.vue';
     import DialogQuestionnaireTs from './dialog-questionnaire-ts.vue';
     import DialogResource from './dialog-resource.vue';
+
+    import * as $ from 'jquery';
+    // import * as $ from ''
+
+    // (<any>$("#sidebar")).resizable({handles: "e"});
 
 
     type Column = { name: string, type: string, expression: string };
@@ -132,6 +138,28 @@
                     this.fhirVersion = res.version;
                 });
 
+            let separator = document.getElementById("separator");
+            var dragging = false;
+            separator.onmousedown = function (e: MouseEvent) {
+                e.preventDefault();
+                document.body.style.cursor = "col-resize";
+                dragging = true;
+            };
+            window.addEventListener("mousemove", function (e: MouseEvent) {
+                if (dragging) {
+                    // e.preventDefault();
+                    console.log("dragging", e);
+                    document.getElementById("sidebar").style.width = e.pageX + "px";
+                }
+            });
+            window.addEventListener("mouseup", function (e: MouseEvent) {
+                if (dragging) {
+                    // e.preventDefault();
+                    console.log("dragend", e);
+                    document.body.style.cursor = null;
+                    dragging = false;
+                }
+            });
         }
     }
 </script>
