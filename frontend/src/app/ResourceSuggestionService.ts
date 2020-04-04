@@ -31,7 +31,7 @@ export class ResourceSuggestionService {
             console.log("Invalid resource name: " + resourceName);
             return [];
         }
-        let result = [];
+        let result: Column[] = [];
         for (let element of resources[0].resource.snapshot.element) {
             let expression = element.path;
             let name = this.removeResourceName(expression);
@@ -39,29 +39,62 @@ export class ResourceSuggestionService {
             if (element.path === resourceName) {
                 continue;
             }
-            let dataType = element.type && element.type.length === 1 ? this.getDataType(element.type[0].code) : null;
-            if ((dataType === null || dataType.type === "primitive-type") && expression !== resourceName + ".id") {
-                result.push({name: name, type: 'join(" ")', expression: expression});
-            } else if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
-                expression = `getIdPart(${expression})`;
-                result.push({name: name, type: 'join(" ")', expression: expression});
-            } else if (dataType.snapshot) {
-                for (let element2 of dataType.snapshot.element) {
-                    let subpath = this.removeResourceName(element2.path);
-
-                    if (element2.path !== dataType.id) {
-                        let expression3 = expression + "." + subpath;
+            if (element.type && element.type.length === 1) {
+                let dataType = this.getDataType(element.type[0].code);
+                if (dataType) {
+                    if (expression === resourceName + ".id" || dataType.name === "Reference") {
+                        expression = `getIdPart(${expression})`;
+                        result.push({name: name, type: 'join(" ")', expression: expression});
+                    } else if (dataType.kind === "primitive-type") {
+                        result.push({name: name, type: 'join(" ")', expression: expression});
+                    } else if (dataType.snapshot) {
+                        this.addTypeElements(dataType, expression, expression, result);
+                    } else {
+                        result.push({name: name, type: 'join(" ")', expression: expression});
+                    }
+                } else {
+                    result.push({name: name, type: 'join(" ")', expression: expression});
+                }
+            } else if (element.type && element.type.length > 1) {
+                let startExpression = expression.substring(0, expression.lastIndexOf("[x]"));
+                for (let type of element.type) {
+                    let dataType = this.getDataType(type.code);
+                    let expressionWithCasting = startExpression + ".ofType(" + dataType.name + ")";
+                    let newName = startExpression + dataType.name[0].toUpperCase() + dataType.name.substring(1);
+                    if (dataType.kind === "primitive-type") {
                         result.push({
-                            name: this.removeResourceName(expression3),
+                            name: this.removeResourceName(newName),
                             type: 'join(" ")',
-                            expression: expression3
-                        })
+                            expression: expressionWithCasting
+                        });
+                    } else {
+                        this.addTypeElements(dataType, expressionWithCasting, newName, result);
                     }
                 }
             }
 
+
         }
         return result.filter((it: Column) => !it.expression.includes("extension") && !it.expression.includes("modifierExtension"));
+    }
+
+    private addTypeElements(dataType: any, expression: string, name: string, result: Column[]) {
+        if (dataType.snapshot) {
+            for (let element2 of dataType.snapshot.element) {
+                let subpath = this.removeResourceName(element2.path);
+
+                if (element2.base.path !== "Element.id" //Hide the generic id for inter-element referencing
+                    && element2.path !== dataType.id) { //Hide the base element
+                    let expression3 = expression + "." + subpath;
+                    let newName = name + "." + subpath;
+                    result.push({
+                        name: this.removeResourceName(newName),
+                        type: 'join(" ")',
+                        expression: expression3
+                    })
+                }
+            }
+        }
     }
 
     private removeResourceName(expression: string): string {
