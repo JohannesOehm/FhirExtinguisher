@@ -39,7 +39,7 @@ export class ResourceSuggestionService {
             if (element.path === resourceName) {
                 continue;
             }
-            let dataType = element.type.length === 1 ? this.getDataType(element.type[0].code) : null;
+            let dataType = element.type && element.type.length === 1 ? this.getDataType(element.type[0].code) : null;
             if ((dataType === null || dataType.type === "primitive-type") && expression !== resourceName + ".id") {
                 result.push({name: name, type: 'join(" ")', expression: expression});
             } else if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
