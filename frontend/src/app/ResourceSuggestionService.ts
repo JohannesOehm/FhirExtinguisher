@@ -39,6 +39,9 @@ export class ResourceSuggestionService {
             if (element.path === resourceName) {
                 continue;
             }
+            if (element.base.path === "Element.id") { //Patient.id => Resource.id, this applies only to BackboneElement
+                continue;
+            }
             if (element.type && element.type.length === 1) {
                 let dataType = this.getDataType(element.type[0].code);
                 if (dataType) {
@@ -53,7 +56,7 @@ export class ResourceSuggestionService {
                         result.push({name: name, type: 'join(" ")', expression: expression});
                     }
                 } else {
-                    result.push({name: name, type: 'join(" ")', expression: expression});
+                    result.push({name: name, type: 'join(" ")', expression: expression}); //fallback
                 }
             } else if (element.type && element.type.length > 1) {
                 let startExpression = expression.substring(0, expression.lastIndexOf("[x]"));
