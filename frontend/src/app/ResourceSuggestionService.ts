@@ -40,22 +40,22 @@ export class ResourceSuggestionService {
                 continue;
             }
             let dataType = element.type.length === 1 ? this.getDataType(element.type[0].code) : null;
-            if (dataType === null || dataType.type === "primitive-type") {
+            if ((dataType === null || dataType.type === "primitive-type") && expression !== resourceName + ".id") {
                 result.push({name: name, type: 'join(" ")', expression: expression});
-            } else {
-                if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
-                    expression = `getIdPart(${expression})`;
-                } else {
-                    result.push({name: name, type: 'join(" ")', expression: expression});
-                    if (dataType.snapshot) {
-                        for (let element2 of dataType.snapshot.element) {
-                            let subpath = this.removeResourceName(element2.path);
+            } else if (expression === resourceName + ".id" || (element.type && element.type.length === 1 && element.type[0].code === "Reference")) {
+                expression = `getIdPart(${expression})`;
+                result.push({name: name, type: 'join(" ")', expression: expression});
+            } else if (dataType.snapshot) {
+                for (let element2 of dataType.snapshot.element) {
+                    let subpath = this.removeResourceName(element2.path);
 
-                            if (element2.path !== dataType.id) {
-                                let expression3 = expression + "." + subpath;
-                                result.push({name: this.removeResourceName(expression3), type: 'join(" ")', expression: expression3})
-                            }
-                        }
+                    if (element2.path !== dataType.id) {
+                        let expression3 = expression + "." + subpath;
+                        result.push({
+                            name: this.removeResourceName(expression3),
+                            type: 'join(" ")',
+                            expression: expression3
+                        })
                     }
                 }
             }

@@ -1,7 +1,6 @@
 <template>
-    <div id="app" style="display: flex;flex-direction: column;height:100%; max-height: 100%;">
+    <div id="app" style="display: flex;flex-direction: column;height:100%; max-height: 100%; overflow: hidden;">
         <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest" ref="searchbar" style="flex: 0 0 auto;"/>
-        <!--        <div class="container-fluid">-->
         <div id="content" style="flex: 1 0 auto; overflow: hidden;max-height: calc(100% - 40px);">
             <div class="bg-light sidebar" id="sidebar" style="width: 500px;">
                 <div class="sidebar-sticky" style="">
@@ -10,11 +9,9 @@
                 </div>
             </div>
             <div id="separator" draggable="true"></div>
-            <div id="tableOrRaw" role="main">
-                <!--                    <ContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>-->
+            <div id="tableOrRaw" role="main" style="overflow: auto">
                 <MyContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
             </div>
-            <!--            </div>-->
         </div>
         <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
                       @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
@@ -53,8 +50,13 @@
                         type: 'join(" ")',
                         expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
                     },
-                    {name: "name.first", type: 'join(" ")', expression: "Patient.name[0].given"},
-                    {name: "name.last", type: 'join(" ")', expression: "Patient.name[0].family"}
+                    {name: "firstnames", type: 'join(" ")', expression: "Patient.name[0].given"},
+                    {name: "lastname", type: 'join(" ")', expression: "Patient.name[0].family"},
+                    {
+                        name: "managingOrganization",
+                        type: 'join(" ")',
+                        expression: "Patient.managingOrganization.resolve().name"
+                    },
                 ],
                 limit: 50,
                 rawData: null,
@@ -109,12 +111,12 @@
                 }
             },
             handleRequest: function (url: string) {
+                this.rawData = "Loading...";
                 this.fhirQuery = url;
                 fetch("/redirect/" + url)
                     .then(res => res.text())
                     .then(res => {
                         this.rawData = res;
-                        console.log(res);
                     });
             },
             updateColumns: function (columns: Column[], replace: Boolean) {

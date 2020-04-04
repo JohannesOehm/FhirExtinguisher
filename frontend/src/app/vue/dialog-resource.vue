@@ -30,13 +30,14 @@
     </b-modal>
 </template>
 
-<script type="ts">
+<script lang="ts">
     import {ResourceSuggestionService} from '../ResourceSuggestionService'
+    import {Column} from "../index";
 
     export default {
         name: "DialogResource",
         props: ["fhirVersion"],
-        data: function () {
+        data: function (): { resourceNames: string[], resourceName: string, columnNames: Column[], columnsSelected: Column[], replace: boolean } {
             return {
                 resourceNames: [],
                 resourceName: null,
@@ -49,7 +50,7 @@
             handleOk: function () {
                 this.$emit("update-columns", this.columnsSelected, this.replace);
             },
-            handleChange: function (e) {
+            handleChange: function (e: any) {
                 if (e.target.files.length !== 0) {
                     document.getElementById("questionnaireFileLabel").innerText = e.target.files[0].name;
                 } else {
@@ -58,13 +59,28 @@
             },
             handleShown: function () {
                 this.resourceNames = this.$options.resourceSuggestionService.getResourceNames();
-                console.log(this.resourceNames);
+                try {
+                    let query = (<any>window).searchEditor.getValue();
+
+                    let resourceName;
+                    if (query.indexOf("/") !== -1) {
+                        resourceName = query.substring(0, query.indexOf("/"));
+                    } else if (query.indexOf("?") !== -1) {
+                        resourceName = query.substring(0, query.indexOf("?"));
+                    } else {
+                        resourceName = query;
+                    }
+                    if (this.resourceNames.indexOf(resourceName) !== -1) {
+                        this.resourceName = resourceName;
+                    }
+                } catch (e) {
+
+                }
             }
         },
         watch: {
-            resourceName: function (newData, oldData) {
+            resourceName: function (newData: string, oldData: string) {
                 this.columnNames = this.$options.resourceSuggestionService.getResourceFields(newData);
-                console.log(this.columnNames);
             }
         },
         mounted: function () {

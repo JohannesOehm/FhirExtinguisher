@@ -11,6 +11,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/jquery": "^3.3.32",
+    "@types/vuedraggable": "^2.23.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.4.2",
     "file-loader": "^5.0.2",
@@ -34,6 +35,7 @@
     "jquery": "^3.4.1",
     "popper.js": "^1.16.1",
     "vue": "^2.6.11",
+    "vuedraggable": "^2.23.2",
     "webpack-dev-server": "^3.10.3"
   }
 }

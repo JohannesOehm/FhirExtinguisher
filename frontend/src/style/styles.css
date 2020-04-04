@@ -15,6 +15,10 @@ body {
     vertical-align: text-bottom;
 }
 
+.feather:hover {
+    color: black;
+}
+
 #content {
     display: flex;
     flex-direction: row;
@@ -37,6 +41,15 @@ body {
     flex: 0 0 5px;
     cursor: col-resize;
 }
+
+.nav-item:hover {
+    background-color: #CCCCCC;
+}
+
+.nav-item:hover a {
+    text-decoration: none;
+}
+
 
 #tableOrRaw {
     flex: 1 0 70%;

@@ -45,11 +45,14 @@ import {KeyCode} from "monaco-editor";
                     glyphMargin: false,
                     folding: false,
                     scrollbar: {
-                        vertical: "auto",
+                        vertical: "hidden",
                         horizontal: "auto"
                     },
                     fontSize: 16,
-                    theme: "vscode-dark"
+                    theme: "vscode-dark",
+                    scrollBeyondLastLine: false,
+                    overviewRulerLanes: 0,
+                    overviewRulerBorder: false //Still not perfect
                     // lineDecorationsWidth: 0,
                     // lineNumbersMinChars: 0
                 });
