@@ -1,4 +1,4 @@
-# FHIR Extinguisher
+# FhirExtinguisher
 
 ## Goal 
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
@@ -30,11 +30,11 @@ The returned bundles are taken and evaluated against multiple FHIR path expressi
 Please escape `@join(", ")` as `@join("%2C ")`and `@join(":")` as `@join("%3A")`!
 
 ## Building
-Requirements: Java 8, npm 6.13.x
+**Requirements: Java 8, npm 6.13.x**
 
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
 
-At the first time, to compile the frontend, please run `npm install` (and eventually `npm install --only=dev`) in the 
+At the first time, to compile the frontend, you have to run `npm install` (and eventually `npm install --only=dev`) in the 
 `/frontend` folder, since the gradle build script will only invoke webpack and copy the files into the .jar file. 
 
 If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 

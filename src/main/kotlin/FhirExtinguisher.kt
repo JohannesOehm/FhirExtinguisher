@@ -10,6 +10,8 @@ import org.apache.commons.csv.CSVPrinter
 import wrappers.*
 
 import java.net.URLDecoder
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 private val log = KotlinLogging.logger {}
 
@@ -75,7 +77,13 @@ class FhirExtinguisher(
                 )
             }
         }
-        return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream())
+
+        return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream()).apply {
+            val resourceName = if (session.uri.startsWith("/fhir/")) session.uri.drop("/fhir/".length) else session.uri
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+            val filename = (resourceName + "_" + fhirParams + "_" + timestamp).replace(Regex("[\\\\/$:?<>|\"'*]"), "_")
+            addHeader("Content-Disposition", "attachment; filename=\"$filename.csv\"');")
+        }
     }
 
     private fun getBody(session: NanoHTTPD.IHTTPSession): String? {
