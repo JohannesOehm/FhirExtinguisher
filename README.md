@@ -1,5 +1,7 @@
 # FHIR Extinguisher
 
+![Screenshot](img/Screenshot.png)
+
 ## Goal 
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
 of the hierarchical structure into a flat list for analysing R DataFrames.
@@ -35,7 +37,7 @@ Requirements: Java 8, npm 6.13.x
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
 
 At the first time, to compile the frontend, please run `npm install` (and eventually `npm install --only=dev`) in the 
-frontend folder, since the gradle build script will only invoke webpack and copy the files into the .jar file. 
+`/frontend` folder, since the gradle build script will only invoke webpack and copy the files into the .jar file. 
 
 If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 
 webpack error message.
@@ -50,3 +52,11 @@ on your local machine and connects to the public FHIR R4 server. Use `-a user:pa
 
 By default, FhirExtinguisher assumes, the server is R4. If you want to connect with a (D)STU3 server, please add `-v stu3` to the command line arguments.
 
+List of all command line options:
+* `-f [url]` FHIR server URL
+* `-a [user]:[password]` Basic authentication credentials, if required by FHIR server
+* `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available under `http://localhost:8080/`
+* `-ext` Allow connections of non-localhost machines
+
+## Acknowledgement
+Supported by BMBF grant No. 01ZZ1802V (HiGHmed/Münster) 
