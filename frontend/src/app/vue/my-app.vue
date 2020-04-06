@@ -17,6 +17,7 @@
                       @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
         <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
         <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
+        <DialogAbout/>
     </div>
 </template>
 
@@ -28,6 +29,7 @@
     import MyContentView from './my-content-view.vue';
     import DialogQuestionnaireTs from './dialog-questionnaire-ts.vue';
     import DialogResource from './dialog-resource.vue';
+    import DialogAbout from './dialog-about.vue';
 
     import * as $ from 'jquery';
     // import * as $ from ''
@@ -76,7 +78,15 @@
                 }
             }
         },
-        components: {DialogColumn, Searchbar, ColumnsView, MyContentView, DialogQuestionnaireTs, DialogResource},
+        components: {
+            DialogColumn,
+            Searchbar,
+            ColumnsView,
+            MyContentView,
+            DialogQuestionnaireTs,
+            DialogResource,
+            DialogAbout
+        },
         methods: {
             handleAddColumn: function () {
                 this.dialog.visible = true;
