@@ -44,11 +44,11 @@ export class ResourceSuggestionService {
             }
             if (element.type && element.type.length === 1) {
                 let dataType = this.getDataType(element.type[0].code);
-                if (dataType) {
-                    if (expression === resourceName + ".id" || dataType.name === "Reference") {
-                        expression = `getIdPart(${expression})`;
-                        result.push({name: name, type: 'join(" ")', expression: expression});
-                    } else if (dataType.kind === "primitive-type") {
+                if (element.base.path === "Resource.id") {//|| dataType.name === "Reference") {
+                    expression = `getIdPart(${expression})`;
+                    result.push({name: name, type: 'join(" ")', expression: expression});
+                } else if (dataType) {
+                    if (dataType.kind === "primitive-type") {
                         result.push({name: name, type: 'join(" ")', expression: expression});
                     } else if (dataType.snapshot) {
                         this.addTypeElements(dataType, expression, expression, result);
@@ -102,8 +102,7 @@ export class ResourceSuggestionService {
 
     private removeResourceName(expression: string): string {
         let firstIndexOfDot = expression.indexOf(".");
-        let name = firstIndexOfDot !== -1 ? expression.substring(firstIndexOfDot + 1) : expression;
-        return name;
+        return firstIndexOfDot !== -1 ? expression.substring(firstIndexOfDot + 1) : expression;
     }
 
     getDataType(datatypeName: string): any | null {
