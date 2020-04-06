@@ -1,7 +1,5 @@
 # FHIR Extinguisher
 
-![Screenshot](img/Screenshot.PNG)
-
 ## Goal 
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
 of the hierarchical structure into a flat list for analysing R DataFrames.
@@ -57,6 +55,21 @@ List of all command line options:
 * `-a [user]:[password]` Basic authentication credentials, if required by FHIR server
 * `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available under `http://localhost:8080/`
 * `-ext` Allow connections of non-localhost machines
+
+To stop the FhirExtinguisher, use <kbd>Ctrl</kbd>+<kbd>C</kbd>!
+### Usage by URL
+You can create your own links using the specifications above. In R, you can use 
+`data <- read.csv('http://localhost:8082/fhir/Patient?__limit=50&__columns=id@join(" "):getIdPart(Patient.id)')` to always 
+start with a fresh version from the server. However, the FhirExtinguisher must be running during execution of the script. 
+
+You can create a link using the GUI and copy it into your R script.
+
+### Graphical User Interface
+You can use the GUI, which will be available under `http://localhost:[portnumber]/`. There, you can enter your query 
+in the editor on the top using the FHIR Search API and specify the columns in the sidebar. 
+
+![Screenshot](img/Screenshot.PNG)
+
 
 ## Acknowledgement
 Supported by BMBF grant No. 01ZZ1802V (HiGHmed/Münster) 
