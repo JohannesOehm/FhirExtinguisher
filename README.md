@@ -1,6 +1,6 @@
 # FHIR Extinguisher
 
-![Screenshot](img/Screenshot.png)
+![Screenshot](img/Screenshot.PNG)
 
 ## Goal 
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
