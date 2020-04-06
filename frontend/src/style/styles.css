@@ -31,7 +31,7 @@ body {
     z-index: 100; /* Behind the navbar */
     padding: 5px;
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-    flex: 1 0 auto;
+    flex: 1 1 auto;
     max-height: 100%;
     overflow: auto;
 }
@@ -52,7 +52,7 @@ body {
 
 
 #tableOrRaw {
-    flex: 1 0 70%;
+    flex: 1 1 70%;
     margin: 10px;
 }
 
