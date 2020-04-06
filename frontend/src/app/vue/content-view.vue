@@ -5,18 +5,23 @@
             <div class="btn-toolbar mb-2 mb-md-0">
                 <div class="btn-group mr-2">
                     <button class="btn btn-sm btn-outline-secondary" v-bind:class="{ active: showRaw }"
+                            v-b-tooltip.hover
+                            title="Toggle between first bundle as returned by server and preview table"
                             v-on:click="toggleRaw">Raw View
                     </button>
                 </div>
                 <div class="btn-group mr-2">
-                    <button @click="copyToClipboard(downloadUrl)" class="btn btn-sm btn-outline-secondary">
+                    <button @click="copyToClipboard(downloadUrl)" class="btn btn-sm btn-outline-secondary"
+                            v-b-tooltip.hover title="Copy result file link.">
                         Copy Link
                     </button>
-                    <button @click="openUrl(downloadUrl)" class="btn btn-sm btn-outline-secondary" type="submit">
+                    <button @click="openUrl(downloadUrl)" class="btn btn-sm btn-outline-secondary" type="submit"
+                            v-b-tooltip.hover title="Download as CSV file.">
                         Download
                     </button>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Download Limit:
+                <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit" v-b-tooltip.hover
+                        title="Maximum number of rows in result file.">Download Limit:
                     {{limit}}
                 </button>
             </div>
@@ -71,48 +76,48 @@
             }
         },
         props: ['limit', 'rawData', 'columns', 'fhirQuery'],
-        // methods: {
-        //     toggleRaw: function () {
-        //         this.showRaw = !this.showRaw;
-        //     },
-        //     editLimit: function () {
-        //         let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
-        //         let newValue = parseInt(newLimit);
-        //         if (!isNaN(newValue)) {
-        //             this.limit = newValue;
-        //         }
-        //     },
-        //     reEvaluateHighlighting: function () {
-        //         monaco.editor.colorize(this.rawData, 'json', {})
-        //             .then(it => this.rawDataWithHighlighting = it);
-        //     },
-        //     loadTableData: function () {
-        //         let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-        //         fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
-        //             .then(res => res.text())
-        //             .then(csvString => {
-        //                 CSV.fetch({
-        //                     data: csvString
-        //                 }).done(it => this.tableData = it)
-        //             });
-        //     },
-        //     copyToClipboard: function (str) {
-        //         let stringToCopy = window.location.host + str;
-        //
-        //         const el = document.createElement('textarea');
-        //         el.value = stringToCopy;
-        //         el.setAttribute('readonly', '');
-        //         el.style.position = 'absolute';
-        //         el.style.left = '-9999px';
-        //         document.body.appendChild(el);
-        //         el.select();
-        //         document.execCommand('copy');
-        //         document.body.removeChild(el);
-        //     },
-        //     openUrl: function (url) {
-        //         window.open(url);
-        //     }
-        // },
+        methods: {
+            toggleRaw: function () {
+                this.showRaw = !this.showRaw;
+            },
+            editLimit: function () {
+                let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
+                let newValue = parseInt(newLimit);
+                if (!isNaN(newValue)) {
+                    this.limit = newValue;
+                }
+            },
+            reEvaluateHighlighting: function () {
+                monaco.editor.colorize(this.rawData, 'json', {})
+                    .then(it => this.rawDataWithHighlighting = it);
+            },
+            loadTableData: function () {
+                let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
+                fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
+                    .then(res => res.text())
+                    .then(csvString => {
+                        CSV.fetch({
+                            data: csvString
+                        }).done(it => this.tableData = it)
+                    });
+            },
+            copyToClipboard: function (str) {
+                let stringToCopy = window.location.host + str;
+
+                const el = document.createElement('textarea');
+                el.value = stringToCopy;
+                el.setAttribute('readonly', '');
+                el.style.position = 'absolute';
+                el.style.left = '-9999px';
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+            },
+            openUrl: function (url) {
+                window.open(url);
+            }
+        },
         computed: {
             downloadUrl: function () {
                 let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
@@ -126,16 +131,16 @@
 
             }
         },
-        // watch: {
-        //     rawData: function (newData, oldData) {
-        //         this.rawDataWithHighlighting = "Loading Highlighter...";
-        //         this.reEvaluateHighlighting();
-        //         this.tableData = null;
-        //         this.loadTableData();
-        //     },
-        //     columns: function (newData, oldData) {
-        //         this.loadTableData();
-        //     }
-        // }
+        watch: {
+            rawData: function (newData, oldData) {
+                this.rawDataWithHighlighting = "Loading Highlighter...";
+                this.reEvaluateHighlighting();
+                this.tableData = null;
+                this.loadTableData();
+            },
+            columns: function (newData, oldData) {
+                this.loadTableData();
+            }
+        }
     }
 </script>

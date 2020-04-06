@@ -16,20 +16,24 @@
                                    placeholder="Enter column name" type="text" v-model="name">
                         </div>
                         <div class="form-group">
-                            <label>Type</label>
+                            <label v-b-tooltip.hover
+                                   title="Controls how multiple elements returned by FHIRPath expression are handled.">Type</label>
                             <div class="form-control">
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-inline" id="join" type="radio" v-model="type"
                                            value="join"/>
-                                    <label class="form-check-label" for="join">join("<input :disabled="type !== 'join'"
-                                                                                            size="3" type="text"
-                                                                                            style="max-height: 25px;"
-                                                                                            v-model="joinStr"/>")</label>
+                                    <label class="form-check-label" for="join" v-b-tooltip.hover
+                                           title="concat returned elements with separator string">join("<input
+                                            :disabled="type !== 'join'"
+                                            size="3" type="text"
+                                            style="max-height: 25px;"
+                                            v-model="joinStr"/>")</label>
                                 </div>
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-inline" id="explode" type="radio" v-model="type"
                                            value="explode"/>
-                                    <label class="form-check-label" for="explode">explode</label>
+                                    <label class="form-check-label" for="explode" v-b-tooltip.hover
+                                           title="create new row for each element returned by the FHIRPath expression">explode</label>
                                 </div>
                             </div>
                             <!--                            <input class="form-control" id="addColumnType" placeholder='explode or join(" ")'-->

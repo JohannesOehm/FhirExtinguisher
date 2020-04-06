@@ -45,21 +45,22 @@ You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatical
 that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is quite nice.
 
 ## Running 
-Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server 
-on your local machine and connects to the public FHIR R4 server. Use `-a user:passwd` if the server requires Basic Auth.
+Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server on port 8080
+on your local machine and connect to the public FHIR R4 server. 
 
-By default, FhirExtinguisher assumes, the server is R4. If you want to connect with a (D)STU3 server, please add `-v stu3` to the command line arguments.
+By default, FhirExtinguisher assumes, the server is FHIR R4. If you want to connect with a (D)STU3 server, please add `-v stu3` to the command line arguments.
 
-List of all command line options:
+Available command line options:
 * `-f [url]` FHIR server URL
-* `-a [user]:[password]` Basic authentication credentials, if required by FHIR server
-* `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available under `http://localhost:8080/`
+* `-v ["r4"|"stu3"]` FHIR version of the server 
+* `-a [username]:[password]` Basic authentication credentials, if required by FHIR server
+* `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available at `http://localhost:8080/`
 * `-ext` Allow connections of non-localhost machines
 
 To stop the FhirExtinguisher, use <kbd>Ctrl</kbd>+<kbd>C</kbd>!
 ### Usage by URL
 You can create your own links using the specifications above. In R, you can use 
-`data <- read.csv('http://localhost:8082/fhir/Patient?__limit=50&__columns=id@join(" "):getIdPart(Patient.id)')` to always 
+`data <- read.csv('http://localhost:8082/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always 
 start with a fresh version from the server. However, the FhirExtinguisher must be running during execution of the script. 
 
 You can create a link using the GUI and copy it into your R script.
@@ -70,6 +71,11 @@ in the editor on the top using the FHIR Search API and specify the columns in th
 
 ![Screenshot](img/Screenshot.PNG)
 
+# Authors
+* **Johannes Oehm** | (+49) 251/83-5 82 47 | johannes.oehm@uni-muenster.de
 
-## Acknowledgement
+# License
+TODO
+
+# Acknowledgement
 Supported by BMBF grant No. 01ZZ1802V (HiGHmed/Münster) 
