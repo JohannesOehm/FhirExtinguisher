@@ -10,7 +10,7 @@
             </div>
             <div id="separator" draggable="true"></div>
             <div id="tableOrRaw" role="main" style="overflow: auto">
-                <MyContentView :columns="columns" :fhir-query="fhirQuery" :limit="limit" :rawData="rawData"/>
+                <MyContentView :columns="columns" :fhir-query="fhirQuery" :rawData="rawData"/>
             </div>
         </div>
         <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
@@ -44,7 +44,7 @@
 
     export default {
         name: "MyApp",
-        data: function (): { columns: any[], limit: number, rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
+        data: function (): { columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
             return {
                 columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
                     {
@@ -60,7 +60,6 @@
                         expression: "Patient.managingOrganization.resolve().name"
                     },
                 ],
-                limit: 50,
                 rawData: null,
                 endpointUrl: "http://url/to/fhir/endpoint",
                 fhirVersion: "r4",

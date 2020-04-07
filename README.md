@@ -79,6 +79,13 @@ Note that the table shown in the GUI **is only a preview based on the first Bund
 function is providing suggestions based on the Resource's StructureDefinintion, there is **no guarantee of completeness**, 
 and because arrays are handled as single elements, they might be unexpected behaviour.
 
+# Useful FHIRPath expressions
+* `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
+* `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
+* `stringify()` returns a recursive serialization of all the element's fields  
+* `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
+* `.resolve()` resolves a reference to another resource.
+
 # Authors
 * **Johannes Oehm** | (+49) 251/83-5 82 47 | johannes.oehm@uni-muenster.de
 

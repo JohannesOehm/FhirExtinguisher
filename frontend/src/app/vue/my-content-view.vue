@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="table-responsive" v-if="!showRaw">
-            <table class="table table-striped table-sm" v-if="tableData != null">
+            <table class="table table-striped table-sm" style="white-space: pre-wrap;" v-if="tableData != null">
                 <thead>
                 <tr>
                     <th v-for="fieldName in tableData.fields">{{fieldName}}</th>
@@ -71,15 +71,16 @@
 
     export default {
         name: "ContentView",
-        data: function (): { showRaw: boolean, tableData: TableData, tableError: string, rawDataWithHighlighting: string } {
+        data: function (): { showRaw: boolean, tableData: TableData, tableError: string, rawDataWithHighlighting: string, limit: number } {
             return {
                 showRaw: true,
                 tableData: null,
                 tableError: null,
-                rawDataWithHighlighting: null
+                rawDataWithHighlighting: null,
+                limit: 50
             }
         },
-        props: ['limit', 'rawData', 'columns', 'fhirQuery'],
+        props: ['rawData', 'columns', 'fhirQuery'],
         methods: {
             toggleRaw: function () {
                 this.showRaw = !this.showRaw;

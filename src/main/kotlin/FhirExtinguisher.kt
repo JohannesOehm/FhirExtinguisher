@@ -185,6 +185,8 @@ class FhirExtinguisher(
                     throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
                 }
 
+                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
+
                 Column(splitted[0], expression, listProcessingMode)
             }
     }

@@ -1,15 +1,16 @@
 package wrappers
 
 import ca.uhn.fhir.context.FhirContext
+import ca.uhn.fhir.parser.json.GsonWriter
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
-import org.hl7.fhir.instance.model.api.IPrimitiveType
 import org.hl7.fhir.r4.context.SimpleWorkerContext
+import org.hl7.fhir.r4.elementmodel.Manager
+import org.hl7.fhir.r4.formats.JsonCreator
+import org.hl7.fhir.r4.formats.JsonParser
 import org.hl7.fhir.r4.model.*
-import org.hl7.fhir.r4.model.Enumeration
 import org.hl7.fhir.r4.utils.FHIRPathEngine
-import java.util.*
 
 class ExpressionR4(val expression: ExpressionNode) : ExpressionWrapper() {
     override fun toString(): String {
@@ -32,16 +33,30 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                         1,
                         1
                     )
+                    "getChildFields" -> FHIRPathEngine.IEvaluationContext.FunctionDetails(
+                        "Returns the possible children names of a type",
+                        1,
+                        1
+                    )
+                    "stringify" -> FHIRPathEngine.IEvaluationContext.FunctionDetails(
+                        "Writes the result as serialized JSON object",
+                        1,
+                        1
+                    )
                     else -> null
                 }
 
+
             }
+
 
             override fun executeFunction(
                 appContext: Any?, functionName: String, parameters: MutableList<MutableList<Base>>
             ): MutableList<Base> {
                 return when (functionName) {
                     "getIdPart" -> parameters[0].map { StringType((it as IdType).idPart) }.toMutableList()
+                    "getChildFields" -> parameters[0][0].children().map { StringType(it.name) }.toMutableList()
+                    "stringify" -> parameters[0].map { StringType(stringifyElement(it)) }.toMutableList()
                     else -> mutableListOf<Base>()
                 }
             }
@@ -66,16 +81,55 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
                 TODO("not implemented")
 
-            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails = TODO("not implemented")
+            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails {
+                println("resolveConstantType(appContext=$appContext, name=$name)")
+                val typeDetails = TypeDetails(ExpressionNode.CollectionStatus.SINGLETON, "name")
+                return typeDetails
+                TODO("not implemented")
+            }
 
             override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
+
 
         }
 
     }
 
+    private fun stringifyElement(it: Base): String? {
+        return stringifyElement(it, "", false)
+    }
+
+    private fun stringifyElement(it: Base, prefix: String, isList: Boolean): String? {
+        val sb = StringBuilder()
+        var first = true
+        for ((index, child) in it.children().filter { it.hasValues() }.withIndex()) {
+            val prefix1 = if (isList && index == 0) prefix.substring(2) + "- " else prefix
+            sb.append(prefix1).append(child.name).append(": ")
+            if (child.values.all { it.isPrimitive }) {
+                if (child.isList) {
+                    sb.append("[")
+                }
+                sb.append(child.values.joinToString())
+                if (child.isList) {
+                    sb.append("]")
+                }
+            } else {
+                for (value in child.values) {
+                    sb.append("\n").append(stringifyElement(value, "$prefix    ", child.isList))
+                }
+            }
+            sb.append("\n")
+        }
+        return sb.toString().dropLast(1) //drop last linebreak
+
+    }
+
     override fun parseExpression(expression: String) =
         ExpressionR4(engine.parse(expression))
+
+    fun getTypeDetails(expression: String) {
+        engine.check(null, "Patient", null, "Patient")
+    }
 
     override fun evaluateToStringList(base: IBase, expression: ExpressionWrapper): List<String> {
         expression as ExpressionR4
