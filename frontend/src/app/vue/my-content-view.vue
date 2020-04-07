@@ -38,7 +38,10 @@
                 </caption>
             </table>
             <div v-else>
-                Tabledata is not available.
+                Table data is not available.<br><br>
+                <div v-if="tableError != null"><br>
+                    <pre>{{tableError}}</pre>
+                </div>
             </div>
         </div>
         <div id="rawView" v-else>
@@ -68,10 +71,11 @@
 
     export default {
         name: "ContentView",
-        data: function (): { showRaw: boolean, tableData: TableData, rawDataWithHighlighting: string } {
+        data: function (): { showRaw: boolean, tableData: TableData, tableError: string, rawDataWithHighlighting: string } {
             return {
                 showRaw: true,
                 tableData: null,
+                tableError: null,
                 rawDataWithHighlighting: null
             }
         },
@@ -91,15 +95,27 @@
                 monaco.editor.colorize(this.rawData, 'json', {})
                     .then((it: string) => this.rawDataWithHighlighting = it);
             },
-            loadTableData: function () {
+            loadTableData: async function () {
                 let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-                fetch("/fhir/?" + params, {method: 'POST', body: this.rawData})
-                    .then(res => res.text())
-                    .then(csvString => {
-                        (<any>CSV).fetch({
-                            data: csvString
-                        }).done((it: TableData) => this.tableData = it)
-                    });
+                console.log("Hallo Welt");
+                let response = await fetch("/fhir/?" + params, {method: 'POST', body: this.rawData});
+                if (response.ok) {
+                    let csvString = await response.text();
+                    (<any>CSV).fetch({
+                        data: csvString
+                    }).done((it: TableData) => {
+                        this.tableData = it;
+                        this.tableError = null;
+                    }).catch((it: any) => {
+                            this.tableData = null;
+                            this.tableError = it;
+                        }
+                    );
+                } else {
+                    this.tableData = null;
+                    this.tableError = await response.text();
+                    console.log(response);
+                }
             },
             copyToClipboard: function (str: string) {
                 let stringToCopy = window.location.host + str;

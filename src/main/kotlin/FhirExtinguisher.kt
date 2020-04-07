@@ -182,7 +182,7 @@ class FhirExtinguisher(
                 val expression = try {
                     fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
                 } catch (e: Exception) {
-                    throw RuntimeException(e)
+                    throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
                 }
 
                 Column(splitted[0], expression, listProcessingMode)
