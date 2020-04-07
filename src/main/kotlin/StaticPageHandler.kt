@@ -13,60 +13,45 @@ class StaticPageHandler {
     fun serve(session: IHTTPSession): NanoHTTPD.Response {
         val baseUri: String = session.uri
         val realUri: String = normalizeUri(baseUri)!!
-        log.info { "realUri = $realUri, baseUri = $baseUri" }
+        log.info { "Serving '$baseUri', realUri = $realUri" }
 
+        //Protection against path-walking attacks, though it seems like NanoHTTPD is also taking some measures
         if (getPathArray(realUri).contains("..")) {
-            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "'..' in URL path is not supported!")
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "'..' in URL path is not allowed!")
         }
 
-        val resource = javaClass.getResource("static/" + realUri)
-        if (resource == null) {
-            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "404 File not found")
-        }
-        var fileOrDirectory = File(resource.toURI())
-        log.info { "file = $fileOrDirectory" }
-        if (fileOrDirectory.isDirectory) {
-            fileOrDirectory = File(fileOrDirectory, "index.html")
-            if (!fileOrDirectory.exists()) {
-                fileOrDirectory = File(fileOrDirectory.parentFile, "index.htm")
-            }
-        }
-        return if (!fileOrDirectory.exists() || !fileOrDirectory.isFile) {
-            newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "404 File not found")
+        val path = "static/$realUri"
+        val (resourceStream, isIndexHtml) = if (realUri.isNotEmpty()) {
+            javaClass.getResourceAsStream(path) to false
         } else {
+            javaClass.getResourceAsStream("static/index.html") to true
+        }
+        return if (resourceStream != null) {
             try {
-                newChunkedResponse(
-                    Response.Status.OK,
-                    getMimeTypeForFile(fileOrDirectory.name),
-                    fileToInputStream(fileOrDirectory)
-                )
+                val mimeType = if (isIndexHtml) MIME_HTML else getMimeTypeForFile(realUri)
+                newChunkedResponse(Response.Status.OK, mimeType, resourceStream)
             } catch (ioe: IOException) {
-                newFixedLengthResponse(Response.Status.REQUEST_TIMEOUT, "text/plain", null as String?)
+                newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", ioe.message)
             }
+        } else {
+            newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "404 File not found")
         }
     }
 
     @Throws(IOException::class)
-    fun fileToInputStream(fileOrdirectory: File?): BufferedInputStream {
-        return BufferedInputStream(FileInputStream(fileOrdirectory))
+    fun fileToInputStream(file: File?): BufferedInputStream {
+        return BufferedInputStream(FileInputStream(file))
     }
 
     private fun getPathArray(uri: String): Array<String> {
         return uri.split("/").filter { it.length > 0 }.toTypedArray()
     }
 
-    fun normalizeUri(value: String?): String? {
-        var value = value
-        if (value == null) {
-            return value
-        }
-        if (value.startsWith("/")) {
-            value = value.substring(1)
-        }
-        if (value.endsWith("/")) {
-            value = value.substring(0, value.length - 1)
-        }
-        return value
+    /**
+     * Remove leading and/or trailing slash
+     */
+    private fun normalizeUri(value: String?): String? {
+        return value?.dropWhile { it == '/' }?.dropLastWhile { it == '/' }
     }
 
 }

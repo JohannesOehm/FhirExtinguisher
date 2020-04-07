@@ -22,7 +22,8 @@ All parameters are forwarded as they are, except:
 * `__columns` Must be `name:expression,name2:expression2`. Name might be followed by options like `@join(" ")` and `@explode`, 
 which control how to handle multiple returned results by the FHIRPath expression. `@join` concats the strings into a single cell with a delimiter of your choice,
 while explode will create multiple rows for the element.
-* `__limit` By default, the FhirExtinguisher automatically fetches the next bundle. This way you can limit the number of resources processed.
+* `__limit` FhirExtinguisher **automatically fetches Bundle pages until limit is met**. This way you can limit the 
+number of resources processed.
 * `__csvFormat` Is not implemented yet. Change the output format.
 
 The returned bundles are taken and evaluated against multiple FHIR path expressions using the HAPI FHIRPath engine.
@@ -30,7 +31,7 @@ The returned bundles are taken and evaluated against multiple FHIR path expressi
 Please escape `@join(", ")` as `@join("%2C ")`and `@join(":")` as `@join("%3A")`!
 
 ## Building
-**Requirements: Java 8, npm 6.13.x**
+Requirements: **Java 8, npm 6.13.x**
 
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
 
@@ -40,11 +41,13 @@ At the first time, to compile the frontend, you have to run `npm install` (and e
 If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 
 webpack error message.
 
-### Frontend Development
+#### Frontend Development
 You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend. Note 
 that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is quite nice.
 
 ## Running 
+Requirements: **Java 8**, GUI tested with **Firefox** and **Chrome**
+
 Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server on port 8080
 on your local machine and connect to the public FHIR R4 server. 
 
@@ -57,7 +60,7 @@ Available command line options:
 * `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available at `http://localhost:8080/`
 * `-ext` Allow connections of non-localhost machines
 
-To stop the FhirExtinguisher, use <kbd>Ctrl</kbd>+<kbd>C</kbd>!
+To stop the FhirExtinguisher, press <kbd>Enter</kbd> in the command line window!
 ### Usage by URL
 You can create your own links using the specifications above. In R, you can use 
 `data <- read.csv('http://localhost:8082/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always 
@@ -66,10 +69,15 @@ start with a fresh version from the server. However, the FhirExtinguisher must b
 You can create a link using the GUI and copy it into your R script.
 
 ### Graphical User Interface
-You can use the GUI, which will be available under `http://localhost:[portnumber]/`. There, you can enter your query 
-in the editor on the top using the FHIR Search API and specify the columns in the sidebar. 
+You can use the GUI, which will be available under `http://localhost:[portnumber]/`, to download/export a CSV.
+There, you can enter your query in the editor on the top using the [FHIR Search API](https://www.hl7.org/fhir/search.html) 
+and add the columns in the sidebar on the left. 
 
 ![Screenshot](img/Screenshot.PNG)
+
+Note that the table shown in the GUI **is only a preview based on the first Bundle returned by the server**. Note also, that the *Import Resource...* 
+function is providing suggestions based on the Resource's StructureDefinintion, there is **no guarantee of completeness**, 
+and because arrays are handled as single elements, they might be unexpected behaviour.
 
 # Authors
 * **Johannes Oehm** | (+49) 251/83-5 82 47 | johannes.oehm@uni-muenster.de
