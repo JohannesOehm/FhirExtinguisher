@@ -34,7 +34,7 @@ module.exports = {
     },
     plugins: [
         new MonacoWebpackPlugin({
-            languages: ['json', 'xml']
+            languages: ['json', 'xml', 'html']
         }),
         new CopyPlugin([
             {from: 'src/public', to: ''},

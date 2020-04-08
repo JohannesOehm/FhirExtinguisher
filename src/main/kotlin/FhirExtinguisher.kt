@@ -86,11 +86,7 @@ class FhirExtinguisher(
         }
     }
 
-    private fun getBody(session: NanoHTTPD.IHTTPSession): String? {
-        val foo = HashMap<String, String>()
-        session.parseBody(foo)
-        return foo["postData"]
-    }
+
 
     private fun processWithColumns(
         uri: String?,
@@ -185,7 +181,7 @@ class FhirExtinguisher(
                     throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
                 }
 
-                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
+//                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
 
                 Column(splitted[0], expression, listProcessingMode)
             }

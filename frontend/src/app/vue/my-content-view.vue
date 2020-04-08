@@ -48,7 +48,16 @@
             <div v-html="rawDataWithHighlighting" v-if="rawData != null">
             </div>
             <div v-else>
-                Please enter a valid FHIR Query URL and press GET!
+                <div v-if="rawError != null">
+                    Error: <br>
+                    <pre>{{rawError}}</pre>
+                </div>
+                <div v-else-if="!dataLoading">
+                    Please enter a valid FHIR Query URL and press GET!
+                </div>
+                <div v-else>
+                    Loading...
+                </div>
             </div>
         </div>
 
@@ -69,18 +78,33 @@
     }
 
 
+    function stringifyHeaders(headers: Headers) {
+        var s = "";
+        headers.forEach((value, key) => {
+            s += key + ": " + value + "\n";
+        });
+        return s;
+    }
+
     export default {
         name: "ContentView",
-        data: function (): { showRaw: boolean, tableData: TableData, tableError: string, rawDataWithHighlighting: string, limit: number } {
+        data: function (): {
+            showRaw: boolean, tableLoading: boolean, tableData: TableData, tableError: string,
+            dataLoading: false, rawDataWithHighlighting: string, limit: number, rawData: string, rawError: string
+        } {
             return {
                 showRaw: true,
                 tableData: null,
                 tableError: null,
+                tableLoading: false,
+                dataLoading: false,
                 rawDataWithHighlighting: null,
+                rawData: null,
+                rawError: null,
                 limit: 50
             }
         },
-        props: ['rawData', 'columns', 'fhirQuery'],
+        props: ['columns'],
         methods: {
             toggleRaw: function () {
                 this.showRaw = !this.showRaw;
@@ -92,13 +116,30 @@
                     this.limit = newValue;
                 }
             },
+            loadBundle: async function () {
+                this.rawData = null;
+                this.dataLoading = true;
+                this.rawError = null;
+
+                let url = (<any>window).searchEditor.getValue();
+                let response = await fetch("/redirect/" + url);
+                if (response.ok) {
+                    this.rawData = await response.text();
+                } else {
+                    this.rawError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
+                    console.log(response.headers);
+                    this.rawError += "\n\n" + await response.text();
+                    this.showRaw = true;
+                    this.tableData = null;
+                }
+                this.dataLoading = false;
+            },
             reEvaluateHighlighting: function () {
                 monaco.editor.colorize(this.rawData, 'json', {})
                     .then((it: string) => this.rawDataWithHighlighting = it);
             },
             loadTableData: async function () {
                 let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-                console.log("Hallo Welt");
                 let response = await fetch("/fhir/?" + params, {method: 'POST', body: this.rawData});
                 if (response.ok) {
                     let csvString = await response.text();
@@ -114,7 +155,8 @@
                     );
                 } else {
                     this.tableData = null;
-                    this.tableError = await response.text();
+                    this.tableError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
+                    this.tableError += "\n\n" + await response.text();
                     console.log(response);
                 }
             },
@@ -138,12 +180,13 @@
         computed: {
             downloadUrl: function () {
                 let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-                if (this.fhirQuery.endsWith("?")) {
-                    return "/fhir/" + this.fhirQuery + params;
-                } else if (this.fhirQuery.includes("?")) {
-                    return "/fhir/" + this.fhirQuery + "&" + params;
+                let fhirQuery = (<any>window).searchEditor.getValue();
+                if (fhirQuery.endsWith("?")) {
+                    return "/fhir/" + fhirQuery + params;
+                } else if (fhirQuery.includes("?")) {
+                    return "/fhir/" + fhirQuery + "&" + params;
                 } else {
-                    return "/fhir/" + this.fhirQuery + "?" + params;
+                    return "/fhir/" + fhirQuery + "?" + params;
                 }
 
             }
@@ -153,7 +196,9 @@
                 this.rawDataWithHighlighting = "Loading Highlighter...";
                 this.reEvaluateHighlighting();
                 this.tableData = null;
-                this.loadTableData();
+                if (newData != null) {
+                    this.loadTableData();
+                }
             },
             columns: function (newData: Column[], oldData: Column[]) {
                 this.loadTableData();

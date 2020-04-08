@@ -1,6 +1,4 @@
 # FhirExtinguisher
-
-## Goal 
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
 of the hierarchical structure into a flat list for analysing R DataFrames.
 
@@ -76,15 +74,21 @@ and add the columns in the sidebar on the left.
 ![Screenshot](img/Screenshot.PNG)
 
 Note that the table shown in the GUI **is only a preview based on the first Bundle returned by the server**. Note also, that the *Import Resource...* 
-function is providing suggestions based on the Resource's StructureDefinintion, there is **no guarantee of completeness**, 
-and because arrays are handled as single elements, they might be unexpected behaviour.
+function is providing suggestions based on the Resource's StructureDefinintion, there is **no guarantee of completeness**.
+Array fields are inserted like single elements, so there might be unintended behaviour.
+
+In the searchbar, you can use <kbd>Ctrl</kbd>+<kbd>Enter</kbd> for autocompletion. This is based on the server conformance 
+statement on HAPI FHIR using FHIR R4. Note that actual query options on your server might differ.
 
 # Useful FHIRPath expressions
+* `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
+* `.resolve()` resolves a reference to another resource.
+
+Custom functions:
 * `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
 * `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
 * `stringify()` returns a recursive serialization of all the element's fields  
-* `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
-* `.resolve()` resolves a reference to another resource.
+
 
 # Authors
 * **Johannes Oehm** | (+49) 251/83-5 82 47 | johannes.oehm@uni-muenster.de
