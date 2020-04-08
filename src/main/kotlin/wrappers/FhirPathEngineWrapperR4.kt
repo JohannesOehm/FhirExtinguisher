@@ -100,8 +100,11 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
     }
 
     private fun stringifyElement(it: Base, prefix: String, isList: Boolean): String? {
+        if (it.isPrimitive) {
+            return it.toString()
+        }
+
         val sb = StringBuilder()
-        var first = true
         for ((index, child) in it.children().filter { it.hasValues() }.withIndex()) {
             val prefix1 = if (isList && index == 0) prefix.substring(2) + "- " else prefix
             sb.append(prefix1).append(child.name).append(": ")
