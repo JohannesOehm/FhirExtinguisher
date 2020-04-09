@@ -89,6 +89,8 @@ Custom functions:
 * `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
 * `stringify()` returns a recursive serialization of all the element's fields  
 
+# Known Errors
+* `fi.iki.elonen.NanoHTTPD$DefaultTempFileManager clear // WARNUNG: could not delete temporary file` https://github.com/NanoHttpd/nanohttpd/issues/279
 
 # Authors
 * **Johannes Oehm** | (+49) 251/83-5 82 47 | johannes.oehm@uni-muenster.de
