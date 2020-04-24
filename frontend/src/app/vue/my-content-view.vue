@@ -74,7 +74,12 @@
 
 
     function columnsToString(columns: Column[]) {
-        return columns.map((it: Column) => `${it.name}@${it.type.replace(",", "%2C").replace(":", "%3A")}:${it.expression}`).join(",");
+        return columns.map((it: Column) => {
+            let name = it.name.replace(":", "\\:").replace("@", "\\@");
+            let type = it.type.replace(":", "\\:");
+            let expression = it.expression.replace(",", "\\,");
+            return `${name}@${type}:${expression}`
+        }).join(",");
     }
 
 

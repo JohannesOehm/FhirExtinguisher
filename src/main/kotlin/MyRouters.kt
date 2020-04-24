@@ -19,6 +19,7 @@ class MyRouters(portnumber: Int, private val instanceConfiguration: InstanceConf
     var infoService = InfoService(instanceConfiguration)
     var fhirPathHelper = FhirPathHelperService()
 
+
     override fun serve(session: IHTTPSession): Response {
         val clientIp = session.headers["remote-addr"] ?: session.headers["http-client-ip"]
         if (clientIp != "127.0.0.1" && instanceConfiguration.blockExternalRequests) {

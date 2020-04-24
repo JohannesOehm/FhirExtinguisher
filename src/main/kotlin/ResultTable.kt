@@ -1,12 +1,12 @@
 import org.apache.commons.csv.CSVPrinter
 
 class ResultTable() {
-    val columns = ArrayList<FhirExtinguisher.Column>(0)
+    val columns = ArrayList<Column>(0)
     val data = ArrayList<List<String>>()
     var currentLength = 1
 
 
-    fun addColumn(column: FhirExtinguisher.Column, data: List<String>) {
+    fun addColumn(column: Column, data: List<String>) {
         columns.add(column)
 
         if (column.listProcessingMode == "flatten") {

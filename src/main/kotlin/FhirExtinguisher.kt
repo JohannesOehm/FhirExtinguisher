@@ -29,6 +29,8 @@ class FhirExtinguisher(
         FhirPathEngineWrapperR4(fhirContext, fhirClient)
     }
 
+    val columnsParser = ColumnsParser(fhirPathEngine)
+
     init {
         interceptors.forEach { fhirClient.registerInterceptor(it) }
     }
@@ -39,11 +41,7 @@ class FhirExtinguisher(
         val columns: List<Column>?
     )
 
-    data class Column(
-        val name: String,
-        val expression: ExpressionWrapper,
-        val listProcessingMode: String
-    )
+
 
     fun serve(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
         val sb = StringBuilder()
@@ -160,30 +158,30 @@ class FhirExtinguisher(
 
         val csvFormat = map["__csvFormat"] ?: ","
         val limit = map["__limit"]?.toInt()
-        val columnsStr = map["__columns"]
-        val columns = if (columnsStr != null) parseColumns(columnsStr) else null
+        val columnsStr = URLDecoder.decode(map["__columns"])
+        val columns = if (columnsStr != null) columnsParser.parseString(columnsStr) else null
 
         return MyParams(csvFormat, limit, columns)
     }
 
-    private fun parseColumns(stringToParse: String): List<Column> {
-        return stringToParse.split(',')
-            .map { it.split(':', limit = 2) }
-            .filter { it.size == 2 }
-            .map {
-                val splitted = URLDecoder.decode(it[0]).split('@', limit = 2);
-                val listProcessingMode = if (splitted.size == 2) splitted[1] else "flatten"
-                val expressionStr = URLDecoder.decode(it[1])
-
-                val expression = try {
-                    fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
-                } catch (e: Exception) {
-                    throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
-                }
-
-//                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
-
-                Column(splitted[0], expression, listProcessingMode)
-            }
-    }
+//    private fun parseColumns(stringToParse: String): List<Column> {
+//        return stringToParse.split(',')
+//            .map { it.split(':', limit = 2) }
+//            .filter { it.size == 2 }
+//            .map {
+//                val splitted = URLDecoder.decode(it[0]).split('@', limit = 2);
+//                val listProcessingMode = if (splitted.size == 2) splitted[1] else "flatten"
+//                val expressionStr = URLDecoder.decode(it[1])
+//
+//                val expression = try {
+//                    fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
+//                } catch (e: Exception) {
+//                    throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
+//                }
+//
+////                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
+//
+//                Column(splitted[0], expression, listProcessingMode)
+//            }
+//    }
 }
