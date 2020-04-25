@@ -6,6 +6,8 @@ import Vue from 'vue';
 import App from './vue/my-app.vue';
 import BootstrapVue, {IconsPlugin, ModalPlugin} from "bootstrap-vue";
 
+import './url-grammar-antlr'
+
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 Vue.use(ModalPlugin);

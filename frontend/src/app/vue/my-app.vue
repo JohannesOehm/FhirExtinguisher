@@ -10,7 +10,8 @@
             </div>
             <div id="separator" draggable="true"></div>
             <div id="tableOrRaw" role="main" style="overflow: auto">
-                <MyContentView :columns="columns" :fhir-query="fhirQuery" :rawData="rawData" ref="content"/>
+                <MyContentView :columns="columns" :fhir-query="fhirQuery" :rawData="rawData"
+                               @update-columns="updateColumns" ref="content"/>
             </div>
         </div>
         <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"

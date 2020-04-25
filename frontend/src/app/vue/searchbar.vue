@@ -25,6 +25,7 @@ import {KeyCode} from "monaco-editor";
     import {editor, IKeyboardEvent, KeyCode} from "monaco-editor";
     import {URLCompletionItemProvider} from "../url-completionitemprovider";
     import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
+    import {UrlTokensProvider} from "../url-grammar-antlr";
 
     type TableData = { records: string[][], fields: string[], metadata: any };
 
@@ -37,7 +38,35 @@ import {KeyCode} from "monaco-editor";
             this.editor = (function () {
                 monaco.languages.register({id: 'url'});
 
+                monaco.languages.setTokensProvider("url", new UrlTokensProvider());
+
                 monaco.languages.registerCompletionItemProvider("url", new URLCompletionItemProvider());
+
+                let literalFg = '#000000';
+                let idFg = '#344482';
+                let symbolsFg = '#555555';
+                let keywordFg = '#7132a8';
+                let errorFg = '#ff0000';
+                let valueSep = '#990000';
+                monaco.editor.defineTheme('myCoolTheme', {
+                    base: 'vs',
+                    inherit: true,
+                    colors: {},
+                    rules: [
+                        {token: 'string.url', foreground: literalFg},
+                        {token: 'path_string.url', foreground: literalFg, fontStyle: 'bold'},
+                        {token: 'path_separator.url', foreground: symbolsFg},
+                        {token: 'query_path_separator.url', foreground: symbolsFg, fontStyle: 'bold'},
+                        {token: 'searchparameter_separator.url', foreground: symbolsFg},
+                        {token: 'modifier_separator.url', foreground: symbolsFg},
+                        {token: 'modifier.url', foreground: literalFg, fontStyle: 'italic'},
+                        {token: 'keyval_separator.url', foreground: symbolsFg},
+                        {token: 'value_separator.url', foreground: valueSep, fontStyle: 'bold'},
+                        {token: 'composite_separator.url', foreground: valueSep},
+                        {token: 'bar_separator.url', foreground: valueSep},
+                        {token: 'error.url', foreground: errorFg}
+                    ]
+                });
 
                 let element = document.getElementById("searchbar");
                 element.innerHTML = "";
@@ -55,7 +84,7 @@ import {KeyCode} from "monaco-editor";
                         horizontal: "auto"
                     },
                     fontSize: 16,
-                    theme: "vscode-dark",
+                    theme: "myCoolTheme",
                     scrollBeyondLastLine: false,
                     overviewRulerLanes: 0,
                     overviewRulerBorder: false //Still not perfect

@@ -12,13 +12,19 @@
                     <button @click="copyToClipboard(downloadUrl)" class="btn btn-sm btn-outline-secondary">
                         Copy Link
                     </button>
+                    <button @click="importLink()" class="btn btn-sm btn-outline-secondary">
+                        Import Link
+                    </button>
+                </div>
+                <div class="btn-group mr-2">
                     <button @click="openUrl(downloadUrl)" class="btn btn-sm btn-outline-secondary" type="submit">
                         Download
                     </button>
+                    <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Limit:
+                        {{limit}}
+                    </button>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Download Limit:
-                    {{limit}}
-                </button>
+
             </div>
         </div>
         <div class="table-responsive" v-if="!showRaw">
@@ -67,6 +73,7 @@
 <script lang="ts">
     import * as CSV from '../csv.js';
     import * as monaco from "monaco-editor";
+    import {ColumnsParser} from "../column-parser-antlr";
 
 
     type TableData = { records: string[][], fields: string[], metadata: any };
@@ -80,6 +87,16 @@
             let expression = it.expression.replace(",", "\\,");
             return `${name}@${type}:${expression}`
         }).join(",");
+    }
+
+    function getUrlParams(search) {
+        const hashes = search.slice(search.indexOf('?') + 1).split('&')
+        const params = {}
+        hashes.map(hash => {
+            const [key, val] = hash.split('=')
+            params[key] = val
+        })
+        return params
     }
 
 
@@ -115,7 +132,7 @@
                 this.showRaw = !this.showRaw;
             },
             editLimit: function () {
-                let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
+                let newLimit = window.prompt("Please enter the maximum number of resources to process:", this.limit);
                 let newValue = parseInt(newLimit);
                 if (!isNaN(newValue)) {
                     this.limit = newValue;
@@ -164,6 +181,31 @@
                     this.tableError += "\n\n" + await response.text();
                     console.log(response);
                 }
+            },
+            importLink: function () {
+                let link = window.prompt("Please insert link to import!");
+                if (link) {
+                    let urlToParse;
+                    if (link.indexOf("/fhir/") != null) {
+                        urlToParse = link.substring(link.indexOf("/fhir/") + "/fhir/".length);
+                    } else {
+                        urlToParse = link;
+                    }
+                    let urlParams = getUrlParams(urlToParse);
+
+                    this.limit = parseInt(urlParams["__limit"]);
+
+                    let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams["__columns"]));
+                    this.$emit("update-columns", columns);
+
+                    let url = urlToParse.split("?")[0];
+                    let query = Object.keys(urlParams)
+                        .filter(it => it != "__columns" && it != "__limit")
+                        .map(key => key + "=" + urlParams[key])
+                        .join("&");
+                    window.searchEditor.setValue(url + "?" + query);
+                }
+
             },
             copyToClipboard: function (str: string) {
                 let stringToCopy = window.location.host + str;
