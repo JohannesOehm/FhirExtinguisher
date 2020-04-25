@@ -46,7 +46,7 @@ export class UrlTokensProvider implements TokensProvider {
     tokenize(line: string, state: IState): ILineTokens {
         // So far we ignore the state, which is not great for performance reasons
         let foo = tokensForLine(line);
-        console.log(foo);
+        // console.log(foo);
         return foo;
 
         // let inputStream = new ANTLRInputStream(line);

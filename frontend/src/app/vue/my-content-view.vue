@@ -89,19 +89,19 @@
         }).join(",");
     }
 
-    function getUrlParams(search) {
-        const hashes = search.slice(search.indexOf('?') + 1).split('&')
-        const params = {}
-        hashes.map(hash => {
-            const [key, val] = hash.split('=')
-            params[key] = val
-        })
-        return params
+    function getUrlParams(search: string): Map<string, string> {
+        const hashes = search.slice(search.indexOf('?') + 1).split('&');
+        const params: Map<string, string> = new Map();
+        for (let hash of hashes) {
+            const [key, val] = hash.split('=');
+            params.set(key, val);
+        }
+        return params;
     }
 
 
     function stringifyHeaders(headers: Headers) {
-        var s = "";
+        let s = "";
         headers.forEach((value, key) => {
             s += key + ": " + value + "\n";
         });
@@ -179,7 +179,6 @@
                     this.tableData = null;
                     this.tableError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
                     this.tableError += "\n\n" + await response.text();
-                    console.log(response);
                 }
             },
             importLink: function () {
@@ -191,19 +190,20 @@
                     } else {
                         urlToParse = link;
                     }
+
                     let urlParams = getUrlParams(urlToParse);
 
-                    this.limit = parseInt(urlParams["__limit"]);
+                    this.limit = parseInt(urlParams.get("__limit"));
 
-                    let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams["__columns"]));
+                    let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
                     this.$emit("update-columns", columns);
 
                     let url = urlToParse.split("?")[0];
-                    let query = Object.keys(urlParams)
-                        .filter(it => it != "__columns" && it != "__limit")
-                        .map(key => key + "=" + urlParams[key])
+                    let query = [...urlParams.entries()] //TODO: Improve this somehow
+                        .filter(it => it[0] != "__columns" && it[0] != "__limit")
+                        .map(it => it[0] + "=" + it[1])
                         .join("&");
-                    window.searchEditor.setValue(url + "?" + query);
+                    (<any>window).searchEditor.setValue(url + "?" + query);
                 }
 
             },
