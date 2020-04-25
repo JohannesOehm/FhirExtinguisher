@@ -93,7 +93,9 @@
         const hashes = search.slice(search.indexOf('?') + 1).split('&');
         const params: Map<string, string> = new Map();
         for (let hash of hashes) {
-            const [key, val] = hash.split('=');
+            let idx = hash.indexOf('=');
+            const key = hash.substring(0, idx);
+            const val = hash.substring(idx + 1);
             params.set(key, val);
         }
         return params;
