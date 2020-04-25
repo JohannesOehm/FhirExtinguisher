@@ -1,33 +1,34 @@
 # FhirExtinguisher
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
-of the hierarchical structure into a flat list for analysing R DataFrames.
+of the hierarchical structure into a flat list for analysing e.g. in R DataFrames.
 
 There are alternative ways to do this:
-* Using [Cerner Bunsen](https://github.com/cerner/bunsen), you can load FHIR resources as DataFrames in Spark and query them using Spark-SQL.
- The main advantage is that you can use the full set of SQL operations like JOIN, etc., but You have to export 
- your entire dataset first.
+* Using [Cerner Bunsen](https://github.com/cerner/bunsen), you can load FHIR resources as DataFrames in Spark and query 
+them using Spark-SQL. The main advantage is that you can use the full set of SQL operations like JOIN, etc., but you 
+have to export your entire dataset first.
 * Using the [FHIR GraphQL API](http://hl7.org/fhir/graphql.html), you can use operators like "@flatten" to transform it 
 into a flatter format. But the result is still a JSON, and the GraphQL API must be supported by the server.  
 
 ## How does this work?
-This project is a simple WebServer, that connects to a FHIR server and forwards the requests.
-This way you can use all the FHIR REST API filtering options provided by the server. For each resource in the resulting bundle, 
-a [FHIRPath](http://hl7.org/fhirpath/) expression is evaluated.
+This project is a simple WebServer, that connects to a FHIR server and forwards the requests. This way you can use all 
+the FHIR REST API filtering options provided by the server. For each resource in the resulting bundle, a
+ [FHIRPath](http://hl7.org/fhirpath/) expression will be evaluated.
 
 ![image](img/Concept.png)
 
 All parameters are forwarded as they are, except: 
 * `__columns` Must be `name:expression,name2:expression2`. Name might be followed by options like `@join(" ")` and `@explode`, 
-which control how to handle multiple returned results by the FHIRPath expression. `@join` concats the strings into a single cell with a delimiter of your choice,
-while explode will create multiple rows for the element.
+which control how to handle multiple returned results by the FHIRPath expression. `@join` concats the strings into a single 
+cell with a delimiter of your choice, while explode will create multiple rows for the element.
+Please escape `@` and `:` in the column name with `\@` and respectively `\:`. In the FHIRPath expression, escape `,` with `\,`!
 * `__limit` FhirExtinguisher **automatically fetches Bundle pages until limit is met**. This way you can limit the 
 number of resources processed.
 * `__csvFormat` Change the output CSV style. Supported are: `Default`, `Excel`, `InformixUnload`, `InformixUnloadCsv`, 
-`MySQL`, `PostgreSQLCsv`, `PostgreSQLText`, `RFC4180`, `TDF`.
+`MySQL`, `PostgreSQLCsv`, `PostgreSQLText`, `RFC4180`, `TDF` as provided by the Apache Commons CSV library, default is `Excel`.
 
-The returned bundle(s) are evaluated against multiple FHIRPath expressions using the HAPI FHIRPath engine.
+The returned bundle(s) are evaluated against the FHIRPath expressions using the HAPI FHIRPath engine, and returned to the client.
 
-Please escape `@` and `:` in the column name with `\@` and respectively `\:`. In the FHIRPath expression, escape `,` with `\,`!
+
 
 ## Building
 Requirements: **Java 8, npm 6.13.x**
@@ -50,7 +51,8 @@ Requirements: **Java 8**, GUI tested with **Firefox** and **Chrome**
 Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server on port 8080
 on your local machine and connect to the public FHIR R4 server. 
 
-By default, FhirExtinguisher assumes, the server is FHIR R4. If you want to connect with a (D)STU3 server, please add `-v stu3` to the command line arguments.
+By default, FhirExtinguisher assumes, the server is FHIR R4. If you want to connect with a (D)STU3 server, please add 
+`-v stu3` to the command line arguments.
 
 Available command line options:
 * `-f [url]` FHIR server URL
@@ -60,6 +62,7 @@ Available command line options:
 * `-ext` Allow connections of non-localhost machines
 
 To stop the FhirExtinguisher, press <kbd>Enter</kbd> in the command line window!
+
 ### Usage by URL
 You can create your own links using the specifications above. In R, you can use 
 `data <- read.csv('http://localhost:8082/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always 
@@ -86,16 +89,15 @@ statement on HAPI FHIR using FHIR R4. Note that actual query options on your ser
 * `.resolve()` resolves a reference to another resource.
 
 Custom functions:
-* `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
-* `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
-* `stringify()` returns a recursive serialization of all the element's fields  
-
+* `getIdPart(...)` circumvents some inconveniences with HAPI FHIR's `IdType` class
+* `getChildFields(...)` returns a list of possible field names, but the expression until this point must return at least one element
+* `stringify(...)` returns a recursive serialization of all the element's fields  
 
 # Authors
-* **Johannes Oehm** | (+49) 251/83-5 82 47 | johannes.oehm@uni-muenster.de
+* **Johannes Oehm** | (+49) 251 / 83-5 82 47 | johannes.oehm@uni-muenster.de
 
 # License
-TODO
+Apache Licence 2.0
 
 # Acknowledgement
 Supported by BMBF grant No. 01ZZ1802V (HiGHmed/Münster) 
