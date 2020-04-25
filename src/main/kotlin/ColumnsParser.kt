@@ -28,12 +28,30 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
         } catch (e: Exception) {
             throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
         }
-        val type = if (ctx.columnType() != null) {
-            ctx.columnType().text
-        } else {
-            "join(\" \")"
-        }
+        val type = parseType(ctx)
         return Column(columnName, expression, type)
+    }
+
+    private fun parseType(ctx: ColumnsTokens.ColumnContext): ListProcessingMode {
+        val columnType = ctx.columnType()
+        return if (columnType != null) {
+            when (columnType.typeName().text) {
+                "join" -> {
+                    val string = columnType.typeParam().text
+                    //TODO
+                    Join(string.drop(1).dropLast(1))
+                }
+                "explode" -> {
+                    Explode()
+                }
+                else -> {
+                    throw RuntimeException("Cannot parse columnType '${columnType.text}' ('${ctx.text}')!")
+                }
+            }
+        } else {
+            Join(", ")
+        }
+
     }
 
     public fun stringifyList(columns: List<Column>): String {
@@ -45,7 +63,7 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
         val expressionStrEscaped = column.expression.toString().replace(",", "\\,")
 
         if (column.listProcessingMode != null) {
-            val typeEscaped = column.listProcessingMode.replace(":", "\\:")
+            val typeEscaped = column.listProcessingMode.toString().replace(":", "\\:")
             return "$nameEscaped@$typeEscaped:$expressionStrEscaped"
         } else {
             return "$nameEscaped:$expressionStrEscaped"

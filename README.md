@@ -24,9 +24,9 @@ while explode will create multiple rows for the element.
 number of resources processed.
 * `__csvFormat` Is not implemented yet. Change the output format.
 
-The returned bundles are taken and evaluated against multiple FHIR path expressions using the HAPI FHIRPath engine.
+The returned bundle(s) are evaluated against multiple FHIR path expressions using the HAPI FHIRPath engine.
 
-Please escape `@join(", ")` as `@join("%2C ")`and `@join(":")` as `@join("%3A")`!
+Please escape `@` and `:` in the column name with `\@` and respectively `\:`. In the FHIRPath expression, escape `,` with `\,`!
 
 ## Building
 Requirements: **Java 8, npm 6.13.x**

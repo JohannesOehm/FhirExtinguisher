@@ -3,7 +3,7 @@ import mu.KotlinLogging
 
 private val log = KotlinLogging.logger {}
 
-class FhirPathHelperService() {
+class FhirPathHelperService {
     fun serve(req: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
         if (req.uri.contains("/validate")) {
 

@@ -100,7 +100,7 @@
             data: function (newData: Column, oldData: Column) {
                 this.name = newData.name;
                 this.type = newData.type.startsWith("join") ? "join" : "explode";
-                this.joinStr = newData.type.startsWith("join(\"") ? /join\(\s*"([^"])*"\s*\)/.exec(newData.type)[1] : "";
+                this.joinStr = newData.type.startsWith("join(\"") ? /join\(\s*"([^"]*)"\s*\)/.exec(newData.type)[1] : "";
                 this.expression = newData.expression;
             }
         },
