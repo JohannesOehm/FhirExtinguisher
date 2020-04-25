@@ -36,20 +36,20 @@ class FhirExtinguisher(
     }
 
     data class MyParams(
-        val csvFormat: String,
+        val csvFormat: CSVFormat,
         val limit: Int?,
         val columns: List<Column>?
     )
 
 
-
     fun serve(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
         val sb = StringBuilder()
-        val printer = CSVPrinter(sb, CSVFormat.EXCEL)
         val (fhirParams, myParams) = processQueryParams(session)
         log.debug { "uri = '${session.uri}'; queryParams = ${session.queryParameterString}" }
         log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
         //TODO: Abort when user cancels request
+        val printer = CSVPrinter(sb, myParams.csvFormat)
+
 
         if (session.method === NanoHTTPD.Method.POST) {
             val body = getBody(session)
@@ -83,7 +83,6 @@ class FhirExtinguisher(
             addHeader("Content-Disposition", "attachment; filename=\"$filename.csv\"');")
         }
     }
-
 
 
     private fun processWithColumns(
@@ -146,7 +145,7 @@ class FhirExtinguisher(
                 }
             return passThruParams.joinToString("&") to parseMyParams(myParams)
         } else {
-            return "" to MyParams(",", -1, emptyList())
+            return "" to MyParams(CSVFormat.EXCEL, -1, emptyList())
         }
     }
 
@@ -156,7 +155,19 @@ class FhirExtinguisher(
             .map { it[0] to it[1] }
             .toMap()
 
-        val csvFormat = map["__csvFormat"] ?: ","
+        val csvFormat = if (map["__csvFormat"] != null) {
+            val csvFormat = map["__csvFormat"]
+            try {
+                CSVFormat.valueOf(csvFormat)
+            } catch (e: Exception) {
+                val supported = CSVFormat.Predefined.values().joinToString(", ")
+                val message =
+                    "Unknown CSV Format '$csvFormat', supported values are: $supported"
+                throw RuntimeException(message, e)
+            }
+        } else {
+            CSVFormat.EXCEL
+        }
         val limit = map["__limit"]?.toInt()
         val columnsStr = URLDecoder.decode(map["__columns"])
         val columns = if (columnsStr != null) columnsParser.parseString(columnsStr) else null

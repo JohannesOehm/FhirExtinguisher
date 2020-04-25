@@ -22,9 +22,10 @@ which control how to handle multiple returned results by the FHIRPath expression
 while explode will create multiple rows for the element.
 * `__limit` FhirExtinguisher **automatically fetches Bundle pages until limit is met**. This way you can limit the 
 number of resources processed.
-* `__csvFormat` Is not implemented yet. Change the output format.
+* `__csvFormat` Change the output CSV style. Supported are: `Default`, `Excel`, `InformixUnload`, `InformixUnloadCsv`, 
+`MySQL`, `PostgreSQLCsv`, `PostgreSQLText`, `RFC4180`, `TDF`.
 
-The returned bundle(s) are evaluated against multiple FHIR path expressions using the HAPI FHIRPath engine.
+The returned bundle(s) are evaluated against multiple FHIRPath expressions using the HAPI FHIRPath engine.
 
 Please escape `@` and `:` in the column name with `\@` and respectively `\:`. In the FHIRPath expression, escape `,` with `\,`!
 
