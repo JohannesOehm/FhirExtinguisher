@@ -31,7 +31,6 @@ dependencies {
     implementation(group = "org.apache.commons", name = "commons-csv", version = "1.5")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.60")
     antlr("org.antlr:antlr4:4.8")
-//    api(project(":column-parser"))
 }
 
 
