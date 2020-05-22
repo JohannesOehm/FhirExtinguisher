@@ -117,6 +117,8 @@
             dataLoading: false, rawDataWithHighlighting: string, limit: number, rawData: string, rawError: string
         } {
             return {
+                // table: {data:null, loading: false, error: null},
+                // raw: {data:null, loading: false, error: null},
                 showRaw: true,
                 tableData: null,
                 tableError: null,
@@ -146,7 +148,9 @@
                 this.rawError = null;
 
                 let url = (<any>window).searchEditor.getValue();
-                let response = await fetch("/redirect/" + url);
+                let response = await fetch("/redirect/" + url, {
+                    headers: {"Accept": "application/json"}
+                });
                 if (response.ok) {
                     this.rawData = await response.text();
                 } else {
@@ -159,12 +163,16 @@
                 this.dataLoading = false;
             },
             reEvaluateHighlighting: function () {
-                monaco.editor.colorize(this.rawData, 'json', {})
-                    .then((it: string) => this.rawDataWithHighlighting = it);
+                if (this.rawData != null) {
+                    monaco.editor.colorize(this.rawData, 'json', {})
+                        .then((it: string) => this.rawDataWithHighlighting = it);
+                } else {
+                    this.rawDataWithHighlighting = null;
+                }
             },
             loadTableData: async function () {
                 let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-                let response = await fetch("/fhir/?" + params, {method: 'POST', body: this.rawData});
+                let response = await fetch("/processBundle?" + params, {method: 'POST', body: this.rawData});
                 if (response.ok) {
                     let csvString = await response.text();
                     (<any>CSV).fetch({
@@ -198,7 +206,7 @@
                     this.limit = parseInt(urlParams.get("__limit"));
 
                     let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
-                    this.$emit("update-columns", columns);
+                    this.$emit("update-columns", columns, true);
 
                     let url = urlToParse.split("?")[0];
                     let query = [...urlParams.entries()] //TODO: Improve this somehow

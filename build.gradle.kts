@@ -18,6 +18,8 @@ subprojects {
     version = "1.0"
 }
 
+val ktor_version = "1.3.1"
+
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testImplementation(group = "junit", name = "junit", version = "4.12")
@@ -30,6 +32,10 @@ dependencies {
     implementation(group = "ca.uhn.hapi.fhir", name = "hapi-fhir-structures-dstu3", version = "4.1.0")
     implementation(group = "org.apache.commons", name = "commons-csv", version = "1.5")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.60")
+    implementation("io.ktor:ktor-server-core:$ktor_version")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-client:$ktor_version")
+    implementation("io.ktor:ktor-client-apache:$ktor_version")
     antlr("org.antlr:antlr4:4.8")
 }
 
@@ -45,7 +51,7 @@ tasks {
         kotlinOptions {
             jvmTarget = "1.8"
         }
-        dependsOn(copyStaticPages)
+        dependsOn(copyStaticPages, generateGrammarSource)
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
