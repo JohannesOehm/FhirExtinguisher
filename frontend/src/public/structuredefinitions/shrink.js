@@ -33,4 +33,22 @@ for (let fhirVersion of ["stu3", "r4"]) {
         removeUnncessaryFields(data);
         fs.writeFileSync(filename, JSON.stringify(data))
     }
+
+    let data = JSON.parse(fs.readFileSync(path.join(__dirname, fhirVersion, "search-parameters.json")));
+    let result = [];
+    for (let entry of data.entry){
+        let resource = entry.resource;
+        if(resource.type === "reference") {
+            result.push({
+                base: resource.base,
+                parameter: resource.code,
+                target: resource.target
+            });
+        }
+    }
+    fs.writeFileSync("reference-types.json", JSON.stringify(result));
+
 }
+
+
+

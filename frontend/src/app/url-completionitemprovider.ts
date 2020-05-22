@@ -4,14 +4,19 @@ import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 
 export class URLCompletionItemProvider implements languages.CompletionItemProvider {
-    triggerCharacters = ["?", "&", ":", "="];
+    triggerCharacters = ["?", "&", ":", "=", "."];
 
     private conformanceStatement: R4.ICapabilityStatement = undefined;
+    private referenceTypes: { base: string[], parameter: string, target: string[] }[] = undefined;
 
     constructor() {
         fetch("/example-conformance.json")
             .then(res => res.json())
             .then(res => this.conformanceStatement = res)
+
+        fetch("/reference-types.json")
+            .then(res => res.json())
+            .then(res => this.referenceTypes = res);
     }
 
     provideCompletionItems(model: editor.ITextModel, position: mPosition, context: languages.CompletionContext, token: CancellationToken): languages.CompletionList {
@@ -30,6 +35,8 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             let lastParameterStart = Math.max(textUntilPosition.lastIndexOf("&"), textUntilPosition.lastIndexOf("?"));
             if (textUntilPosition.lastIndexOf("=") > lastParameterStart) {
                 suggestions = this.paramValueSuggestions(model, position, textUntilPosition);
+            } else if (textUntilPosition.lastIndexOf(".") > lastParameterStart) {
+                suggestions = this.getChainedSuggestions(model, position, textUntilPosition);
             } else if (textUntilPosition.lastIndexOf(":") > lastParameterStart) {
                 suggestions = this.modifierSuggestions(model, position, textUntilPosition);
             } else {
@@ -46,8 +53,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     }
 
     private resourceNameSuggestions(model: editor.ITextModel, position: mPosition): CompletionItem[] {
-        let foo = this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource);
-        let types = foo[0].map(it => it.type);
+        let types = this.getResourceNames();
 
         let word = model.getWordAtPosition(position);
         console.log("word = ", word);
@@ -68,6 +74,11 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                 insertText: it + "?"
             }
         ));
+    }
+
+    private getResourceNames() {
+        let foo = this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource);
+        return foo[0].map(it => it.type);
     }
 
     private searchParamSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string): CompletionItem[] {
@@ -243,6 +254,52 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         return suggestions.concat(additionalParams);
     }
 
+    /**
+     * Suggestions for
+     * Observation?subject.<click>
+     * Observation?subject:Patient.<click>
+     */
+    private getChainedSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string): CompletionItem[] {
+        let resourceName = this.getResourceName(textUntilPosition);
+        let paramName = textUntilPosition.substring(
+            Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
+            textUntilPosition.lastIndexOf(".")
+        );
+        let strings: Set<string> = new Set();
+        if (paramName.includes(":")) { //?subject:Patient.
+            let referencedResourceName = paramName.substring(paramName.indexOf(":") + 1);
+            this.getDefintionForResourceName(referencedResourceName).searchParam.forEach(it => strings.add(it.name));
+        } else { //subject.<click>
+            let referenceTypes = this.getReferenceType(resourceName, paramName);
+            for (let referenceType of referenceTypes) {
+                let definition = this.getDefintionForResourceName(referenceType);
+                definition.searchParam.forEach(it => strings.add(it.name));
+            }
+        }
+
+
+        let word = model.getWordAtPosition(position);
+        let range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word != null ? word.startColumn : position.column,
+            endColumn: position.column
+        };
+
+        return Array.from(strings).map(it => (
+            {
+                label: it,
+                kind: CompletionItemKind.Function,
+                range: range,
+                detail: "",
+                insertText: it
+            }
+        ));
+
+        //TODO: Insert type (e.g. subject.name is string,...)
+
+    }
+
     private getDefintionForResourceName(resourceName: string) {
         return this.conformanceStatement.rest
             .filter(it => it.mode === "server")[0]
@@ -314,11 +371,11 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                             kind: CompletionItemKind.Function,
                             range: range,
                             detail: it.type,
-                            insertText: it.name+":",
+                            insertText: it.name + ":",
                             documentation: it.documentation
                         }
                     ));
-            } else if(resourceNameTgt && joinField) {
+            } else if (resourceNameTgt && joinField) {
                 let definition = this.getDefintionForResourceName(resourceNameTgt);
                 return definition.searchParam
                     .map(it => (
@@ -327,13 +384,12 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                             kind: CompletionItemKind.Function,
                             range: range,
                             detail: it.type,
-                            insertText: it.name+"=",
+                            insertText: it.name + "=",
                             documentation: it.documentation
                         }
                     ));
             }
         }
-
 
 
         let paramDefinition = definition.searchParam.filter(it => it.name === paramName);
@@ -426,7 +482,36 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                 }
             ]
         } else if (paramDefinition[0].type === "reference") {
-
+            additionalParams = [
+                {
+                    label: "identifier",
+                    range: range,
+                    kind: CompletionItemKind.Operator,
+                    insertText: "identifier=",
+                    documentation: "Search by identifier rather than literal reference (e.g. Observation?subject:identifier=http://acme.org/fhir/identifier/mrn|123456)"
+                },
+                {
+                    label: "above",
+                    range: range,
+                    kind: CompletionItemKind.Operator,
+                    insertText: "above=",
+                    documentation: "Some references are circular - that is, the reference points to another resource of the same type. When the reference establishes a strict hierarchy, the modifiers :above and :below may be used to search transitively through the hierarchy: "
+                },
+                {
+                    label: "below",
+                    range: range,
+                    kind: CompletionItemKind.Operator,
+                    insertText: "below=",
+                    documentation: "The modifier :below is used with canonical references, to control whether the version is considered in the search. \n\nSome references are circular - that is, the reference points to another resource of the same type. When the reference establishes a strict hierarchy, the modifiers :above and :below may be used to search transitively through the hierarchy: "
+                },
+                // ...this.getAllResourceTypes().map(it => ({
+                ...this.getReferenceType(resourceName, paramName).map(it => ({
+                    label: it,
+                    range: range,
+                    kind: CompletionItemKind.Class,
+                    insertText: it
+                }))
+            ]
         } else if (paramDefinition[0].type === "date") {
 
         } else if (paramDefinition[0].type === "composite") {
@@ -492,73 +577,19 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         };
 
         if (paramName === "_summary") {
-            return [
-                {
-                    label: "true",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "true",
-                    documentation: "Return a limited subset of elements from the resource. This subset SHOULD consist " +
-                        "solely of all supported elements that are marked as \"summary\" in the base definition of the " +
-                        "resource(s) (see ElementDefinition.isSummary)"
-                },
-                {
-                    label: "text",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "text",
-                    documentation: "Return only the \"text\" element, the 'id' element, the 'meta' element, and only" +
-                        " top-level mandatory elements"
-                },
-                {
-                    label: "data",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "data",
-                    documentation: "Remove the text element"
-                },
-                {
-                    label: "count",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "count",
-                    documentation: "Search only: just return a count of the matching resources, without returning the actual matches"
-                },
-                {
-                    label: "false",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "false",
-                    documentation: "Return all parts of the resource(s)"
-                },
-            ]
+            return this.returnSummary(range)
         }
 
         if (paramName === "_pretty" || paramModifier === "missing") {
-            return [
-                {
-                    label: "true",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "true"
-                },
-                {
-                    label: "false",
-                    range: range,
-                    kind: CompletionItemKind.Value,
-                    insertText: "false"
-                }
-            ];
-        }
-        if (paramName === "_format") {
-            return ["xml", "text/xml", "application/xml", "application/fhir+xml", "json", "application/json",
-                "application/fhir+json", "ttl", "application/fhir+turtle", "text/turtle",
-                "html", "text/html"].map(it => ({
+            return ["true", "false"].map(it => ({
                 label: it,
                 range: range,
                 kind: CompletionItemKind.Value,
                 insertText: it
             }));
+        }
+        if (paramName === "_format") {
+            return this.returnFormats(range);
         }
 
 
@@ -608,7 +639,76 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         return [];
     }
 
+    private returnSummary(range: { endColumn: number; startColumn: number; endLineNumber: number; startLineNumber: number }) {
+        return [
+            {
+                label: "true",
+                range: range,
+                kind: CompletionItemKind.Value,
+                insertText: "true",
+                documentation: "Return a limited subset of elements from the resource. This subset SHOULD consist " +
+                    "solely of all supported elements that are marked as \"summary\" in the base definition of the " +
+                    "resource(s) (see ElementDefinition.isSummary)"
+            },
+            {
+                label: "text",
+                range: range,
+                kind: CompletionItemKind.Value,
+                insertText: "text",
+                documentation: "Return only the \"text\" element, the 'id' element, the 'meta' element, and only" +
+                    " top-level mandatory elements"
+            },
+            {
+                label: "data",
+                range: range,
+                kind: CompletionItemKind.Value,
+                insertText: "data",
+                documentation: "Remove the text element"
+            },
+            {
+                label: "count",
+                range: range,
+                kind: CompletionItemKind.Value,
+                insertText: "count",
+                documentation: "Search only: just return a count of the matching resources, without returning the actual matches"
+            },
+            {
+                label: "false",
+                range: range,
+                kind: CompletionItemKind.Value,
+                insertText: "false",
+                documentation: "Return all parts of the resource(s)"
+            }
+        ];
+    }
+
+    private returnFormats(range: { endColumn: number; startColumn: number; endLineNumber: number; startLineNumber: number }) {
+        let xml = ["xml", "text/xml", "application/xml", "application/fhir+xml"];
+        let json = ["json", "application/json", "application/fhir+json"];
+        let turtle = ["ttl", "application/fhir+turtle", "text/turtle"];
+
+        let xmlS = this.conformanceStatement.format.filter(it => xml.includes(it)) ? xml : [];
+        let jsonS = this.conformanceStatement.format.filter(it => json.includes(it)) ? json : [];
+        let turtleS = this.conformanceStatement.format.filter(it => turtle.includes(it)) ? turtle : [];
+        return [...xmlS, ...jsonS, ...turtleS, "html", "text/html"].map(it => ({
+            label: it,
+            range: range,
+            kind: CompletionItemKind.Value,
+            insertText: it
+        }));
+    }
+
     private getAllResourceTypes() {
         return this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource)[0].map(it => it.type);
+    }
+
+
+    private getReferenceType(base: string, parameter: string): string[] {
+        for (let o of this.referenceTypes) {
+            if (o.base.includes(base) && o.parameter === parameter) {
+                return o.target;
+            }
+        }
+        return [];
     }
 }
