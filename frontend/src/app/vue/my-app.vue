@@ -17,6 +17,7 @@
                       @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
         <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
         <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
+        <DialogCheatSheet />
         <DialogAbout/>
     </div>
 </template>
@@ -32,6 +33,7 @@
     import DialogAbout from './dialog-about.vue';
 
     import * as $ from 'jquery';
+    import DialogCheatSheet from "./dialog-cheat-sheet.vue";
     // import * as $ from ''
 
     // (<any>$("#sidebar")).resizable({handles: "e"});
@@ -78,13 +80,14 @@
             }
         },
         components: {
+            DialogCheatSheet,
             DialogColumn,
             Searchbar,
             ColumnsView,
             MyContentView,
             DialogQuestionnaireTs,
             DialogResource,
-            DialogAbout
+            DialogAbout,
         },
         methods: {
             handleAddColumn: function () {
