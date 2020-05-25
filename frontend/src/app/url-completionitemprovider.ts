@@ -1,4 +1,4 @@
-import {CancellationToken, editor, languages, Position as mPosition} from "monaco-editor";
+import {CancellationToken, editor, IRange, languages, Position as mPosition} from "monaco-editor";
 import {R4} from "@ahryman40k/ts-fhir-types";
 import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
@@ -24,27 +24,35 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             return {suggestions: []};
         }
 
-
         let textUntilPosition = model.getValueInRange({
             startLineNumber: 1, endLineNumber: 1,
             startColumn: 1, endColumn: position.column
         });
+
+        let word = model.getWordAtPosition(position);
+        console.log("word = ", word);
+
+        let range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word != null ? word.startColumn : position.column,
+            endColumn: position.column
+        };
+
         let suggestions: CompletionItem[];
         if (textUntilPosition.indexOf("?") !== -1) {
-            console.log("Suggestions for QueryParams");
             let lastParameterStart = Math.max(textUntilPosition.lastIndexOf("&"), textUntilPosition.lastIndexOf("?"));
             if (textUntilPosition.lastIndexOf("=") > lastParameterStart) {
-                suggestions = this.paramValueSuggestions(model, position, textUntilPosition);
+                suggestions = this.getParamValueSuggestions(model, range, textUntilPosition);
             } else if (textUntilPosition.lastIndexOf(".") > lastParameterStart) {
-                suggestions = this.getChainedSuggestions(model, position, textUntilPosition);
+                suggestions = this.getChainedSuggestions(model, range, textUntilPosition);
             } else if (textUntilPosition.lastIndexOf(":") > lastParameterStart) {
-                suggestions = this.modifierSuggestions(model, position, textUntilPosition);
+                suggestions = this.modifierSuggestions(model, range, textUntilPosition);
             } else {
-                suggestions = this.searchParamSuggestions(model, position, textUntilPosition);
+                suggestions = this.getSearchParamSuggestions(model, range, textUntilPosition);
             }
         } else {
-            console.log("Suggestions for ResourceNames");
-            suggestions = this.resourceNameSuggestions(model, position);
+            suggestions = this.getResourceNameSuggestions(model, range);
         }
 
         return {
@@ -52,60 +60,67 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         };
     }
 
-    private resourceNameSuggestions(model: editor.ITextModel, position: mPosition): CompletionItem[] {
-        let types = this.getResourceNames();
-
-        let word = model.getWordAtPosition(position);
-        console.log("word = ", word);
-
-        let range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word != null ? word.startColumn : position.column,
-            endColumn: position.column
-        };
-
-
+    private getResourceNameSuggestions(model: editor.ITextModel, range: IRange, suffix: String = "?"): CompletionItem[] {
+        let types = this.getAllResourceNames();
         return types.map(it => (
             {
                 label: it,
                 kind: CompletionItemKind.Class,
                 range: range,
-                insertText: it + "?"
+                insertText: it + suffix
             }
         ));
     }
 
-    private getResourceNames() {
+    private getAllResourceNames() {
         let foo = this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource);
         return foo[0].map(it => it.type);
     }
 
-    private searchParamSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string): CompletionItem[] {
-        let resourceName = this.getResourceName(textUntilPosition);
-        let definition = this.getDefintionForResourceName(resourceName);
+    private getSearchParamSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string): CompletionItem[] {
+        let resourceNames = this.getResourceName(textUntilPosition);
+
+        console.log("resourceNames = ", resourceNames);
+
+        let suggestions: CompletionItem[] = [];
 
 
-        let word = model.getWordAtPosition(position);
-        console.log("word = ", word);
+        if (resourceNames === null || resourceNames.length === 0) {
+            suggestions.push(
+                {
+                    label: "_type",
+                    kind: CompletionItemKind.Function,
+                    range: range,
+                    // detail: it.type,
+                    insertText: "_type=",
+                    documentation: "TODO",
+                    preselect: true
+                }
+            );
+        }
+        if (resourceNames === null) {
+            resourceNames = this.getAllResourceNames();
+        }
 
-        let range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word != null ? word.startColumn : position.column,
-            endColumn: position.column
-        };
-
-        let suggestions: CompletionItem[] = definition.searchParam.map(it => (
-            {
-                label: it.name,
-                kind: CompletionItemKind.Function,
-                range: range,
-                detail: it.type,
-                insertText: it.name,
-                documentation: it.documentation
+        for (let resourceName of resourceNames) {
+            let definition = this.getDefinitionForResourceName(resourceName);
+            if (!definition) {
+                console.log("Cannot find definition for " + resourceName + "!")
+                continue;
             }
-        ));
+
+            suggestions.push(...definition.searchParam.map(it => (
+                {
+                    label: it.name,
+                    kind: CompletionItemKind.Function,
+                    range: range,
+                    detail: it.type,
+                    insertText: it.name,
+                    documentation: it.documentation
+                }
+            )));
+
+        }
 
         let additionalParams: CompletionItem[] = [
             {
@@ -259,8 +274,8 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
      * Observation?subject.<click>
      * Observation?subject:Patient.<click>
      */
-    private getChainedSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string): CompletionItem[] {
-        let resourceName = this.getResourceName(textUntilPosition);
+    private getChainedSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string): CompletionItem[] {
+        let resourceName = this.getResourceName(textUntilPosition)[0];
         let paramName = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
             textUntilPosition.lastIndexOf(".")
@@ -268,23 +283,14 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         let strings: Set<string> = new Set();
         if (paramName.includes(":")) { //?subject:Patient.
             let referencedResourceName = paramName.substring(paramName.indexOf(":") + 1);
-            this.getDefintionForResourceName(referencedResourceName).searchParam.forEach(it => strings.add(it.name));
+            this.getDefinitionForResourceName(referencedResourceName).searchParam.forEach(it => strings.add(it.name));
         } else { //subject.<click>
             let referenceTypes = this.getReferenceType(resourceName, paramName);
             for (let referenceType of referenceTypes) {
-                let definition = this.getDefintionForResourceName(referenceType);
+                let definition = this.getDefinitionForResourceName(referenceType);
                 definition.searchParam.forEach(it => strings.add(it.name));
             }
         }
-
-
-        let word = model.getWordAtPosition(position);
-        let range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word != null ? word.startColumn : position.column,
-            endColumn: position.column
-        };
 
         return Array.from(strings).map(it => (
             {
@@ -300,27 +306,39 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
 
     }
 
-    private getDefintionForResourceName(resourceName: string) {
+    private getDefinitionForResourceName(resourceName: string) {
         return this.conformanceStatement.rest
             .filter(it => it.mode === "server")[0]
             .resource.filter(it => it.type === resourceName)[0];
     }
 
-    private getResourceName(textUntilPosition: string) {
+    /**
+     * null is wildcard
+     */
+    private getResourceName(textUntilPosition: string): string[] | null {
         let resourceName: string;
         if (textUntilPosition.indexOf("/") !== -1) {
             resourceName = textUntilPosition.substring(0, textUntilPosition.indexOf("/"));
         } else if (textUntilPosition.indexOf("?") !== -1) {
             resourceName = textUntilPosition.substring(0, textUntilPosition.indexOf("?"));
-        } else {
-            resourceName = textUntilPosition;
         }
-        return resourceName;
+
+        if (resourceName === "") {
+            let idxOfQ = textUntilPosition.indexOf("?");
+            if (idxOfQ !== -1) {
+                let urlSearchParams = new URLSearchParams(textUntilPosition.substring(idxOfQ + 1));
+                if (urlSearchParams.has("_type")) {
+                    return urlSearchParams.get("_type").split(",");
+                }
+            }
+            return null;
+        } else {
+            return [resourceName];
+        }
+
     }
 
-    private modifierSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string) {
-        let resourceName = this.getResourceName(textUntilPosition);
-        let definition = this.getDefintionForResourceName(resourceName);
+    private modifierSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string) {
 
         let paramName = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
@@ -329,15 +347,6 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
 
         console.log("paramName = ", paramName);
 
-        let word = model.getWordAtPosition(position);
-        console.log("word = ", word);
-
-        let range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word != null ? word.startColumn : position.column,
-            endColumn: position.column
-        };
 
         if (paramName === "_include" || paramName === "_revinclude") {
             return [
@@ -362,7 +371,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     }
                 ));
             } else if (resourceNameTgt && !joinField) {
-                let definition = this.getDefintionForResourceName(resourceNameTgt);
+                let definition = this.getDefinitionForResourceName(resourceNameTgt);
                 return definition.searchParam
                     .filter(it => it.type === "reference") //TODO This makes only sense on references, doesn't it?
                     .map(it => (
@@ -376,7 +385,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                         }
                     ));
             } else if (resourceNameTgt && joinField) {
-                let definition = this.getDefintionForResourceName(resourceNameTgt);
+                let definition = this.getDefinitionForResourceName(resourceNameTgt);
                 return definition.searchParam
                     .map(it => (
                         {
@@ -391,12 +400,14 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             }
         }
 
+        let resourceNames = this.getResourceName(textUntilPosition);
+        let paramDefinition = this.getParamDefinitionFirstMatch(resourceNames, paramName);
 
-        let paramDefinition = definition.searchParam.filter(it => it.name === paramName);
         let additionalParams: CompletionItem[] = [];
-        if (paramDefinition.length === 0) {
+
+        if (!paramDefinition) {
             return [];
-        } else if (paramDefinition[0].type === "token") {
+        } else if (paramDefinition.type === "token") {
             additionalParams = [
                 {
                     label: "text",
@@ -464,7 +475,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                         "3 parts must be present."
                 }
             ]
-        } else if (paramDefinition[0].type === "string") {
+        } else if (paramDefinition.type === "string") {
             additionalParams = [
                 {
                     label: "exact",
@@ -481,7 +492,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     documentation: "The :contains modifier returns results that include the supplied parameter value anywhere within the field being searched."
                 }
             ]
-        } else if (paramDefinition[0].type === "reference") {
+        } else if (paramDefinition.type === "reference") {
             additionalParams = [
                 {
                     label: "identifier",
@@ -505,20 +516,22 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     documentation: "The modifier :below is used with canonical references, to control whether the version is considered in the search. \n\nSome references are circular - that is, the reference points to another resource of the same type. When the reference establishes a strict hierarchy, the modifiers :above and :below may be used to search transitively through the hierarchy: "
                 },
                 // ...this.getAllResourceTypes().map(it => ({
-                ...this.getReferenceType(resourceName, paramName).map(it => ({
-                    label: it,
-                    range: range,
-                    kind: CompletionItemKind.Class,
-                    insertText: it
-                }))
-            ]
-        } else if (paramDefinition[0].type === "date") {
+                ...resourceNames.map(resourceName => {
+                    return this.getReferenceType(resourceName, paramName).map(it => ({
+                        label: it,
+                        range: range,
+                        kind: CompletionItemKind.Class,
+                        insertText: it
+                    }))
+                }).reduce((acc, val) => acc.concat(val), []) //TODO: Use .flatMap() instead
+            ];
+        } else if (paramDefinition.type === "date") {
 
-        } else if (paramDefinition[0].type === "composite") {
+        } else if (paramDefinition.type === "composite") {
 
-        } else if (paramDefinition[0].type === "quantity") {
+        } else if (paramDefinition.type === "quantity") {
 
-        } else if (paramDefinition[0].type === "uri") {
+        } else if (paramDefinition.type === "uri") {
             additionalParams = [
                 {
                     label: "above",
@@ -535,7 +548,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     documentation: "TODO"
                 }
             ]
-        } else if (paramDefinition[0].type === "special") {
+        } else if (paramDefinition.type === "special") {
 
         } else {
             // return [];
@@ -558,7 +571,20 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
 
     }
 
-    private paramValueSuggestions(model: editor.ITextModel, position: mPosition, textUntilPosition: string): CompletionItem[] {
+    private getParamDefinitionFirstMatch(resourceNames: string[], paramName: string) {
+        for (let resourceName of resourceNames) {
+            let definition = this.getDefinitionForResourceName(resourceNames[0]);
+
+            let paramDefinition = definition.searchParam.filter(it => it.name === paramName);
+            if (paramDefinition.length !== 0) {
+                return paramDefinition[0];
+            }
+
+        }
+        return undefined;
+    }
+
+    private getParamValueSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string): CompletionItem[] {
         let paramKey = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
             textUntilPosition.lastIndexOf("=")
@@ -567,14 +593,6 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         let [paramName, paramModifier] = paramKey.split(":", 2);
         console.log(`paramName = `, paramName, " paramModifier = ", paramModifier, " paramValue = " + paramValue);
 
-        let word = model.getWordAtPosition(position);
-
-        let range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word != null ? word.startColumn : position.column,
-            endColumn: position.column
-        };
 
         if (paramName === "_summary") {
             return this.returnSummary(range)
@@ -593,7 +611,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         }
 
 
-        let resourceName = this.getResourceName(textUntilPosition);
+        let resourceName = this.getResourceName(textUntilPosition)[0];
         if (paramName === "_include") {
             if (paramValue === "") {
                 return [{
@@ -618,7 +636,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         }
         if (paramName === "_include" || paramName === "_revinclude" && paramValue.includes(":")) {
             let paramValueResourceName = paramValue.substring(0, paramValue.indexOf(":"));
-            let definition = this.getDefintionForResourceName(paramValueResourceName);
+            let definition = this.getDefinitionForResourceName(paramValueResourceName);
             if (definition) {
                 return definition.searchParam
                     .filter(it => it.type === "reference") //TODO This makes only sense on references, doesn't it?
@@ -633,6 +651,24 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                         }
                     ));
             }
+        }
+
+        if (paramName === "_sort") {
+            let definition = this.getDefinitionForResourceName(resourceName);
+            return definition.searchParam.map(it => (
+                {
+                    label: it.name,
+                    kind: CompletionItemKind.Function,
+                    range: range,
+                    detail: it.type,
+                    insertText: it.name,
+                    documentation: it.documentation
+                }
+            ));
+        }
+
+        if (paramName === "_type") {
+            return this.getResourceNameSuggestions(model, range, "");
         }
 
 
