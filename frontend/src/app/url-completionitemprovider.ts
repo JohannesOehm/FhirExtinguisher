@@ -80,25 +80,22 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     }
 
     private getSearchParamSuggestions(fullText: string, range: IRange, textUntilPosition: string): CompletionItem[] {
-        let resourceNames = this.getResourceName(textUntilPosition);
-
+        let resourceNames = this.getResourceName(fullText);
         console.log("resourceNames = ", resourceNames);
 
         let suggestions: CompletionItem[] = [];
 
 
         if (resourceNames === null || resourceNames.length === 0) {
-            suggestions.push(
-                {
-                    label: "_type",
-                    kind: CompletionItemKind.TypeParameter,
-                    range: range,
-                    // detail: it.type,
-                    insertText: "_type=",
-                    documentation: "TODO",
-                    preselect: true
-                }
-            );
+            suggestions.push({
+                label: "_type",
+                kind: CompletionItemKind.TypeParameter,
+                range: range,
+                // detail: it.type,
+                insertText: "_type=",
+                documentation: "When using `/?`, all resources are searched by default. Using the _type parameter, you can constrain this on specific resource types.",
+                preselect: true
+            });
         }
         if (resourceNames === null) {
             resourceNames = this.getAllResourceNamesSupportedByServer();
@@ -600,36 +597,38 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         }
 
 
-        let resourceNames = this.getResourceName(fullText); //TODO
-        if (paramName === "_include") {
-            if (paramValue === "") {
-                return resourceNames.map(resourceName => ({
-                    label: resourceName,
-                    range: range,
-                    kind: CompletionItemKind.Class,
-                    insertText: resourceName + ":"
-                }));
-            }
-        } else if (paramName === "_revinclude") {
-            if (paramValue === "") {
-                let types = this.getAllResourceTypes();
-                return types.map(it => (
-                    {
-                        label: it,
-                        kind: CompletionItemKind.Class,
+        let resourceNames = this.getResourceName(fullText);
+        if (paramName === "_include" || paramName === "_revinclude") {
+            let paramLastValue = this.getParamLastValue(paramValue);
+            if (!paramLastValue.includes(":")) {
+                if (paramName === "_include") {
+                    return resourceNames.map(resourceName => ({
+                        label: resourceName,
                         range: range,
-                        insertText: it + ":"
-                    }
-                ));
-            }
-        }
-        if (paramName === "_include" || paramName === "_revinclude" && paramValue.includes(":")) {
-            let paramValueResourceName = paramValue.substring(0, paramValue.indexOf(":"));
-            let definition = this.getDefinitionForResourceName(paramValueResourceName);
-            if (definition) {
-                return definition.searchParam
-                    .filter(it => it.type === "reference") //TODO This makes only sense on references, doesn't it?
-                    .map(it => ({
+                        kind: CompletionItemKind.Class,
+                        insertText: resourceName + ":"
+                    })).concat(
+                        resourceNames.map(it => this.getDefinitionForResourceName(it).searchInclude)
+                            .reduce((acc, val) => acc.concat(val), []) //TODO: flatMap()
+                            .map(value => ({
+                                label: value,
+                                range: range,
+                                kind: CompletionItemKind.Value,
+                                insertText: value
+                            }))
+                    );
+
+
+                } else if (paramName === "_revinclude") {
+                    return this.getResourceNameSuggestions(range, ":");
+                }
+            } else { //paramValue.includes(":")
+                let paramValueResourceName = paramValue.substring(0, paramValue.indexOf(":"));
+                let definition = this.getDefinitionForResourceName(paramValueResourceName);
+                if (definition) {
+                    return definition.searchParam
+                        .filter(it => it.type === "reference")
+                        .map(it => ({
                             label: it.name,
                             kind: CompletionItemKind.Function,
                             range: range,
@@ -637,79 +636,70 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                             insertText: it.name,
                             documentation: it.documentation
                         }));
+                }
             }
         }
 
-        if (paramName === "_sort") {
-            return resourceNames
-                .map(it => this.getDefinitionForResourceName(it))
-                .map(it => it.searchParam.map(it => ({
-                        label: it.name,
-                        kind: CompletionItemKind.Function,
-                        range: range,
-                        detail: it.type,
-                        insertText: it.name,
-                        documentation: it.documentation
-                    })
-                )).reduce((acc, val) => acc.concat(val), []) //TODO: Use .flatMap() instead;
-        }
 
+        if (paramName === "_sort") {
+            return resourceNames.map(it => this.getDefinitionForResourceName(it)).map(it => it.searchParam.map(it => ({
+                label: it.name,
+                kind: CompletionItemKind.Function,
+                range: range,
+                detail: it.type,
+                insertText: it.name,
+                documentation: it.documentation
+            }))).reduce((acc, val) => acc.concat(val), []) /*TODO: Use .flatMap() instead;*/
+        }
         if (paramName === "_type") {
             return this.getResourceNameSuggestions(range, "");
         }
-
-
         return [];
     }
 
-    private returnSummary(range: { endColumn: number; startColumn: number; endLineNumber: number; startLineNumber: number }) {
-        return [
-            {
-                label: "true",
-                range: range,
-                kind: CompletionItemKind.Value,
-                insertText: "true",
-                documentation: "Return a limited subset of elements from the resource. This subset SHOULD consist " +
-                    "solely of all supported elements that are marked as \"summary\" in the base definition of the " +
-                    "resource(s) (see ElementDefinition.isSummary)"
-            },
-            {
-                label: "text",
-                range: range,
-                kind: CompletionItemKind.Value,
-                insertText: "text",
-                documentation: "Return only the \"text\" element, the 'id' element, the 'meta' element, and only" +
-                    " top-level mandatory elements"
-            },
-            {
-                label: "data",
-                range: range,
-                kind: CompletionItemKind.Value,
-                insertText: "data",
-                documentation: "Remove the text element"
-            },
-            {
-                label: "count",
-                range: range,
-                kind: CompletionItemKind.Value,
-                insertText: "count",
-                documentation: "Search only: just return a count of the matching resources, without returning the actual matches"
-            },
-            {
-                label: "false",
-                range: range,
-                kind: CompletionItemKind.Value,
-                insertText: "false",
-                documentation: "Return all parts of the resource(s)"
-            }
-        ];
+    private getParamLastValue(paramValue: string) {
+        let lastIndexOf = paramValue.lastIndexOf(",");
+        return lastIndexOf !== -1 ? paramValue.substring(lastIndexOf + 1) : paramValue;
+    }
+
+    private returnSummary(range: IRange) {
+        return [{
+            label: "true",
+            range: range,
+            kind: CompletionItemKind.Value,
+            insertText: "true",
+            documentation: "Return a limited subset of elements from the resource. This subset SHOULD consist " + "solely of all supported elements that are marked as \"summary\" in the base definition of the " + "resource(s) (see ElementDefinition.isSummary)"
+        }, {
+            label: "text",
+            range: range,
+            kind: CompletionItemKind.Value,
+            insertText: "text",
+            documentation: "Return only the \"text\" element, the 'id' element, the 'meta' element, and only" + " top-level mandatory elements"
+        }, {
+            label: "data",
+            range: range,
+            kind: CompletionItemKind.Value,
+            insertText: "data",
+            documentation: "Remove the text element"
+        }, {
+            label: "count",
+            range: range,
+            kind: CompletionItemKind.Value,
+            insertText: "count",
+            documentation: "Search only: just return a count of the matching resources, without returning the actual matches"
+        }, {
+            label: "false",
+            range: range,
+            kind: CompletionItemKind.Value,
+            insertText: "false",
+            documentation: "Return all parts of the resource(s)"
+        }];
     }
 
     private returnFormats(range: { endColumn: number; startColumn: number; endLineNumber: number; startLineNumber: number }) {
         let xml = ["xml", "text/xml", "application/xml", "application/fhir+xml"];
         let json = ["json", "application/json", "application/fhir+json"];
         let turtle = ["ttl", "application/fhir+turtle", "text/turtle"];
-
         let xmlS = this.conformanceStatement.format.filter(it => xml.includes(it)) ? xml : [];
         let jsonS = this.conformanceStatement.format.filter(it => json.includes(it)) ? json : [];
         let turtleS = this.conformanceStatement.format.filter(it => turtle.includes(it)) ? turtle : [];
@@ -724,7 +714,6 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     private getAllResourceTypes() {
         return this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource)[0].map(it => it.type);
     }
-
 
     private getReferenceType(base: string, parameter: string): string[] {
         for (let o of this.referenceTypes) {
