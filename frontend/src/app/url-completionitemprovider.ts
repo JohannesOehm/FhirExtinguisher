@@ -29,6 +29,8 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             startColumn: 1, endColumn: position.column
         });
 
+        let fullText = model.getValue();
+
         let word = model.getWordAtPosition(position);
         console.log("word = ", word);
 
@@ -43,16 +45,16 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         if (textUntilPosition.indexOf("?") !== -1) {
             let lastParameterStart = Math.max(textUntilPosition.lastIndexOf("&"), textUntilPosition.lastIndexOf("?"));
             if (textUntilPosition.lastIndexOf("=") > lastParameterStart) {
-                suggestions = this.getParamValueSuggestions(model, range, textUntilPosition);
+                suggestions = this.getParamValueSuggestions(fullText, range, textUntilPosition);
             } else if (textUntilPosition.lastIndexOf(".") > lastParameterStart) {
-                suggestions = this.getChainedSuggestions(model, range, textUntilPosition);
+                suggestions = this.getChainedSuggestions(fullText, range, textUntilPosition);
             } else if (textUntilPosition.lastIndexOf(":") > lastParameterStart) {
-                suggestions = this.modifierSuggestions(model, range, textUntilPosition);
+                suggestions = this.getModifierSuggestions(fullText, range, textUntilPosition);
             } else {
-                suggestions = this.getSearchParamSuggestions(model, range, textUntilPosition);
+                suggestions = this.getSearchParamSuggestions(fullText, range, textUntilPosition);
             }
         } else {
-            suggestions = this.getResourceNameSuggestions(model, range);
+            suggestions = this.getResourceNameSuggestions(range);
         }
 
         return {
@@ -60,8 +62,8 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         };
     }
 
-    private getResourceNameSuggestions(model: editor.ITextModel, range: IRange, suffix: String = "?"): CompletionItem[] {
-        let types = this.getAllResourceNames();
+    private getResourceNameSuggestions(range: IRange, suffix: String = "?"): CompletionItem[] {
+        let types = this.getAllResourceNamesSupportedByServer();
         return types.map(it => (
             {
                 label: it,
@@ -72,12 +74,12 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         ));
     }
 
-    private getAllResourceNames() {
+    private getAllResourceNamesSupportedByServer() {
         let foo = this.conformanceStatement.rest.filter(it => it.mode === "server").map(it => it.resource);
         return foo[0].map(it => it.type);
     }
 
-    private getSearchParamSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string): CompletionItem[] {
+    private getSearchParamSuggestions(fullText: string, range: IRange, textUntilPosition: string): CompletionItem[] {
         let resourceNames = this.getResourceName(textUntilPosition);
 
         console.log("resourceNames = ", resourceNames);
@@ -89,7 +91,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             suggestions.push(
                 {
                     label: "_type",
-                    kind: CompletionItemKind.Function,
+                    kind: CompletionItemKind.TypeParameter,
                     range: range,
                     // detail: it.type,
                     insertText: "_type=",
@@ -99,7 +101,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             );
         }
         if (resourceNames === null) {
-            resourceNames = this.getAllResourceNames();
+            resourceNames = this.getAllResourceNamesSupportedByServer();
         }
 
         for (let resourceName of resourceNames) {
@@ -274,7 +276,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
      * Observation?subject.<click>
      * Observation?subject:Patient.<click>
      */
-    private getChainedSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string): CompletionItem[] {
+    private getChainedSuggestions(fullText: string, range: IRange, textUntilPosition: string): CompletionItem[] {
         let resourceName = this.getResourceName(textUntilPosition)[0];
         let paramName = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
@@ -338,7 +340,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
 
     }
 
-    private modifierSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string) {
+    private getModifierSuggestions(fullText: string, range: IRange, textUntilPosition: string) {
 
         let paramName = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
@@ -408,90 +410,79 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         if (!paramDefinition) {
             return [];
         } else if (paramDefinition.type === "token") {
-            additionalParams = [
-                {
-                    label: "text",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "text=",
-                    documentation: "The search parameter is processed as a string that searches text associated with the" +
-                        " code/value - either CodeableConcept.text, Coding.display, or Identifier.type.text. In this case, " +
-                        "the search functions as a normal string search"
-                },
-                {
-                    label: "not",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "not=",
-                    documentation: "Reverse the code matching described in the paragraph above: return all resources " +
-                        "that do not have a matching item. Note that this includes resources that have no value for the " +
-                        "parameter - e.g. ?gender:not=male includes all patients that do not have gender = male, including" +
-                        " patients that do not have a gender at all"
-                },
-                {
-                    label: "above",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "above=",
-                    documentation: "The search parameter is a concept with the form [system]|[code], and the search parameter " +
-                        "tests whether the coding in a resource subsumes the specified search code. For example, the search" +
-                        " concept has an is-a relationship with the coding in the resource, and this includes the coding itself."
-                },
-                {
-                    label: "below",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "below=",
-                    documentation: "The search parameter is a concept with the form [system]|[code], and the search parameter " +
-                        "tests whether the coding in a resource is subsumed by the specified search code. For example, the " +
-                        "coding in the resource has an is-a relationship with the search concept, and this includes the coding itself."
-                },
-                {
-                    label: "in",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "in=",
-                    documentation: "The search parameter is a URI (relative or absolute) that identifies a value set, " +
-                        "and the search parameter tests whether the coding is in the specified value set. The reference" +
-                        " may be literal (to an address where the value set can be found) or logical (a reference to ValueSet.url)." +
-                        " If the server can treat the reference as a literal URL, it does, else it tries to match known logical " +
-                        "ValueSet.url values."
-                },
-                {
-                    label: "not-in",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "not-in=",
-                    documentation: "The search parameter is a URI (relative or absolute) that identifies a value set, and " +
-                        "the search parameter tests whether the coding is not in the specified value set."
-                },
-                {
-                    label: "of-type",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "not-in=",
-                    documentation: "The search parameter has the format system|code|value, where the system and code refer" +
-                        " to a Identifier.type.coding.system and .code, and match if any of the type codes match. All " +
-                        "3 parts must be present."
-                }
-            ]
+            additionalParams = [{
+                label: "text",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "text=",
+                documentation: "The search parameter is processed as a string that searches text associated with the" +
+                    " code/value - either CodeableConcept.text, Coding.display, or Identifier.type.text. In this case, " +
+                    "the search functions as a normal string search"
+            }, {
+                label: "not",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "not=",
+                documentation: "Reverse the code matching described in the paragraph above: return all resources " +
+                    "that do not have a matching item. Note that this includes resources that have no value for the " +
+                    "parameter - e.g. ?gender:not=male includes all patients that do not have gender = male, including" +
+                    " patients that do not have a gender at all"
+            }, {
+                label: "above",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "above=",
+                documentation: "The search parameter is a concept with the form [system]|[code], and the search parameter " +
+                    "tests whether the coding in a resource subsumes the specified search code. For example, the search" +
+                    " concept has an is-a relationship with the coding in the resource, and this includes the coding itself."
+            }, {
+                label: "below",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "below=",
+                documentation: "The search parameter is a concept with the form [system]|[code], and the search parameter " +
+                    "tests whether the coding in a resource is subsumed by the specified search code. For example, the " +
+                    "coding in the resource has an is-a relationship with the search concept, and this includes the coding itself."
+            }, {
+                label: "in",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "in=",
+                documentation: "The search parameter is a URI (relative or absolute) that identifies a value set, " +
+                    "and the search parameter tests whether the coding is in the specified value set. The reference" +
+                    " may be literal (to an address where the value set can be found) or logical (a reference to ValueSet.url)." +
+                    " If the server can treat the reference as a literal URL, it does, else it tries to match known logical " +
+                    "ValueSet.url values."
+            }, {
+                label: "not-in",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "not-in=",
+                documentation: "The search parameter is a URI (relative or absolute) that identifies a value set, and " +
+                    "the search parameter tests whether the coding is not in the specified value set."
+            }, {
+                label: "of-type",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "not-in=",
+                documentation: "The search parameter has the format system|code|value, where the system and code refer" +
+                    " to a Identifier.type.coding.system and .code, and match if any of the type codes match. All " +
+                    "3 parts must be present."
+            }]
         } else if (paramDefinition.type === "string") {
-            additionalParams = [
-                {
-                    label: "exact",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "exact=",
-                    documentation: "The :exact modifier returns results that match the entire supplied parameter, including casing and accents. "
-                },
-                {
-                    label: "contains",
-                    range: range,
-                    kind: CompletionItemKind.Operator,
-                    insertText: "contains=",
-                    documentation: "The :contains modifier returns results that include the supplied parameter value anywhere within the field being searched."
-                }
-            ]
+            additionalParams = [{
+                label: "exact",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "exact=",
+                documentation: "The :exact modifier returns results that match the entire supplied parameter, including casing and accents. "
+            }, {
+                label: "contains",
+                range: range,
+                kind: CompletionItemKind.Operator,
+                insertText: "contains=",
+                documentation: "The :contains modifier returns results that include the supplied parameter value anywhere within the field being searched."
+            }]
         } else if (paramDefinition.type === "reference") {
             additionalParams = [
                 {
@@ -500,15 +491,13 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                     kind: CompletionItemKind.Operator,
                     insertText: "identifier=",
                     documentation: "Search by identifier rather than literal reference (e.g. Observation?subject:identifier=http://acme.org/fhir/identifier/mrn|123456)"
-                },
-                {
+                }, {
                     label: "above",
                     range: range,
                     kind: CompletionItemKind.Operator,
                     insertText: "above=",
                     documentation: "Some references are circular - that is, the reference points to another resource of the same type. When the reference establishes a strict hierarchy, the modifiers :above and :below may be used to search transitively through the hierarchy: "
-                },
-                {
+                }, {
                     label: "below",
                     range: range,
                     kind: CompletionItemKind.Operator,
@@ -584,7 +573,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         return undefined;
     }
 
-    private getParamValueSuggestions(model: editor.ITextModel, range: IRange, textUntilPosition: string): CompletionItem[] {
+    private getParamValueSuggestions(fullText: string, range: IRange, textUntilPosition: string): CompletionItem[] {
         let paramKey = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
             textUntilPosition.lastIndexOf("=")
@@ -611,15 +600,15 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         }
 
 
-        let resourceName = this.getResourceName(textUntilPosition)[0];
+        let resourceNames = this.getResourceName(fullText); //TODO
         if (paramName === "_include") {
             if (paramValue === "") {
-                return [{
+                return resourceNames.map(resourceName => ({
                     label: resourceName,
                     range: range,
                     kind: CompletionItemKind.Class,
                     insertText: resourceName + ":"
-                }];
+                }));
             }
         } else if (paramName === "_revinclude") {
             if (paramValue === "") {
@@ -640,35 +629,33 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             if (definition) {
                 return definition.searchParam
                     .filter(it => it.type === "reference") //TODO This makes only sense on references, doesn't it?
-                    .map(it => (
-                        {
+                    .map(it => ({
                             label: it.name,
                             kind: CompletionItemKind.Function,
                             range: range,
                             detail: it.type,
                             insertText: it.name,
                             documentation: it.documentation
-                        }
-                    ));
+                        }));
             }
         }
 
         if (paramName === "_sort") {
-            let definition = this.getDefinitionForResourceName(resourceName);
-            return definition.searchParam.map(it => (
-                {
-                    label: it.name,
-                    kind: CompletionItemKind.Function,
-                    range: range,
-                    detail: it.type,
-                    insertText: it.name,
-                    documentation: it.documentation
-                }
-            ));
+            return resourceNames
+                .map(it => this.getDefinitionForResourceName(it))
+                .map(it => it.searchParam.map(it => ({
+                        label: it.name,
+                        kind: CompletionItemKind.Function,
+                        range: range,
+                        detail: it.type,
+                        insertText: it.name,
+                        documentation: it.documentation
+                    })
+                )).reduce((acc, val) => acc.concat(val), []) //TODO: Use .flatMap() instead;
         }
 
         if (paramName === "_type") {
-            return this.getResourceNameSuggestions(model, range, "");
+            return this.getResourceNameSuggestions(range, "");
         }
 
 
