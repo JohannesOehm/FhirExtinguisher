@@ -7,7 +7,19 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     triggerCharacters = ["?", "&", ":", "=", "."];
 
     private conformanceStatement: R4.ICapabilityStatement = undefined;
+
+    /**
+     * e.g. {base:["Observation"],parameter:"subject",target:["Group","Device","Patient","Location"]}
+     * means Observation?subject= references either Group, Device, Patient or Location
+     */
     private referenceTypes: { base: string[], parameter: string, target: string[] }[] = undefined;
+
+    /**
+     * e.g. "Patient":["id","meta",...] means, Patient has Patient.id, Patient.meta, ... as root elements
+     * for Patient?_elements=<click> completion
+     */
+    private typeElements: Record<string, string[]>;
+
 
     constructor() {
         fetch("/example-conformance.json")
@@ -17,6 +29,10 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
         fetch("/reference-types.json")
             .then(res => res.json())
             .then(res => this.referenceTypes = res);
+
+        fetch(`/structuredefinitions/type-elements-r4.json`)
+            .then(res => res.json())
+            .then(it => this.typeElements = it);
     }
 
     provideCompletionItems(model: editor.ITextModel, position: mPosition, context: languages.CompletionContext, token: CancellationToken): languages.CompletionList {
@@ -573,6 +589,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             return this.returnSummary(range)
         }
 
+
         if (paramName === "_pretty" || paramModifier === "missing") {
             return ["true", "false"].map(it => ({
                 label: it,
@@ -585,8 +602,20 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             return this.returnFormatValues(range);
         }
 
-
         let resourceNames = this.getResourceName(fullText);
+
+        if (paramName === "_elements") {
+            return resourceNames.map(it => this.typeElements[it])
+                .reduce((acc, val) => acc.concat(val), [])
+                .map(it => ({
+                        label: it,
+                        range: range,
+                        kind: CompletionItemKind.Value,
+                        insertText: it
+                    })
+                );
+        }
+
         if (paramName === "_include" || paramName === "_revinclude") {
             let paramLastValue = this.getParamLastValue(paramValue);
             if (!paramLastValue.includes(":")) {

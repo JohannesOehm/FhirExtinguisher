@@ -1,6 +1,6 @@
 <template>
     <b-modal id="modal-cheat-sheet" title="FHIR Search API Cheat Sheet" size="xl">
-        <h5>AND/OR</h5>
+        <h5>Combining Criteria</h5>
         <table>
             <tr>
                 <td><code>Patient?language=FR&language=NL</code></td>
@@ -38,7 +38,7 @@
                 <td>String parameters only. Matches anywhere in the text</td>
             </tr>
         </table>
-        Please check out the IntelliSense help to the other modifiers.
+        Please check out the IntelliSense documentation for help with the other modifiers.
 
         <h5>Token</h5>
         This searchparameter type is used for Codings, CodeableConcepts, Identifier, ContactPoint, code datatypes.
