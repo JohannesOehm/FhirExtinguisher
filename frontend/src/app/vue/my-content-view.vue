@@ -12,13 +12,19 @@
                     <button @click="copyToClipboard(downloadUrl)" class="btn btn-sm btn-outline-secondary">
                         Copy Link
                     </button>
+                    <button @click="importLink()" class="btn btn-sm btn-outline-secondary">
+                        Import Link
+                    </button>
+                </div>
+                <div class="btn-group mr-2">
                     <button @click="openUrl(downloadUrl)" class="btn btn-sm btn-outline-secondary" type="submit">
                         Download
                     </button>
+                    <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Limit:
+                        {{limit}}
+                    </button>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Download Limit:
-                    {{limit}}
-                </button>
+
             </div>
         </div>
         <div class="table-responsive" v-if="!showRaw">
@@ -67,6 +73,7 @@
 <script lang="ts">
     import * as CSV from '../csv.js';
     import * as monaco from "monaco-editor";
+    import {ColumnsParser} from "../column-parser-antlr";
 
 
     type TableData = { records: string[][], fields: string[], metadata: any };
@@ -74,12 +81,29 @@
 
 
     function columnsToString(columns: Column[]) {
-        return columns.map((it: Column) => `${it.name}@${it.type.replace(",", "%2C").replace(":", "%3A")}:${it.expression}`).join(",");
+        return columns.map((it: Column) => {
+            let name = it.name.replace(":", "\\:").replace("@", "\\@");
+            let type = it.type.replace(":", "\\:");
+            let expression = it.expression.replace(",", "\\,");
+            return `${name}@${type}:${expression}`
+        }).join(",");
+    }
+
+    function getUrlParams(search: string): Map<string, string> {
+        const hashes = search.slice(search.indexOf('?') + 1).split('&');
+        const params: Map<string, string> = new Map();
+        for (let hash of hashes) {
+            let idx = hash.indexOf('=');
+            const key = hash.substring(0, idx);
+            const val = hash.substring(idx + 1);
+            params.set(key, val);
+        }
+        return params;
     }
 
 
     function stringifyHeaders(headers: Headers) {
-        var s = "";
+        let s = "";
         headers.forEach((value, key) => {
             s += key + ": " + value + "\n";
         });
@@ -110,7 +134,7 @@
                 this.showRaw = !this.showRaw;
             },
             editLimit: function () {
-                let newLimit = window.prompt("Please enter the new limit parameter:", this.limit);
+                let newLimit = window.prompt("Please enter the maximum number of resources to process:", this.limit);
                 let newValue = parseInt(newLimit);
                 if (!isNaN(newValue)) {
                     this.limit = newValue;
@@ -157,8 +181,33 @@
                     this.tableData = null;
                     this.tableError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
                     this.tableError += "\n\n" + await response.text();
-                    console.log(response);
                 }
+            },
+            importLink: function () {
+                let link = window.prompt("Please insert link to import!");
+                if (link) {
+                    let urlToParse;
+                    if (link.indexOf("/fhir/") != null) {
+                        urlToParse = link.substring(link.indexOf("/fhir/") + "/fhir/".length);
+                    } else {
+                        urlToParse = link;
+                    }
+
+                    let urlParams = getUrlParams(urlToParse);
+
+                    this.limit = parseInt(urlParams.get("__limit"));
+
+                    let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
+                    this.$emit("update-columns", columns);
+
+                    let url = urlToParse.split("?")[0];
+                    let query = [...urlParams.entries()] //TODO: Improve this somehow
+                        .filter(it => it[0] != "__columns" && it[0] != "__limit")
+                        .map(it => it[0] + "=" + it[1])
+                        .join("&");
+                    (<any>window).searchEditor.setValue(url + "?" + query);
+                }
+
             },
             copyToClipboard: function (str: string) {
                 let stringToCopy = window.location.host + str;

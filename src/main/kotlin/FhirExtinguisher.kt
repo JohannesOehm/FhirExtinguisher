@@ -29,29 +29,27 @@ class FhirExtinguisher(
         FhirPathEngineWrapperR4(fhirContext, fhirClient)
     }
 
+    val columnsParser = ColumnsParser(fhirPathEngine)
+
     init {
         interceptors.forEach { fhirClient.registerInterceptor(it) }
     }
 
     data class MyParams(
-        val csvFormat: String,
+        val csvFormat: CSVFormat,
         val limit: Int?,
         val columns: List<Column>?
     )
 
-    data class Column(
-        val name: String,
-        val expression: ExpressionWrapper,
-        val listProcessingMode: String
-    )
 
     fun serve(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
         val sb = StringBuilder()
-        val printer = CSVPrinter(sb, CSVFormat.EXCEL)
         val (fhirParams, myParams) = processQueryParams(session)
         log.debug { "uri = '${session.uri}'; queryParams = ${session.queryParameterString}" }
         log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
         //TODO: Abort when user cancels request
+        val printer = CSVPrinter(sb, myParams.csvFormat)
+
 
         if (session.method === NanoHTTPD.Method.POST) {
             val body = getBody(session)
@@ -85,7 +83,6 @@ class FhirExtinguisher(
             addHeader("Content-Disposition", "attachment; filename=\"$filename.csv\"');")
         }
     }
-
 
 
     private fun processWithColumns(
@@ -148,7 +145,7 @@ class FhirExtinguisher(
                 }
             return passThruParams.joinToString("&") to parseMyParams(myParams)
         } else {
-            return "" to MyParams(",", -1, emptyList())
+            return "" to MyParams(CSVFormat.EXCEL, -1, emptyList())
         }
     }
 
@@ -158,32 +155,44 @@ class FhirExtinguisher(
             .map { it[0] to it[1] }
             .toMap()
 
-        val csvFormat = map["__csvFormat"] ?: ","
+        val csvFormat = if (map["__csvFormat"] != null) {
+            val csvFormat = map["__csvFormat"]
+            try {
+                CSVFormat.valueOf(csvFormat)
+            } catch (e: Exception) {
+                val supported = CSVFormat.Predefined.values().joinToString(", ")
+                val message =
+                    "Unknown CSV Format '$csvFormat', supported values are: $supported"
+                throw RuntimeException(message, e)
+            }
+        } else {
+            CSVFormat.EXCEL
+        }
         val limit = map["__limit"]?.toInt()
-        val columnsStr = map["__columns"]
-        val columns = if (columnsStr != null) parseColumns(columnsStr) else null
+        val columnsStr = URLDecoder.decode(map["__columns"])
+        val columns = if (columnsStr != null) columnsParser.parseString(columnsStr) else null
 
         return MyParams(csvFormat, limit, columns)
     }
 
-    private fun parseColumns(stringToParse: String): List<Column> {
-        return stringToParse.split(',')
-            .map { it.split(':', limit = 2) }
-            .filter { it.size == 2 }
-            .map {
-                val splitted = URLDecoder.decode(it[0]).split('@', limit = 2);
-                val listProcessingMode = if (splitted.size == 2) splitted[1] else "flatten"
-                val expressionStr = URLDecoder.decode(it[1])
-
-                val expression = try {
-                    fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
-                } catch (e: Exception) {
-                    throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
-                }
-
-//                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
-
-                Column(splitted[0], expression, listProcessingMode)
-            }
-    }
+//    private fun parseColumns(stringToParse: String): List<Column> {
+//        return stringToParse.split(',')
+//            .map { it.split(':', limit = 2) }
+//            .filter { it.size == 2 }
+//            .map {
+//                val splitted = URLDecoder.decode(it[0]).split('@', limit = 2);
+//                val listProcessingMode = if (splitted.size == 2) splitted[1] else "flatten"
+//                val expressionStr = URLDecoder.decode(it[1])
+//
+//                val expression = try {
+//                    fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
+//                } catch (e: Exception) {
+//                    throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
+//                }
+//
+////                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
+//
+//                Column(splitted[0], expression, listProcessingMode)
+//            }
+//    }
 }

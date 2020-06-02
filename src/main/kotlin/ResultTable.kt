@@ -1,38 +1,40 @@
 import org.apache.commons.csv.CSVPrinter
 
 class ResultTable() {
-    val columns = ArrayList<FhirExtinguisher.Column>(0)
+    val columns = ArrayList<Column>(0)
     val data = ArrayList<List<String>>()
     var currentLength = 1
 
 
-    fun addColumn(column: FhirExtinguisher.Column, data: List<String>) {
+    fun addColumn(column: Column, data: List<String>) {
         columns.add(column)
 
-        if (column.listProcessingMode == "flatten") {
-            val value = if (data.size == 1) data[0] else data.toString()
-            this.data.add(List(currentLength) { value }) // just one element
-
-        } else if (column.listProcessingMode.startsWith("join")) {
-            val regex = "join\\(\\s*\"([^\"])*\"\\s*\\)".toRegex()
-            if (!regex.matches(column.listProcessingMode)) {
-                throw RuntimeException("Invalid @join expression at column '${column.name}': ${column.listProcessingMode}")
+        when (column.listProcessingMode) {
+            is Join -> {
+                val value = data.joinToString(column.listProcessingMode.delimiter)
+                this.data.add(List(currentLength) { value })
             }
-            val separator = regex.find(column.listProcessingMode)!!.groupValues[1]
-            this.data.add(listOf(data.joinToString(separator)))
-        } else if (column.listProcessingMode == "explode") {
-            if (data.size == 1) {
-                this.data.add(List(currentLength) { data[0].toString() })
-            } else if (data.isEmpty()) {
-                this.data.add(List(currentLength) { data.toString() })
-            } else {
-                for ((i, col) in this.data.withIndex()) {
-                    this.data[i] = repeatList(col, data.size)
+            is Explode -> {
+                when {
+                    data.size == 1 -> {
+                        this.data.add(List(currentLength) { data[0] })
+                    }
+                    data.isEmpty() -> {
+                        this.data.add(List(currentLength) { data.toString() })
+                    }
+                    else -> {
+                        for ((i, col) in this.data.withIndex()) {
+                            this.data[i] = repeatList(col, data.size)
+                        }
+                        this.data.add(data)
+                        this.currentLength = currentLength * data.size
+                    }
                 }
-                this.data.add(data)
-                this.currentLength = currentLength * data.size
             }
-
+            else -> {
+                val value = if (data.size == 1) data[0] else data.toString()
+                this.data.add(List(currentLength) { value }) // just one element
+            }
         }
     }
 

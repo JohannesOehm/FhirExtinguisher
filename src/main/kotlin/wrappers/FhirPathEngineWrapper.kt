@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.instance.model.api.IBaseResource
+import java.lang.RuntimeException
 
 private val log = KotlinLogging.logger {}
 
@@ -44,7 +45,7 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
 
         } catch (e: Exception) {
             log.error(e) { "Cannot resolve reference $url!" }
-            null
+            throw RuntimeException("Failed to resolve reference '$url'!", e)
         }
 
     }
