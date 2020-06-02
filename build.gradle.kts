@@ -10,7 +10,7 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.0-SNAPSHOT"
+    version = "1.1"
 }
 
 
@@ -45,7 +45,7 @@ tasks {
         kotlinOptions {
             jvmTarget = "1.8"
         }
-        dependsOn(copyStaticPages)
+        dependsOn(copyStaticPages, generateGrammarSource)
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
