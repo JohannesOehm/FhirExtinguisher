@@ -83,7 +83,7 @@ Note that the table shown in the GUI **is only a preview based on the first Bund
 function is providing suggestions based on the Resource's StructureDefinintion, there is **no guarantee of completeness**.
 Array fields are inserted like single elements, so there might be unintended behaviour.
 
-In the searchbar, you can use <kbd>Ctrl</kbd>+<kbd>Enter</kbd> for autocompletion. This is based on the server conformance 
+In the searchbar, you can use <kbd>Ctrl</kbd>+<kbd>Space</kbd> for autocompletion. This is based on the server conformance 
 statement on HAPI FHIR using FHIR R4. Note that actual query options on your server might differ.
 
 # Useful FHIRPath expressions
