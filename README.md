@@ -31,6 +31,8 @@ The returned bundle(s) are evaluated against the FHIRPath expressions using the 
 
 
 ## Building
+**Note that you can download pre-compiled binaries in the Release-section of the Gitlab**!
+
 Requirements: **Java 8, npm 6.13.x**
 
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
