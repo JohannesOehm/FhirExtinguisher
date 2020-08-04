@@ -40,7 +40,8 @@
                 </tr>
                 </tbody>
                 <caption>
-                    This is only a preview of the first Bundle returned by the server. Click download for the full data.
+                    This is only a preview, where only the resources in the first Bundle returned by the server was processed.
+                    Click download to process as many Bundles as needed to fulfill the limit.
                 </caption>
             </table>
             <div v-else>
