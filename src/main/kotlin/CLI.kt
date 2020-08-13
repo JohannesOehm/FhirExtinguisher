@@ -13,9 +13,11 @@ import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.defaultResource
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
+import io.ktor.request.receiveText
 import io.ktor.request.uri
 import io.ktor.response.header
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -26,6 +28,7 @@ import mu.KotlinLogging
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
+import java.io.File
 
 private val log = KotlinLogging.logger {}
 
@@ -93,12 +96,45 @@ fun main(args: Array<String>) {
     val instanceConfiguration =
         InstanceConfiguration(fhirServerUrl, fhirContext, basicAuth, interceptors, !external)
 
+    val savedQueriesFile = File("storedQueries.csv")
+    val savedQueries: MutableList<StoredQuery> =
+        if (savedQueriesFile.exists()) deserialize(savedQueriesFile.readText()) else mutableListOf()
+
     val fhirExtinguisher = FhirExtinguisher(fhirServerUrl, fhirContext, interceptors)
     embeddedServer(Netty, 8080) {
         routing {
             redirect("/redirect", fhirServerUrl)
             post("/processBundle") {
                 fhirExtinguisher.processBundle(call)
+            }
+            get("/query") {
+                call.respondText(
+                    serialize(savedQueries),
+                    contentType = ContentType.Text.CSV,
+                    status = HttpStatusCode.OK
+                )
+            }
+            post("/query/{name}") {
+                val queryName = call.parameters["name"]
+                val force = call.parameters["force"] == "true"
+                if (queryName != null) {
+                    if (!force && savedQueries.any { it.name == queryName }) {
+                        call.respond(HttpStatusCode.BadRequest, "Query name already in use")
+                    } else {
+                        if (force) {
+                            savedQueries.removeIf { it.name == queryName }
+                        }
+                        savedQueries += StoredQuery(queryName, call.receiveText())
+                    }
+                    savedQueriesFile.writeText(serialize(savedQueries))
+                }
+            }
+            delete("/query/{name}") {
+                val queryName = call.parameters["name"]
+                if (queryName != null) {
+                    savedQueries.removeIf { it.name == queryName }
+                    savedQueriesFile.writeText(serialize(savedQueries))
+                }
             }
             route("/fhir/*") {
                 handle {

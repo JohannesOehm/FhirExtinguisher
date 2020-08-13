@@ -5,6 +5,8 @@ import {KeyCode} from "monaco-editor";
             <template v-slot:button-content>
                 <img src="logo.png" style="height:28px; width:28px;"/><span class="sr-only">FhirExtinguisher</span>
             </template>
+            <b-dropdown-item href="#" v-b-modal.modal-query-save>Save query...</b-dropdown-item>
+            <b-dropdown-item href="#" v-b-modal.modal-query-load>Load query...</b-dropdown-item>
             <b-dropdown-item href="#" v-b-modal.modal-about>About</b-dropdown-item>
         </b-dropdown>
         <a :href="endpointUrl" class="navbar-brand col-sm-3 col-md-3 mr-0" href="#" id="fhirServerUrl" target="_blank">{{endpointUrl}}</a>
