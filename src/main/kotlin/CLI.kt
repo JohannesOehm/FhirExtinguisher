@@ -119,7 +119,7 @@ fun main(args: Array<String>) {
                 val force = call.parameters["force"] == "true"
                 if (queryName != null) {
                     if (!force && savedQueries.any { it.name == queryName }) {
-                        call.respond(HttpStatusCode.BadRequest, "Query name already in use")
+                        call.respond(HttpStatusCode.Conflict, "Query name already in use")
                     } else {
                         if (force) {
                             savedQueries.removeIf { it.name == queryName }

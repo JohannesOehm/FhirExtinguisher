@@ -19,7 +19,7 @@
     <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
     <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
     <DialogAbout/>
-    <DialogQueryLoad/>
+    <DialogQueryLoad @import-link="importLink"/>
     <DialogQuerySave />
   </div>
 </template>
@@ -61,6 +61,30 @@ function getUrlParams(search: string): Map<string, string> {
     params.set(key, val);
   }
   return params;
+}
+
+type ParsedUrl = { limit: number, url: string, columns: Column[] };
+
+export function parseLink(link: string): ParsedUrl {
+  let urlToParse: string;
+  if (link.indexOf("/fhir/") != null) {
+    urlToParse = link.substring(link.indexOf("/fhir/") + "/fhir/".length);
+  } else {
+    urlToParse = link;
+  }
+
+  let urlParams = getUrlParams(urlToParse);
+
+  let limit = parseInt(urlParams.get("__limit"));
+
+  let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
+
+  let url = urlToParse.split("?")[0];
+  let query = [...urlParams.entries()] //TODO: Improve this somehow
+          .filter(it => it[0] != "__columns" && it[0] != "__limit")
+          .map(it => it[0] + "=" + it[1])
+          .join("&");
+  return {url: url + "?" + query, columns, limit}
 }
 
 export type Column = { name: string, type: string, expression: string };
@@ -167,32 +191,13 @@ export default {
       this.limit = newLimit;
     },
     importLink: function (link: string) {
-      let urlToParse;
-      if (link.indexOf("/fhir/") != null) {
-        urlToParse = link.substring(link.indexOf("/fhir/") + "/fhir/".length);
-      } else {
-        urlToParse = link;
-      }
-
-      let urlParams = getUrlParams(urlToParse);
-
-      this.limit = parseInt(urlParams.get("__limit"));
-
-      let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
-      this.$emit("update-columns", columns, true);
-
-      let url = urlToParse.split("?")[0];
-      let query = [...urlParams.entries()] //TODO: Improve this somehow
-          .filter(it => it[0] != "__columns" && it[0] != "__limit")
-          .map(it => it[0] + "=" + it[1])
-          .join("&");
-      (<any>window).searchEditor.setValue(url + "?" + query);
+      (<any>window).searchEditor.setValue(parseLink(link).url);
+      this.$emit("update-columns", parseLink(link).columns, true);
+      this.limit = parseLink(link).limit;
     },
     getDownloadUrl: function () {
       let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
       let fhirQuery = (<any>window).searchEditor?.getValue() ?? "";
-      console.log((<any>window).searchEditor);
-      console.log(fhirQuery);
       if (fhirQuery.endsWith("?")) {
         return "/fhir/" + fhirQuery + params;
       } else if (fhirQuery.includes("?")) {

@@ -135,7 +135,6 @@ export default {
         this.rawData = await response.text();
       } else {
         this.rawError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
-        console.log(response.headers);
         this.rawError += "\n\n" + await response.text();
         this.showRaw = true;
         this.tableData = null;
