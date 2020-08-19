@@ -11,17 +11,18 @@
       <div id="separator" draggable="true"></div>
       <div id="tableOrRaw" role="main" style="overflow: auto">
         <MyContentView :columns="columns" :fhir-query="fhirQuery" :rawData="rawData" :limit="limit"
-                       @update-columns="updateColumns" @update-limit="updateLimit" @import-link="importLink" ref="content"/>
+                       @update-columns="updateColumns" @update-limit="updateLimit" @import-link="importLink"
+                       ref="content"/>
       </div>
     </div>
     <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
                   @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
     <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
     <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
-    <DialogCheatSheet />
+    <DialogCheatSheet/>
     <DialogAbout/>
     <DialogQueryLoad @import-link="importLink"/>
-    <DialogQuerySave />
+    <DialogQuerySave/>
   </div>
 </template>
 
@@ -36,9 +37,7 @@ import DialogResource from './dialog-resource.vue';
 import DialogQueryLoad from './dialog-query-load.vue';
 import DialogQuerySave from './dialog-query-save.vue';
 import DialogAbout from './dialog-about.vue';
-
-import * as $ from 'jquery';
-    import DialogCheatSheet from "./dialog-cheat-sheet.vue";
+import DialogCheatSheet from "./dialog-cheat-sheet.vue";
 import {ColumnsParser} from "../column-parser-antlr";
 // import * as $ from ''
 
@@ -83,9 +82,9 @@ export function parseLink(link: string): ParsedUrl {
 
   let url = urlToParse.split("?")[0];
   let query = [...urlParams.entries()] //TODO: Improve this somehow
-          .filter(it => it[0] != "__columns" && it[0] != "__limit")
-          .map(it => it[0] + "=" + it[1])
-          .join("&");
+      .filter(it => it[0] != "__columns" && it[0] != "__limit")
+      .map(it => it[0] + "=" + it[1])
+      .join("&");
   return {url: url + "?" + query, columns, limit}
 }
 
@@ -131,7 +130,7 @@ export default {
     }
   },
   components: {
-            DialogCheatSheet,
+    DialogCheatSheet,
     DialogColumn,
     Searchbar,
     ColumnsView,
@@ -141,7 +140,6 @@ export default {
     DialogAbout,
     DialogQueryLoad,
     DialogQuerySave,
-    DialogAbout,
   },
   methods: {
     handleAddColumn: function () {
@@ -212,9 +210,7 @@ export default {
 
     }
   },
-  computed: {
-
-  },
+  computed: {},
   mounted: function () {
     fetch("/info")
         .then(res => res.json())
