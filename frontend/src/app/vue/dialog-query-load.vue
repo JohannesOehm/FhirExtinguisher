@@ -37,10 +37,13 @@
 
     export default {
         name: "DialogQueryLoad",
-        data: function (): { queries: StoredQuery[], query: StoredQuery, updateSearch: true, updateLimit: true, updateColumns: true } {
+        data: function (): { queries: StoredQuery[], query: StoredQuery, updateSearch: boolean, updateLimit: boolean, updateColumns: boolean } {
             return {
                 queries: [],
-                query: null
+                query: null,
+                updateSearch: true,
+                updateLimit: true,
+                updateColumns: true
             }
         },
         methods: {
