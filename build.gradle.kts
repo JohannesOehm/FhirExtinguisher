@@ -1,11 +1,14 @@
 plugins {
-    kotlin("jvm") version "1.3.60"
+    kotlin("jvm") version "1.4.0"
     antlr
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 repositories {
     mavenCentral()
+    maven{
+        url = uri("https://dl.bintray.com/kotlin/ktor/")
+    }
 }
 
 kotlin {
@@ -22,6 +25,8 @@ val ktor_version = "1.3.1"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
     testImplementation(group = "junit", name = "junit", version = "4.12")
     implementation(group = "org.nanohttpd", name = "nanohttpd", version = "2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
@@ -31,7 +36,6 @@ dependencies {
     implementation(group = "ca.uhn.hapi.fhir", name = "hapi-fhir-structures-r4", version = "4.1.0")
     implementation(group = "ca.uhn.hapi.fhir", name = "hapi-fhir-structures-dstu3", version = "4.1.0")
     implementation(group = "org.apache.commons", name = "commons-csv", version = "1.5")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.3.60")
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-client:$ktor_version")
