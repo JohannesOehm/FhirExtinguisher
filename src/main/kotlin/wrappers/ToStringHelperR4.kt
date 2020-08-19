@@ -62,7 +62,7 @@ object ToStringHelperR4 {
     }
 
     private fun getTimingAsString(it: Timing): String {
-        return "Timing" //TODO
+        return "Timing[event=${it.event}, repeat=${it.repeat}, code=${it.code}]" //TODO
     }
 
     private fun getAddressAsString(it: Address): String {
@@ -92,7 +92,7 @@ object ToStringHelperR4 {
         return sb.toString()
     }
 
-    private fun getQuantityAsString(it: Quantity) = ("${it.value} ${it.unit}")
+    private fun getQuantityAsString(it: Quantity) = ("${it.value} '${it.unit}'")
 
     private fun getRangeAsString(it: Range): String {
         return if (it.low != null) getQuantityAsString(it.low) else "" +
@@ -135,32 +135,30 @@ object ToStringHelperR4 {
         return sb.toString()
     }
 
-    private fun getSampledDataAsString(it: SampledData): String {
-        return "SampledData"
-    }
+    private fun getSampledDataAsString(it: SampledData) =
+        "SampledData[origin=${it.origin}, period=${it.period}, factor=${it.factor}, lowerLimit=${it.lowerLimit}," +
+                " upperLimit=${it.upperLimit}, dimensions=${it.dimensions}, data=${it.data}]" //TODO
 
 
-    private fun getCodingAsString(it: Coding): String {
-        val sb = StringBuilder()
+    private fun getCodingAsString(it: Coding): String = buildString {
         if (it.hasSystem()) {
-            sb.append(it.system).append('|')
+            append(it.system).append('|')
         }
         if (it.hasVersion()) {
-            sb.append(it.version).append('|')
+            append(it.version).append('|')
         }
-        sb.append(it.code)
-        return sb.toString()
-
+        append(it.code)
     }
+
 
     private fun getCodeableConceptAsString(it: CodeableConcept) =
         if (it.text != null) it.text else it.coding.joinToString { getCodingAsString(it) }
 
     private fun getNameAsString(name: HumanName): String {
-        if (name.hasText()) {
-            return name.text
+        return if (name.hasText()) {
+            name.text
         } else {
-            return listOf(
+            listOf(
                 name.prefix.joinToString(" "),
                 name.given.joinToString(" "),
                 if (name.hasFamily()) name.family else "",
@@ -169,14 +167,10 @@ object ToStringHelperR4 {
         }
     }
 
-    private fun getReferenceAsString(reference: Reference): String {
-        if (reference.hasReference()) {
-            return reference.reference
-        } else if (reference.hasIdentifier()) {
-            return getIdentifierAsString(reference.identifier)
-        } else {
-            return reference.display
-        }
+    private fun getReferenceAsString(reference: Reference) = when {
+        reference.hasReference() -> reference.reference
+        reference.hasIdentifier() -> getIdentifierAsString(reference.identifier)
+        else -> reference.display
     }
 
     private fun getIdentifierAsString(identifier: Identifier): String {

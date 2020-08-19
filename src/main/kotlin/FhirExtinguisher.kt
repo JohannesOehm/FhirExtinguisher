@@ -4,10 +4,20 @@ import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.newChunkedResponse
 import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
+import io.ktor.application.ApplicationCall
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
+import io.ktor.request.receiveStream
+import io.ktor.request.uri
+import io.ktor.response.header
+import io.ktor.response.respond
+import io.ktor.response.respondText
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import wrappers.*
+import java.net.URI
 
 import java.net.URLDecoder
 import java.time.LocalDateTime
@@ -42,48 +52,58 @@ class FhirExtinguisher(
     )
 
 
-    fun serve(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
+    suspend fun processBundle(call: ApplicationCall) {
         val sb = StringBuilder()
-        val (fhirParams, myParams) = processQueryParams(session)
-        log.debug { "uri = '${session.uri}'; queryParams = ${session.queryParameterString}" }
+        val (fhirParams, myParams) = processQueryParams(call.parameters) //TODO: Only parse my_params
+//        log.debug { "uri = '${call.uri}'; queryParams = ${session.queryParameterString}" }
         log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
         //TODO: Abort when user cancels request
         val printer = CSVPrinter(sb, myParams.csvFormat)
 
-
-        if (session.method === NanoHTTPD.Method.POST) {
-            val body = getBody(session)
-            val resource = fhirContext.newJsonParser().parseResource(body)
-            val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
-            val bundleWrapper = BundleWrapper(bundleDefinition, resource)
-            printer.printRecord(myParams.columns!!.map { it.name })
-            for (bundleEntry in bundleWrapper.entry) {
-                processBundleEntry(myParams.columns, bundleEntry, printer)
-            }
-        } else {
-            val bundleUrl = session.uri.drop("/fhir/".length)
-            try {
-                if (myParams.columns != null) {
-                    processWithColumns(bundleUrl, fhirParams, myParams, printer, myParams.columns)
-                }
-            } catch (e: Exception) {
-                log.error(e) { "An error occured while serving $bundleUrl !" }
-                return newFixedLengthResponse(
-                    NanoHTTPD.Response.Status.INTERNAL_ERROR,
-                    "text/plain",
-                    "Error: " + e.message
-                )
-            }
+        val resource = fhirContext.newJsonParser().parseResource(call.receiveStream())
+        val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
+        val bundleWrapper = BundleWrapper(bundleDefinition, resource)
+        printer.printRecord(myParams.columns!!.map { it.name })
+        for (bundleEntry in bundleWrapper.entry) {
+            processBundleEntry(myParams.columns, bundleEntry, printer)
         }
 
-        return newChunkedResponse(NanoHTTPD.Response.Status.OK, "text/csv", sb.toString().byteInputStream()).apply {
-            val resourceName = if (session.uri.startsWith("/fhir/")) session.uri.drop("/fhir/".length) else session.uri
-            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
-            val filename = (resourceName + "_" + fhirParams + "_" + timestamp).replace(Regex("[\\\\/$:?<>|\"'*]"), "_")
-            addHeader("Content-Disposition", "attachment; filename=\"$filename.csv\"');")
-        }
+        call.respondText(sb.toString()) //TODO: Streamify this
     }
 
+    suspend fun processUrl(call: ApplicationCall) {
+        println("call.request.uri= " + call.request.uri)
+        val bundleUrl = URI(call.request.uri.removePrefix("/fhir/")).path
+        val (fhirParams, myParams) = processQueryParams(call.parameters)
+
+        val sb = StringBuilder()
+        val printer = CSVPrinter(sb, myParams.csvFormat)
+        try {
+            if (myParams.columns != null) {
+                processWithColumns(bundleUrl, fhirParams, myParams, printer, myParams.columns)
+            }
+        } catch (e: Exception) {
+            log.error(e) { "An error occured while serving $bundleUrl !" }
+            return call.respond(
+                HttpStatusCode.InternalServerError,
+                "Error: " + e.message
+            )
+        }
+
+        call.response.header(
+            "Content-Disposition",
+            "attachment; filename=\"${defaultCsvFileName(bundleUrl, fhirParams)}.csv\"');"
+        )
+
+
+        call.respondText(text = sb.toString(), contentType = ContentType.Text.CSV)
+
+    }
+
+    private fun defaultCsvFileName(bundleUrl: String, fhirParams: String): String {
+        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+        return (bundleUrl + "_" + fhirParams + "_" + timestamp).replace(Regex("[\\\\/$:?<>|\"'*]"), "_")
+    }
 
     private fun processWithColumns(
         uri: String?,
@@ -136,63 +156,33 @@ class FhirExtinguisher(
         table.print(printer)
     }
 
-    private fun processQueryParams(session: NanoHTTPD.IHTTPSession): Pair<String, MyParams> {
-        if (session.queryParameterString != null) {
-            val (myParams, passThruParams) = session.queryParameterString
-                .split('&')
-                .partition {
-                    listOf("__csvFormat", "__limit", "__columns").any { prefix -> it.startsWith(prefix) }
-                }
-            return passThruParams.joinToString("&") to parseMyParams(myParams)
-        } else {
-            return "" to MyParams(CSVFormat.EXCEL, -1, emptyList())
-        }
+    private fun processQueryParams(parameters: Parameters): Pair<String, MyParams> {
+        val (myParams, passThruParams) = parameters.entries()
+            .partition {
+                listOf("__csvFormat", "__limit", "__columns").any { prefix -> it.key.startsWith(prefix) }
+            }
+        val fhirParams = passThruParams.flatMap { (key, value) -> value.map { "$key=$it" } }
+            .joinToString("&")
+        return fhirParams to parseMyParams(myParams)
     }
 
 
-    private fun parseMyParams(stringsToParse: List<String>): MyParams {
-        val map = stringsToParse.map { it.split('=', limit = 2) }
-            .map { it[0] to it[1] }
-            .toMap()
+    private fun parseMyParams(stringsToParse: List<Map.Entry<String, List<String>>>): MyParams {
+        val map = stringsToParse.map { it.key to it.value }.toMap()
 
-        val csvFormat = if (map["__csvFormat"] != null) {
-            val csvFormat = map["__csvFormat"]
+        val csvFormat = map["__csvFormat"]?.let {
             try {
-                CSVFormat.valueOf(csvFormat)
+                CSVFormat.valueOf(it[0])
             } catch (e: Exception) {
                 val supported = CSVFormat.Predefined.values().joinToString(", ")
-                val message =
-                    "Unknown CSV Format '$csvFormat', supported values are: $supported"
-                throw RuntimeException(message, e)
+                throw RuntimeException("Unknown CSV Format '$it', supported values are: $supported", e)
             }
-        } else {
-            CSVFormat.EXCEL
-        }
-        val limit = map["__limit"]?.toInt()
-        val columnsStr = URLDecoder.decode(map["__columns"])
+        } ?: CSVFormat.EXCEL
+        val limit = map["__limit"]?.get(0)?.toInt()
+        val columnsStr = URLDecoder.decode(map["__columns"]?.get(0))
         val columns = if (columnsStr != null) columnsParser.parseString(columnsStr) else null
 
         return MyParams(csvFormat, limit, columns)
     }
 
-//    private fun parseColumns(stringToParse: String): List<Column> {
-//        return stringToParse.split(',')
-//            .map { it.split(':', limit = 2) }
-//            .filter { it.size == 2 }
-//            .map {
-//                val splitted = URLDecoder.decode(it[0]).split('@', limit = 2);
-//                val listProcessingMode = if (splitted.size == 2) splitted[1] else "flatten"
-//                val expressionStr = URLDecoder.decode(it[1])
-//
-//                val expression = try {
-//                    fhirPathEngine.parseExpression(expressionStr) //TODO: Thread-Safe?
-//                } catch (e: Exception) {
-//                    throw RuntimeException("Error parsing FHIRPath-Expression: $expressionStr", e)
-//                }
-//
-////                println(expression.toString() + ": " + (expression as ExpressionR4).expression.types)
-//
-//                Column(splitted[0], expression, listProcessingMode)
-//            }
-//    }
 }

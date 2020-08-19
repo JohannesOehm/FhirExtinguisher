@@ -6,6 +6,8 @@ import {KeyCode} from "monaco-editor";
                 <img src="logo.png" style="height:28px; width:28px;"/><span class="sr-only">FhirExtinguisher</span>
             </template>
             <b-dropdown-item href="#" v-b-modal.modal-cheat-sheet>FHIR Search Cheat Sheet</b-dropdown-item>
+            <b-dropdown-item href="#" v-b-modal.modal-query-save>Save query...</b-dropdown-item>
+            <b-dropdown-item href="#" v-b-modal.modal-query-load>Load query...</b-dropdown-item>
             <b-dropdown-item href="#" v-b-modal.modal-about>About</b-dropdown-item>
         </b-dropdown>
         <a :href="endpointUrl" class="navbar-brand col-sm-3 col-md-3 mr-0" href="#" id="fhirServerUrl" target="_blank">{{endpointUrl}}</a>
@@ -74,9 +76,7 @@ import {KeyCode} from "monaco-editor";
                 let searchEditor = monaco.editor.create(element, {
                     value: "Patient?",
                     language: "url",
-                    minimap: {
-                        enabled: false
-                    },
+                    minimap: {enabled: false},
                     lineNumbers: 'off',
                     glyphMargin: false,
                     folding: false,
@@ -88,7 +88,8 @@ import {KeyCode} from "monaco-editor";
                     theme: "myCoolTheme",
                     scrollBeyondLastLine: false,
                     overviewRulerLanes: 0,
-                    overviewRulerBorder: false //Still not perfect
+                    overviewRulerBorder: false, //Still not perfect
+                    hideCursorInOverviewRuler: true,
                     // lineDecorationsWidth: 0,
                     // lineNumbersMinChars: 0
                 });
@@ -97,13 +98,7 @@ import {KeyCode} from "monaco-editor";
                     (<any>window).searchEditor.layout();
                 });
                 // let myBinding = searchEditor.addCommand(monaco.KeyCode.Enter,
-                //     function (args) {
-                //         if((<any>searchEditor)._contentWidgets["editor.widget.suggestWidget"].widget.state === 3){
-                //
-                //         } else {
-                //             that.$emit('startRequest', searchEditor.getValue());
-                //         }
-                //     });
+                // );
                 searchEditor.onKeyDown(function (e: IKeyboardEvent) {
                     if (e.keyCode === KeyCode.Enter) {
                         //TODO: Maybe there is a public API for this?
@@ -118,7 +113,6 @@ import {KeyCode} from "monaco-editor";
 
                 });
 
-                // monaco.languages.setTokensProvider("url", )
 
                 return searchEditor;
             })();
