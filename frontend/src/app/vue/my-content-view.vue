@@ -74,7 +74,6 @@
 <script lang="ts">
 import * as CSV from '../csv.js';
 import * as monaco from "monaco-editor";
-import {ColumnsParser} from "../column-parser-antlr";
 import {Column, columnsToString} from "./my-app";
 
 
@@ -93,7 +92,8 @@ export default {
   name: "ContentView",
   data: function (): {
     showRaw: boolean, tableLoading: boolean, tableData: TableData, tableError: string,
-    dataLoading: false, rawDataWithHighlighting: string, rawData: string, rawError: string
+    dataLoading: false, rawDataWithHighlighting: string, rawData: string, rawError: string,
+    rawDataFormat: "xml" | "json"
   } {
     return {
       // table: {data:null, loading: false, error: null},
@@ -105,7 +105,8 @@ export default {
       dataLoading: false,
       rawDataWithHighlighting: null,
       rawData: null,
-      rawError: null
+      rawError: null,
+      rawDataFormat: "json"
     }
   },
   props: ['columns', 'limit'],
@@ -132,6 +133,7 @@ export default {
       let response = await fetch("/redirect/" + url, {
         headers: {"Accept": "application/json"}
       });
+      this.rawDataFormat = response.headers.get("Content-Type").includes("json") ? "json" : "xml";
       if (response.ok) {
         this.rawData = await response.text();
       } else {
@@ -144,7 +146,7 @@ export default {
     },
     reEvaluateHighlighting: function () {
       if (this.rawData != null) {
-        monaco.editor.colorize(this.rawData, 'json', {})
+        monaco.editor.colorize(this.rawData, this.rawDataFormat, {})
             .then((it: string) => this.rawDataWithHighlighting = it);
       } else {
         this.rawDataWithHighlighting = null;
@@ -152,7 +154,13 @@ export default {
     },
     loadTableData: async function () {
       let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-      let response = await fetch("/processBundle?" + params, {method: 'POST', body: this.rawData});
+      let response = await fetch("/processBundle?" + params, {
+        method: 'POST',
+        body: this.rawData,
+        headers: {
+          "Content-Type": this.rawDataFormat == "json" ? "application/json" : "application/xml",
+        }
+      });
       if (response.ok) {
         let csvString = await response.text();
         (<any>CSV).fetch({
@@ -161,8 +169,8 @@ export default {
           this.tableData = it;
           this.tableError = null;
         }).catch((it: any) => {
-              this.tableData = null;
-              this.tableError = it;
+          this.tableData = null;
+          this.tableError = it;
             }
         );
       } else {

@@ -1,24 +1,18 @@
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
-import fi.iki.elonen.NanoHTTPD
-import fi.iki.elonen.NanoHTTPD.newChunkedResponse
-import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
-import io.ktor.application.ApplicationCall
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
-import io.ktor.request.receiveStream
-import io.ktor.request.uri
-import io.ktor.response.header
-import io.ktor.response.respond
-import io.ktor.response.respondText
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
-import wrappers.*
+import wrappers.BundleEntryComponentWrapper
+import wrappers.BundleWrapper
+import wrappers.FhirPathEngineWrapperR4
+import wrappers.FhirPathEngineWrapperSTU3
 import java.net.URI
-
 import java.net.URLDecoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -60,7 +54,13 @@ class FhirExtinguisher(
         //TODO: Abort when user cancels request
         val printer = CSVPrinter(sb, myParams.csvFormat)
 
-        val resource = fhirContext.newJsonParser().parseResource(call.receiveStream())
+
+        val resource = if (call.request.headers["Content-Type"] == "application/json") {
+            fhirContext.newJsonParser().parseResource(call.receiveStream())
+        } else {
+            fhirContext.newXmlParser().parseResource(call.receiveStream())
+        }
+
         val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
         val bundleWrapper = BundleWrapper(bundleDefinition, resource)
         printer.printRecord(myParams.columns!!.map { it.name })
