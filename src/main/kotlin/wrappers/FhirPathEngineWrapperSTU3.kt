@@ -64,6 +64,13 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
         return evaluation.map { convertToString(it) }
     }
 
+
+    override fun evaluateToBase(base: IBase, expression: ExpressionWrapper): List<Base> {
+        expression as ExpressionSTU3
+        base as Base
+        return engine.evaluate(base, expression.expression)
+    }
+
     private fun convertToString(it: Base): String =
         when (it) {
             is Enumeration<*> -> it.value.name

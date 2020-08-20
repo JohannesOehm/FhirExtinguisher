@@ -1,14 +1,10 @@
 package wrappers
 
 import ca.uhn.fhir.context.FhirContext
-import ca.uhn.fhir.parser.json.GsonWriter
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.context.SimpleWorkerContext
-import org.hl7.fhir.r4.elementmodel.Manager
-import org.hl7.fhir.r4.formats.JsonCreator
-import org.hl7.fhir.r4.formats.JsonParser
 import org.hl7.fhir.r4.model.*
 import org.hl7.fhir.r4.utils.FHIRPathEngine
 
@@ -134,12 +130,17 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
         engine.check(null, "Patient", null, "Patient")
     }
 
+    override fun evaluateToBase(base: IBase, expression: ExpressionWrapper): List<Base> {
+        expression as ExpressionR4
+        base as Base
+        return engine.evaluate(base, expression.expression)
+    }
+
     override fun evaluateToStringList(base: IBase, expression: ExpressionWrapper): List<String> {
         expression as ExpressionR4
         base as Base
 
-        val evaluation = engine.evaluate(base, expression.expression)
-        return evaluation.map { ToStringHelperR4.convertToString(it) }
+        return evaluateToBase(base, expression).map { ToStringHelperR4.convertToString(it) }
     }
 
 

@@ -6,6 +6,7 @@ data class Column(
     val listProcessingMode: ListProcessingMode
 )
 
+data class SubColumn(val name: String, val expression: ExpressionWrapper)
 
 abstract class ListProcessingMode
 
@@ -20,6 +21,30 @@ class Explode : ListProcessingMode() {
         return "explode"
     }
 }
+
+/**
+ *
+ */
+/**
+ * Erzeuge neuen Entry für jede Spalte
+ */
+class ExplodeWide(val discriminator: ExpressionWrapper, val subcolumns: List<SubColumn>) : ListProcessingMode() {
+    override fun toString(): String {
+        return "explodeWide"
+    }
+
+
+}
+
+/**
+ * Erzeuge neuen Entry für jede Spalte
+ */
+class ExplodeLong(val subcolumns: List<SubColumn>) : ListProcessingMode() {
+    override fun toString(): String {
+        return "explodeLong"
+    }
+}
+
 
 class Singleton : ListProcessingMode() {
     override fun toString(): String {

@@ -5,7 +5,6 @@ import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.instance.model.api.IBaseResource
-import java.lang.RuntimeException
 
 private val log = KotlinLogging.logger {}
 
@@ -14,6 +13,7 @@ private val log = KotlinLogging.logger {}
  */
 abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClient: IGenericClient) {
     abstract fun parseExpression(expression: String): ExpressionWrapper
+    abstract fun evaluateToBase(base: IBase, expression: ExpressionWrapper): List<Any>
     abstract fun evaluateToStringList(base: IBase, expression: ExpressionWrapper): List<String>
 
     private val cache = mutableMapOf<String, IBaseResource>()

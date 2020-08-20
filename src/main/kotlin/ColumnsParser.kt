@@ -1,7 +1,20 @@
-import org.antlr.v4.runtime.CommonTokenStream
+import ca.uhn.fhir.context.FhirContext
 import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import wrappers.FhirPathEngineWrapper
-import java.lang.Exception
+import wrappers.FhirPathEngineWrapperR4
+
+
+fun main() {
+    val fhirContext = FhirContext.forR4()
+    val wrapper = FhirPathEngineWrapperR4(fhirContext, fhirContext.newRestfulGenericClient(""))
+    val parser = ColumnsParser(wrapper)
+
+    println(parser.parseString("test@explodeLong(foo:Patient.name):Patient"))
+    println(parser.parseString("test@explodeWide(\$disc:Patient.name):Patient"))
+
+}
+
 
 class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
 
@@ -44,6 +57,16 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
                 "explode" -> {
                     Explode()
                 }
+                "explodeLong" -> {
+                    val subcolumns = parseSubColumns(columnType.typeParam().text)
+                    ExplodeLong(subcolumns)
+                }
+                "explodeWide" -> {
+                    val subcolumns = parseSubColumns(columnType.typeParam().text)
+                    ExplodeWide(
+                        subcolumns.find { it.name == "\$disc" }!!.expression,
+                        subcolumns.filter { it.name != "\$disc" })
+                }
                 else -> {
                     throw RuntimeException("Cannot parse columnType '${columnType.text}' ('${ctx.text}')!")
                 }
@@ -52,6 +75,18 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
             Join(", ")
         }
 
+    }
+
+    private fun parseSubColumns(text: String): List<SubColumn> {
+        val subcolumns = split(text).map {
+            split(it, ':').let {
+                SubColumn(
+                    it[0].replace("\\:", ":"),
+                    fhirPathEngine.parseExpression(it[1])
+                )
+            }
+        }
+        return subcolumns
     }
 
     public fun stringifyList(columns: List<Column>): String {
@@ -68,6 +103,27 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
         } else {
             return "$nameEscaped:$expressionStrEscaped"
         }
+    }
+
+    private fun split(toSplit: String, delimiter: Char = ',', escape: Char = '\\'): List<String> {
+        val result = emptyList<String>().toMutableList()
+        var lastStart = 0
+        var escapeChar = false
+        for ((i, c) in toSplit.withIndex()) {
+            if (c == escape) {
+                escapeChar = true
+            } else {
+                if (!escapeChar && c == delimiter) {
+                    result += toSplit.substring(lastStart, i).replace("$escape$delimiter", "$delimiter")
+                    lastStart = i + 1
+                }
+                if (i == toSplit.length - 1) {
+                    result += toSplit.substring(lastStart).replace("$escape$delimiter", "$delimiter")
+                }
+                escapeChar = false
+            }
+        }
+        return result
     }
 }
 
