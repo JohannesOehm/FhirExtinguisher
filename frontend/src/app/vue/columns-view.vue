@@ -35,9 +35,13 @@
                     <a class="" style="flex: 1 1 auto;" href="#" v-on:click="$emit('editColumn', idx)">
                         <div class="">
                             <span style="color:black;">{{column.name}}</span><span
-                                class="text-muted">@{{column.type}}</span>
+                                class="text-muted">@{{column.type}}</span><span v-if="column.subColumns"
+                                                                                class="text-muted">
+                                ({{column.subColumns.map(it => it.name).join(", ")}})
+                            </span>
                             <br>
                             <span class="text-muted text-truncate d-inline-block" style="max-width: 300px;">{{column.expression}}</span>
+
                         </div>
                     </a>
 

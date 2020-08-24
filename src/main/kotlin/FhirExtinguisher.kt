@@ -63,11 +63,11 @@ class FhirExtinguisher(
 
         val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
         val bundleWrapper = BundleWrapper(bundleDefinition, resource)
-        printer.printRecord(myParams.columns!!.map { it.name })
+        val resultTables = mutableListOf<SubTable>()
         for (bundleEntry in bundleWrapper.entry) {
-            processBundleEntry(myParams.columns, bundleEntry, printer)
+            resultTables += processBundleEntry(myParams.columns!!, bundleEntry)
         }
-
+        ResultTable(resultTables).print(printer)
         call.respondText(sb.toString()) //TODO: Streamify this
     }
 
@@ -113,7 +113,7 @@ class FhirExtinguisher(
         columns: List<Column>
     ) {
 
-        printer.printRecord(columns.map { it.name })
+//        printer.printRecord(columns.map { it.name })
 
         var count = 0
         var nextUrl: String? = "$uri?$fhirParams"
@@ -121,6 +121,7 @@ class FhirExtinguisher(
         val bundleDefintion = fhirContext.getResourceDefinition("Bundle")
         val bundleClass = bundleDefintion.implementingClass
 
+        val subtables = mutableListOf<SubTable>()
 
         myloop@ do {
             log.debug { "Loading Bundle from $nextUrl" }
@@ -128,7 +129,7 @@ class FhirExtinguisher(
             val bundleWrapper = BundleWrapper(bundleDefintion, bundle)
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
             for (bundleEntry in bundleWrapper.entry) {
-                processBundleEntry(columns, bundleEntry, printer)
+                subtables += processBundleEntry(columns, bundleEntry)
                 count++;
                 if (myParams.limit != null && count >= myParams.limit) {
                     break@myloop;
@@ -136,24 +137,22 @@ class FhirExtinguisher(
             }
         } while (nextUrl != null)
 
+        ResultTable(subtables).print(printer)
+
     }
 
 
-    private fun processBundleEntry(
-        columns: List<Column>,
-        bundleEntry: BundleEntryComponentWrapper,
-        printer: CSVPrinter
-    ) {
-        val table = ResultTable()
+    private fun processBundleEntry(columns: List<Column>, bundleEntry: BundleEntryComponentWrapper): SubTable {
+        val table = SubTable()
         for (column in columns) {
             try {
-                val result = fhirPathEngine.evaluateToStringList(bundleEntry.resource!!, column.expression)
-                table.addColumn(column, result)
+                table.addColumn(column, bundleEntry.resource!!, fhirPathEngine)
             } catch (e: Exception) {
                 table.addColumn(column, listOf(e.message ?: "ERROR"))
             }
         }
-        table.print(printer)
+        return table
+//        table.print(printer)
     }
 
     private fun processQueryParams(parameters: Parameters): Pair<String, MyParams> {
@@ -179,7 +178,7 @@ class FhirExtinguisher(
             }
         } ?: CSVFormat.EXCEL
         val limit = map["__limit"]?.get(0)?.toInt()
-        val columnsStr = URLDecoder.decode(map["__columns"]?.get(0))
+        val columnsStr = map["__columns"]?.get(0)
         val columns = if (columnsStr != null) columnsParser.parseString(columnsStr) else null
 
         return MyParams(csvFormat, limit, columns)

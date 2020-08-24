@@ -13,8 +13,13 @@ private val log = KotlinLogging.logger {}
  */
 abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClient: IGenericClient) {
     abstract fun parseExpression(expression: String): ExpressionWrapper
-    abstract fun evaluateToBase(base: IBase, expression: ExpressionWrapper): List<Any>
-    abstract fun evaluateToStringList(base: IBase, expression: ExpressionWrapper): List<String>
+    abstract fun evaluateToBase(
+        base: IBase,
+        expression: ExpressionWrapper,
+        variables: Map<String, Any> = emptyMap()
+    ): List<IBase>
+
+    abstract fun convertToString(base: IBase): String
 
     private val cache = mutableMapOf<String, IBaseResource>()
 

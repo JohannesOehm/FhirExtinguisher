@@ -17,7 +17,8 @@
                         </div>
                         <div class="form-group">
                             <label v-b-tooltip.hover
-                                   title="Controls how multiple elements returned by FHIRPath expression are handled.">Type</label>
+                                   title="Controls how multiple elements returned by FHIRPath expression are handled.">List
+                                Processing Behaviour</label>
                             <div class="form-control">
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-inline" id="join" type="radio" v-model="type"
@@ -29,11 +30,23 @@
                                             style="max-height: 25px;"
                                             v-model="joinStr"/>")</label>
                                 </div>
+                                <!--                                <div class="form-check form-check-inline">-->
+                                <!--                                    <input class="form-check-inline" id="explode" type="radio" v-model="type"-->
+                                <!--                                           value="explode"/>-->
+                                <!--                                    <label class="form-check-label" for="explode" v-b-tooltip.hover-->
+                                <!--                                           title="create new row for each element returned by the FHIRPath expression">explode</label>-->
+                                <!--                                </div>-->
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-inline" id="explode" type="radio" v-model="type"
-                                           value="explode"/>
-                                    <label class="form-check-label" for="explode" v-b-tooltip.hover
-                                           title="create new row for each element returned by the FHIRPath expression">explode</label>
+                                    <input class="form-check-inline" id="explodeWide" type="radio" v-model="type"
+                                           value="explodeWide"/>
+                                    <label class="form-check-label" for="explodeWide" v-b-tooltip.hover
+                                           title="create new column(s) for each element returned by FHIRPath expression">explodeWide</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-inline" id="explodeLong" type="radio" v-model="type"
+                                           value="explodeLong"/>
+                                    <label class="form-check-label" for="explodeLong" v-b-tooltip.hover
+                                           title="create new row for each element returned by the FHIRPath expression">explodeLong</label>
                                 </div>
                             </div>
                             <!--                            <input class="form-control" id="addColumnType" placeholder='explode or join(" ")'-->
@@ -52,6 +65,54 @@
                                    target="_blank">Open FHIRPath Specification...</a>
                             </small>
                         </div>
+                        <div class="form-group" v-if="type==='explodeWide' || type==='explodeLong'">
+                            <label>Subcolumns</label>
+                            <div class="form-row form-group" v-if="type==='explodeWide'">
+                                <div class="col">
+                                    <label for="disc" class="col-form-label col-form-label-sm">Discriminator:</label>
+                                </div>
+                                <div class="col col-9">
+                                    <input id="disc" type="text" class="form-control" placeholder="Expression"
+                                           v-model="discriminator"/>
+                                </div>
+                            </div>
+                            <div class="form-row form-group" v-for="(subcolumn, idx) in subcolumns">
+                                <div class="col col-3">
+                                    <input type="text" class="form-control" placeholder="Name"
+                                           v-model="subcolumn.name"/>
+                                </div>
+                                <div class="col">
+                                    <input type="text" class="form-control" placeholder="Expression"
+                                           v-model="subcolumn.expression"/>
+                                </div>
+                                <div class="col col-1 text-center">
+                                    <a class="align-items-center text-muted" href="#"
+                                       v-on:click="removeSubColumn(idx)">
+                                        <svg class="feather" fill="none" height="24"
+                                             stroke="currentColor"
+                                             stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                             viewBox="0 0 448 512"
+                                             width="24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
+                                                  fill="currentColor"></path>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="form-group form-row">
+                                <a class="text-muted" href="#" title="ADD SUBCOLUMN..." v-on:click="addSubcolumn">
+                                    <svg class="feather feather-plus-circle" fill="none" height="15" width="15"
+                                         stroke="currentColor"
+                                         stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                         viewBox="0 0 24 24"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <line x1="12" x2="12" y1="0" y2="24"/>
+                                        <line x1="0" x2="24" y1="12" y2="12"/>
+                                    </svg>
+                                    ADD SUBCOLUMN...
+                                </a>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -67,26 +128,45 @@
 
 <script lang="ts">
     import * as $ from 'jquery';
+    import {Column, SubColumn} from "./my-app.vue";
 
-    type Column = { name: string, type: string, expression: string }
 
     export default {
         name: "DialogColumn",
-        data: function () {
+        data: function (): { name: string, type: string, joinStr: string, expression: string, subcolumns: SubColumn[], discriminator: string } {
             return {
                 name: "",
                 type: "join",
                 joinStr: ", ",
-                expression: ""
+                expression: "",
+                subcolumns: [],
+                discriminator: "%index"
             }
         },
         methods: {
             getData: function (): Column {
-                return {
+                let shallowCopy = JSON.parse(JSON.stringify(this.subcolumns)); //remove Vue.js magic from object
+                var subColumns;
+                if (this.type === "explodeWide") {
+                    subColumns = shallowCopy.concat({name: "$disc", expression: this.discriminator})
+                } else if (this.type === "explodeLong") {
+                    subColumns = shallowCopy;
+                }
+
+                let retVal = {
                     name: this.name,
                     type: this.type === "join" ? "join(\"" + this.joinStr + "\")" : this.type,
-                    expression: this.expression
-                }
+                    expression: this.expression,
+                    subColumns: subColumns
+                };
+                console.log(retVal);
+                return retVal;
+            },
+            addSubcolumn: function () {
+                this.subcolumns.push({name: "", expression: ""})
+            },
+            removeSubColumn: function (index: number) {
+                this.subcolumns.splice(index, 1)
             }
         },
         watch: {
@@ -99,9 +179,14 @@
             },
             data: function (newData: Column, oldData: Column) {
                 this.name = newData.name;
-                this.type = newData.type.startsWith("join") ? "join" : "explode";
+                this.type = newData.type.startsWith("join") ? "join" : newData.type;
                 this.joinStr = newData.type.startsWith("join(\"") ? /join\(\s*"([^"]*)"\s*\)/.exec(newData.type)[1] : "";
+                this.subcolumns = (newData.subColumns ?? []).filter(it => it.name !== "$disc");
                 this.expression = newData.expression;
+                let disc = (newData.subColumns ?? []).filter(it => it.name === "$disc");
+                if (disc.length != 0) {
+                    this.discriminator = disc[0].expression;
+                }
             }
         },
         mounted: function () {

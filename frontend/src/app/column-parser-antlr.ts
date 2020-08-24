@@ -5,7 +5,7 @@ import {
     ProxyParserErrorListener, Token
 } from 'antlr4ts';
 import {ColumnsContext, ColumnsTokens} from "../antlr/ColumnsTokens";
-import {Column} from "./index";
+import {Column, SubColumn} from "./index";
 import {ColumnsLexer} from "../antlr/ColumnsLexer";
 
 
@@ -25,15 +25,55 @@ export class ColumnsParser {
         for (let columnContext of columnsContext.column()) {
             let columnName = columnContext.columnName().text.replace("\\:", ":").replace("\\@", "@")
             let type;
+            let subcolumns: SubColumn[] = undefined;
             if (columnContext.columnType() != null) {
                 type = columnContext.columnType().text.replace(":", "\\:")
+                if (type === "explodeWide" || type === "explodeLong") {
+                    let columnsStr = ColumnsParser.split(columnContext.columnType().typeParam().text)
+                    subcolumns = [];
+                    for (let columnStr in columnsStr) {
+                        let [name, expression] = ColumnsParser.split(columnStr, ":")
+                        subcolumns.push({
+                            name: this.unescape(name),
+                            expression: this.unescape(expression)
+                        });
+                    }
+
+                }
             } else {
                 type = 'join(" ")'
             }
             let expression = columnContext.fhirpathExpression().text.replace(",", "\\,")
-            results.push({name: columnName, type: type, expression: expression})
+            results.push({name: columnName, type: type, expression: expression, subColumns: subcolumns})
         }
         return results;
+    }
+
+
+    private unescape(name: string): string {
+        return name.replace("\\,", ",").replace("\\:", ":");
+    }
+
+    private static split(toSplit: string, delimiter: string = ',', escape: string = '\\'): string[] {
+        let result: string[] = []
+        let lastStart = 0
+        let escapeChar = false
+        for (let i = 0; i < toSplit.length; i++) {
+            let c = toSplit[i];
+            if (c == escape) {
+                escapeChar = true;
+            } else {
+                if (!escapeChar && c == delimiter) {
+                    result.push(toSplit.substring(lastStart, i).replace(escape + delimiter, delimiter));
+                    lastStart = i + 1;
+                }
+                if (i == toSplit.length - 1) {
+                    result.push(toSplit.substring(lastStart).replace(escape + delimiter, delimiter));
+                }
+                escapeChar = false;
+            }
+        }
+        return result;
     }
 
 }

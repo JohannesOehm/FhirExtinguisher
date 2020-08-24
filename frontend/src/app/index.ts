@@ -18,4 +18,6 @@ new Vue({
 }).$mount("#app");
 
 
-export type Column = { name: string, type: string, expression: string }
+export type Column = { name: string, type: string, expression: string, subColumns?: SubColumn[] }
+
+export type SubColumn = { name: string, expression: string };

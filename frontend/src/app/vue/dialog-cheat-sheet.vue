@@ -202,12 +202,10 @@ export default {
   name: "DialogCheatSheet",
   mounted() {
     this.$root.$on('bv::modal::shown', (bvEvent: any, modalId: any) => {
-      console.log("Dialog shown!")
       let elements = document.querySelectorAll(".highlight-url");
       for (let element of elements) {
         monaco.editor.colorize(element.innerHTML.replace("&amp;", "&"), "url", {})
             .then((it: any) => {
-              console.log(it);
               return element.innerHTML = it;
             });
         element.classList.add("highlighted")

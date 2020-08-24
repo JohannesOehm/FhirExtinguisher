@@ -153,8 +153,12 @@ export default {
       }
     },
     loadTableData: async function () {
+      if (!this.rawData) {
+        return
+      }
+
       let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-      let response = await fetch("/processBundle?" + params, {
+      let response = await fetch("/processBundle?" + encodeURI(params), {
         method: 'POST',
         body: this.rawData,
         headers: {

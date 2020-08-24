@@ -13,14 +13,21 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
     FhirPathEngineWrapper(fhirContext, fhirClient) {
     val engine = FHIRPathEngine(SimpleWorkerContext())
 
+    val variables = mutableMapOf<String, Any>()
+
     init {
         engine.hostServices = object : org.hl7.fhir.dstu3.utils.FHIRPathEngine.IEvaluationContext {
             override fun resolveConstantType(appContext: Any?, name: String?): org.hl7.fhir.dstu3.model.TypeDetails {
                 TODO("not implemented")
             }
 
-            override fun resolveConstant(appContext: Any?, name: String?): Base {
-                TODO("not implemented")
+            override fun resolveConstant(appContext: Any?, name: String?): Base? {
+                val result = variables[name]
+                return when (result) {
+                    is String -> StringType(result)
+                    is Int -> IntegerType(result)
+                    else -> null
+                }
             }
 
             override fun resolveFunction(functionName: String?): FHIRPathEngine.IEvaluationContext.FunctionDetails {
@@ -56,22 +63,19 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
     override fun parseExpression(expression: String) =
         ExpressionSTU3(engine.parse(expression))
 
-    override fun evaluateToStringList(base: IBase, expression: ExpressionWrapper): List<String> {
-        expression as ExpressionSTU3
-        base as Base
-        val expression1 = expression.expression
-        val evaluation = engine.evaluate(base, expression1)
-        return evaluation.map { convertToString(it) }
-    }
+    override fun convertToString(base: IBase): String = convertToStringInternal(base as Base)
 
 
-    override fun evaluateToBase(base: IBase, expression: ExpressionWrapper): List<Base> {
+    override fun evaluateToBase(base: IBase, expression: ExpressionWrapper, variables: Map<String, Any>): List<Base> {
         expression as ExpressionSTU3
         base as Base
+
+        this.variables.clear()
+        this.variables.putAll(variables)
         return engine.evaluate(base, expression.expression)
     }
 
-    private fun convertToString(it: Base): String =
+    private fun convertToStringInternal(it: Base): String =
         when (it) {
             is Enumeration<*> -> it.value.name
             is Quantity -> ("${it.value} ${it.unit}")

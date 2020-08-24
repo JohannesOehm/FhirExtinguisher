@@ -3,6 +3,7 @@ package wrappers
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
+import org.hl7.fhir.dstu3.model.IntegerType
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.context.SimpleWorkerContext
 import org.hl7.fhir.r4.model.*
@@ -19,6 +20,8 @@ private val log = KotlinLogging.logger {}
 class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClient) :
     FhirPathEngineWrapper(fhirContext, fhirClient) {
     val engine = FHIRPathEngine(SimpleWorkerContext())
+
+    val variables = mutableMapOf<String, Any>()
 
     init {
         engine.hostServices = object : org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext {
@@ -64,8 +67,14 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             ): TypeDetails =
                 TODO("not implemented")
 
-            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): Base =
-                TODO("not implemented")
+            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): Base? {
+                val result = variables[name]
+                return when (result) {
+                    is String -> StringType(result)
+                    is Int -> org.hl7.fhir.r4.model.IntegerType(result)
+                    else -> null
+                }
+            }
 
             override fun log(argument: String?, focus: MutableList<Base>?): Boolean {
                 log.info { "argument = $argument, focus = $focus" }
@@ -130,17 +139,17 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
         engine.check(null, "Patient", null, "Patient")
     }
 
-    override fun evaluateToBase(base: IBase, expression: ExpressionWrapper): List<Base> {
+    override fun evaluateToBase(base: IBase, expression: ExpressionWrapper, variables: Map<String, Any>): List<Base> {
         expression as ExpressionR4
         base as Base
+        this.variables.clear()
+        this.variables.putAll(variables)
         return engine.evaluate(base, expression.expression)
     }
 
-    override fun evaluateToStringList(base: IBase, expression: ExpressionWrapper): List<String> {
-        expression as ExpressionR4
+    override fun convertToString(base: IBase): String {
         base as Base
-
-        return evaluateToBase(base, expression).map { ToStringHelperR4.convertToString(it) }
+        return ToStringHelperR4.convertToString(base)
     }
 
 
