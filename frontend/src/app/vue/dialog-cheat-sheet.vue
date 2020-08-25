@@ -1,5 +1,5 @@
 <template>
-  <b-modal id="modal-cheat-sheet" title="FHIR Search API Cheat Sheet" size="xl">
+  <b-modal id="modal-cheat-sheet" title="FHIR Search API Cheat Sheet" size="xl" hide-footer="true">
     <h5>Combining Criteria</h5>
     <table>
       <tr>

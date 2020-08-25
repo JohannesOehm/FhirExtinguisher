@@ -1,5 +1,5 @@
 <template>
-  <b-modal id="modal-show-resource" title="Raw resource" size="xl">
+  <b-modal id="modal-show-resource" title="Raw resource" size="xl" hide-footer="true">
     <pre>{{ text }}</pre>
   </b-modal>
 </template>

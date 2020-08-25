@@ -1,9 +1,4 @@
-import {
-    ANTLRInputStream,
-    CommonTokenStream,
-    DiagnosticErrorListener, ParserRuleContext,
-    ProxyParserErrorListener, Token
-} from 'antlr4ts';
+import {ANTLRInputStream, CommonTokenStream} from 'antlr4ts';
 import {ColumnsContext, ColumnsTokens} from "../antlr/ColumnsTokens";
 import {Column, SubColumn} from "./index";
 import {ColumnsLexer} from "../antlr/ColumnsLexer";
@@ -23,13 +18,13 @@ export class ColumnsParser {
     private parseColumn(columnsContext: ColumnsContext): Column[] {
         let results: Column[] = [];
         for (let columnContext of columnsContext.column()) {
-            let columnName = columnContext.columnName().text.replace("\\:", ":").replace("\\@", "@")
+            let columnName = columnContext.columnName().text.replace(/\\:/g, ":").replace(/\\@/g, "@")
             let type;
             let subcolumns: SubColumn[] = undefined;
             if (columnContext.columnType() != null) {
-                type = columnContext.columnType().text.replace(":", "\\:")
+                type = columnContext.columnType().typeName().text.replace(/\\:/g, ":")
                 if (type === "explodeWide" || type === "explodeLong") {
-                    let columnsStr = ColumnsParser.split(columnContext.columnType().typeParam().text)
+                    let columnsStr = ColumnsParser.split(columnContext.columnType().typeParam().text.replace("\\)", ")"))
                     subcolumns = [];
                     for (let columnStr in columnsStr) {
                         let [name, expression] = ColumnsParser.split(columnStr, ":")
@@ -51,7 +46,7 @@ export class ColumnsParser {
 
 
     private unescape(name: string): string {
-        return name.replace("\\,", ",").replace("\\:", ":");
+        return name.replace(/\\,/g, ",").replace(/\\:/g, ":");
     }
 
     private static split(toSplit: string, delimiter: string = ',', escape: string = '\\'): string[] {

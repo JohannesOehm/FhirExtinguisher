@@ -1,15 +1,15 @@
 <template>
-    <b-modal id="modal-about" title="About FhirExtinguisher" size="lg">
-        Tool was made using open-source software. Click to toggle licence information.
+    <b-modal id="modal-about" title="About FhirExtinguisher" size="lg" hide-footer="true">
+      Tool was made using open-source software. Click to toggle licence information.
 
-        <div role="tablist">
-            <b-card no-body class="mb-1">
-                <b-card-header header-tag="header" class="p-1" role="tab">
-                    <b-button block href="#" v-b-toggle.accordion-1 variant="light">NanoHTTPD</b-button>
-                </b-card-header>
-                <b-collapse id="accordion-1" accordion="my-accordion" role="tabpanel">
-                    <b-card-body>
-                        <b-card-text><pre style="white-space: pre-wrap;">
+      <div role="tablist">
+        <b-card no-body class="mb-1">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block href="#" v-b-toggle.accordion-1 variant="light">NanoHTTPD</b-button>
+          </b-card-header>
+          <b-collapse id="accordion-1" accordion="my-accordion" role="tabpanel">
+            <b-card-body>
+              <b-card-text><pre style="white-space: pre-wrap;">
 Copyright (c) 2012-2013 by Paul S. Hawke, 2001,2005-2013 by Jarno Elonen, 2010 by Konstantinos Togias All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
