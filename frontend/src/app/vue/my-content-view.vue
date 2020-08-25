@@ -31,12 +31,12 @@
       <table class="table table-striped table-sm" style="white-space: pre-wrap;" v-if="tableData != null">
         <thead>
         <tr>
-          <th v-for="fieldName in tableData.fields">{{ fieldName }}</th>
+          <th v-for="(fieldName, idx) in tableData.fields"><span v-if="idx !== 0">{{ fieldName }}</span></th>
         </tr>
         </thead>
         <tbody>
-        <tr v-for="row in tableData.records">
-          <td v-for="rowElem in row">{{ rowElem }}</td>
+        <tr v-for="row in tableData.records" v-on:dblclick="openRawDialog(row[0])">
+          <td v-for="(rowElem, idx) in row"><span v-if="idx !== 0"> {{ rowElem }}</span></td>
         </tr>
         </tbody>
         <caption>
@@ -46,6 +46,8 @@
       </table>
       <div v-else>
         Table data is not available.<br><br>
+        <span v-if="dataLoading">Raw data is loading...</span>
+        <span v-if="tableLoading">Table data is loading...</span>
         <div v-if="tableError != null"><br>
           <pre>{{ tableError }}</pre>
         </div>
@@ -204,6 +206,9 @@ export default {
     },
     openUrl: function (url: string) {
       window.open(url);
+    },
+    openRawDialog: function (value: string) {
+      this.$emit("show-resource", value);
     }
   },
 

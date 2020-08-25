@@ -12,6 +12,7 @@
             <div id="tableOrRaw" role="main" style="overflow: auto">
                 <MyContentView :columns="columns" :fhir-query="fhirQuery" :rawData="rawData" :limit="limit"
                                @update-columns="updateColumns" @update-limit="updateLimit" @import-link="importLink"
+                               @show-resource="handleShowResource"
                                ref="content"/>
             </div>
         </div>
@@ -20,6 +21,7 @@
         <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
         <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
         <DialogCheatSheet/>
+      <DialogShowResource :resource="resource" ref="modalResource"/>
         <DialogAbout/>
         <DialogQueryLoad @import-link="importLink"/>
         <DialogQuerySave/>
@@ -28,35 +30,36 @@
 
 
 <script lang="ts">
-    import Searchbar from './searchbar.vue';
-    import ColumnsView from './columns-view.vue';
-    import DialogColumn from './dialog-column.vue';
-    import MyContentView from './my-content-view.vue';
-    import DialogQuestionnaireTs from './dialog-questionnaire-ts.vue';
-    import DialogResource from './dialog-resource.vue';
-    import DialogQueryLoad from './dialog-query-load.vue';
-    import DialogQuerySave from './dialog-query-save.vue';
-    import DialogAbout from './dialog-about.vue';
-    import DialogCheatSheet from "./dialog-cheat-sheet.vue";
-    import {ColumnsParser} from "../column-parser-antlr";
-    // import * as $ from ''
+import Searchbar from './searchbar.vue';
+import ColumnsView from './columns-view.vue';
+import DialogColumn from './dialog-column.vue';
+import MyContentView from './my-content-view.vue';
+import DialogQuestionnaireTs from './dialog-questionnaire-ts.vue';
+import DialogResource from './dialog-resource.vue';
+import DialogQueryLoad from './dialog-query-load.vue';
+import DialogQuerySave from './dialog-query-save.vue';
+import DialogShowResource from './dialog-show-resource.vue';
+import DialogAbout from './dialog-about.vue';
+import DialogCheatSheet from "./dialog-cheat-sheet.vue";
+import {ColumnsParser} from "../column-parser-antlr";
+// import * as $ from ''
 
-    // (<any>$("#sidebar")).resizable({handles: "e"});
+// (<any>$("#sidebar")).resizable({handles: "e"});
 
-    export function columnsToString(columns: Column[]) {
-        function escape(str: string) {
-            return str.replace(",", "\\,").replace("\\", "\\:")
-        }
+export function columnsToString(columns: Column[]) {
+  function escape(str: string) {
+    return str.replace(/,/g, "\\,").replace(/:/g, "\\:")
+  }
 
-        return columns.map((it: Column) => {
-            let name = it.name.replace(":", "\\:").replace("@", "\\@");
-            let type = it.type.replace(":", "\\:");
-            if (it.subColumns) {
-                type += "(" + it.subColumns.map(it => escape(it.name) + ":" + escape(it.expression)) + ")";
-            }
-            let expression = it.expression.replace(",", "\\,");
-            return `${name}@${type}:${expression}`
-        }).join(",");
+  return columns.map((it: Column) => {
+    let name = it.name.replace(/:/g, "\\:").replace(/@/g, "\\@");
+    let type = it.type.replace(/:/g, "\\:");
+    if (it.subColumns) {
+      type += "(" + it.subColumns.map(it => escape(it.name) + ":" + escape(it.expression)).join(",").replace(/\)/g, "\\)") + ")";
+    }
+    let expression = it.expression.replace(",", "\\,");
+    return `${name}@${type}:${expression}`
+  }).join(",");
     }
 
     function getUrlParams(search: string): Map<string, string> {
@@ -95,7 +98,6 @@
         return {url: url + "?" + query, columns, limit}
     }
 
-    im
     export type Column = { name: string, type: string, expression: string, subColumns?: SubColumn[] }
     export type SubColumn = { name: string, expression: string };
 
@@ -105,54 +107,56 @@
 
     export default {
         name: "MyApp",
-        data: function (): { limit: number, columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
-            return {
-                columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
-                    {
-                        name: "ssn",
-                        type: 'join(" ")',
-                        expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
-                    }, {
-                        name: "name", type: "explodeWide", expression: "Patient.name", subColumns: [
-                            {name: "$disc", "expression": "$this.use"},
-                            {name: "given", "expression": "$this.given[0]"},
+      data: function (): { resource: string, limit: number, columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
+        return {
+          columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
+            {
+              name: "ssn",
+              type: 'join(" ")',
+              expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
+            }, {
+              name: "name", type: "explodeWide", expression: "Patient.name", subColumns: [
+                {name: "$disc", "expression": "$this.use"},
+                {name: "given", "expression": "$this.given[0]"},
                             {name: "family", "expression": "$this.family"},
                         ]
-                    }, {
-                        name: "managingOrganization",
-                        type: 'join(" ")',
-                        expression: "Patient.managingOrganization.resolve().name"
-                    },
-                ],
-                rawData: null,
-                endpointUrl: "http://url/to/fhir/endpoint",
-                fhirVersion: "r4",
-                fhirQuery: "",
-                dialog: {
-                    visible: false,
-                    title: "",
-                    mode: "add",
-                    idx: -1,
-                    data: {
-                        name: "",
-                        type: 'join(", ")',
-                        expression: ""
-                    }
+            }, {
+              name: "managingOrganization",
+              type: 'join(" ")',
+              expression: "Patient.managingOrganization.resolve().name"
+            },
+          ],
+          rawData: null,
+          endpointUrl: "http://url/to/fhir/endpoint",
+          fhirVersion: "r4",
+          fhirQuery: "",
+          resource: "",
+          dialog: {
+            visible: false,
+            title: "",
+            mode: "add",
+            idx: -1,
+            data: {
+              name: "",
+              type: 'join(", ")',
+              expression: ""
+            }
                 },
                 limit: 50
             }
         },
         components: {
-            DialogCheatSheet,
-            DialogColumn,
-            Searchbar,
-            ColumnsView,
-            MyContentView,
-            DialogQuestionnaireTs,
-            DialogResource,
-            DialogAbout,
-            DialogQueryLoad,
-            DialogQuerySave,
+          DialogCheatSheet,
+          DialogColumn,
+          Searchbar,
+          ColumnsView,
+          MyContentView,
+          DialogQuestionnaireTs,
+          DialogResource,
+          DialogAbout,
+          DialogShowResource,
+          DialogQueryLoad,
+          DialogQuerySave,
         },
         methods: {
             handleAddColumn: function () {
@@ -181,26 +185,30 @@
                 this.dialog.visible = false;
             },
             handleDialogSubmit: function (data: Column) {
-                this.dialog.visible = false;
-                if (this.dialog.mode === "add") {
-                    this.columns.push(data);
-                } else {
-                    this.columns.splice(this.dialog.idx, 1, data);
-                }
+              this.dialog.visible = false;
+              if (this.dialog.mode === "add") {
+                this.columns.push(data);
+              } else {
+                this.columns.splice(this.dialog.idx, 1, data);
+              }
             },
-            handleRequest: function () {
-                this.$refs.content.loadBundle()
-            },
-            updateColumns: function (columns: Column[], replace: Boolean) {
-                if (replace) {
-                    this.columns = columns;
-                } else {
-                    for (let column of columns) {
-                        this.columns.push(column);
-                    }
-                }
-            },
-            updateUrl: function (url: string) {
+          handleRequest: function () {
+            this.$refs.content.loadBundle()
+          },
+          handleShowResource: function (value: string) {
+            this.resource = value;
+            this.$bvModal.show('modal-show-resource');
+          },
+          updateColumns: function (columns: Column[], replace: Boolean) {
+            if (replace) {
+              this.columns = columns;
+            } else {
+              for (let column of columns) {
+                this.columns.push(column);
+              }
+            }
+          },
+          updateUrl: function (url: string) {
                 this.$refs.searchbar.setQueryUrl(url);
             },
             updateLimit: function (newLimit: number) {
@@ -212,8 +220,8 @@
                 this.limit = parseLink(link).limit;
             },
             getDownloadUrl: function () {
-                let params = encodeURI(`__limit=${this.limit}&__columns=${columnsToString(this.columns)}`);
-                let fhirQuery = (<any>window).searchEditor?.getValue() ?? "";
+              let params = `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}`;
+              let fhirQuery = (<any>window).searchEditor?.getValue() ?? "";
                 if (fhirQuery.endsWith("?")) {
                     return "/fhir/" + fhirQuery + params;
                 } else if (fhirQuery.includes("?")) {

@@ -5,8 +5,6 @@ import org.hl7.fhir.r4.model.Bundle
 import wrappers.FhirPathEngineWrapper
 import wrappers.FhirPathEngineWrapperR4
 import java.io.FileReader
-import kotlin.collections.ArrayList
-import kotlin.collections.LinkedHashMap
 import kotlin.math.max
 
 
@@ -99,13 +97,8 @@ class SubTable() {
             is ExplodeWide -> {
                 for ((index, iBase) in eval.withIndex()) {
                     val disc =
-                        fpe.convertToString(
-                            fpe.evaluateToBase(
-                                iBase,
-                                column.listProcessingMode.discriminator,
-                                mapOf("index" to index)
-                            ).first()
-                        )
+                        fpe.evaluateToBase(iBase, column.listProcessingMode.discriminator, mapOf("index" to index))
+                            .firstOrNull()?.let { fpe.convertToString(it) } ?: "empty"
                     val sc = if (column.listProcessingMode.subcolumns.isNotEmpty()) {
                         column.listProcessingMode.subcolumns.map { (column.name + "." + disc + if (it.name != "") ".${it.name}" else "") to it.expression }
                     } else {
@@ -125,34 +118,8 @@ class SubTable() {
     }
 
 
-    fun addColumn(column: Column, eval: List<String>) {
-        when (column.listProcessingMode) {
-            is Join -> {
-                val value = eval.joinToString(column.listProcessingMode.delimiter)
-                this.data[column.name] = List(currentLength) { value }
-            }
-            is Explode -> {
-                when {
-                    eval.size == 1 -> {
-                        this.data[column.name] = List(currentLength) { eval[0] }
-                    }
-                    eval.isEmpty() -> {
-                        this.data[column.name] = List(currentLength) { eval.toString() }
-                    }
-                    else -> {
-                        for ((i, col) in this.data) {
-                            this.data[i] = repeatList(col, eval.size)
-                        }
-                        this.data[column.name] = stretchList(eval, currentLength)
-                        this.currentLength = currentLength * eval.size
-                    }
-                }
-            }
-            else -> {
-                val value = if (eval.size == 1) eval[0] else eval.toString()
-                this.data[column.name] = List(currentLength) { value } // just one element
-            }
-        }
+    fun addColumn(columnName: String, value: String) {
+        this.data[columnName] = List(currentLength) { value }
     }
 
 

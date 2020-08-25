@@ -8,12 +8,12 @@ import io.ktor.response.*
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.hl7.fhir.instance.model.api.IBaseResource
 import wrappers.BundleEntryComponentWrapper
 import wrappers.BundleWrapper
 import wrappers.FhirPathEngineWrapperR4
 import wrappers.FhirPathEngineWrapperSTU3
 import java.net.URI
-import java.net.URLDecoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -55,8 +55,9 @@ class FhirExtinguisher(
         val printer = CSVPrinter(sb, myParams.csvFormat)
 
 
+        val jsonParser = fhirContext.newJsonParser()
         val resource = if (call.request.headers["Content-Type"] == "application/json") {
-            fhirContext.newJsonParser().parseResource(call.receiveStream())
+            jsonParser.parseResource(call.receiveStream())
         } else {
             fhirContext.newXmlParser().parseResource(call.receiveStream())
         }
@@ -65,7 +66,11 @@ class FhirExtinguisher(
         val bundleWrapper = BundleWrapper(bundleDefinition, resource)
         val resultTables = mutableListOf<SubTable>()
         for (bundleEntry in bundleWrapper.entry) {
-            resultTables += processBundleEntry(myParams.columns!!, bundleEntry)
+            resultTables += processBundleEntry(
+                myParams.columns!!,
+                bundleEntry,
+                jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource)
+            )
         }
         ResultTable(resultTables).print(printer)
         call.respondText(sb.toString()) //TODO: Streamify this
@@ -142,13 +147,21 @@ class FhirExtinguisher(
     }
 
 
-    private fun processBundleEntry(columns: List<Column>, bundleEntry: BundleEntryComponentWrapper): SubTable {
+    private fun processBundleEntry(
+        columns: List<Column>,
+        bundleEntry: BundleEntryComponentWrapper,
+        addRaw: String? = null
+    ): SubTable {
         val table = SubTable()
+        if (addRaw != null) {
+            table.addColumn("\$raw", addRaw)
+        }
+
         for (column in columns) {
             try {
                 table.addColumn(column, bundleEntry.resource!!, fhirPathEngine)
             } catch (e: Exception) {
-                table.addColumn(column, listOf(e.message ?: "ERROR"))
+                table.addColumn(column.name, e.message ?: "ERROR")
             }
         }
         return table

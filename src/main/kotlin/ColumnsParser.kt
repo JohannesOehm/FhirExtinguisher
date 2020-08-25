@@ -13,6 +13,8 @@ fun main() {
     println(parser.parseString("test@explodeLong(foo:Patient.name):Patient"))
     println(parser.parseString("test@explodeWide(\$disc:Patient.name):Patient"))
 
+    println(parser.parseString("name@explodeWide(given:\$this.given[0],family:\$this.family,\$disc:iif(\$this.use.empty(\\)\\, 'foo'\\, \$this.use\\)):Patient.name"))
+
 }
 
 
@@ -78,7 +80,7 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
     }
 
     private fun parseSubColumns(text: String): List<SubColumn> {
-        val subcolumns = split(text).map {
+        return split(text.replace("\\)", ")")).map {
             split(it, ':').let {
                 SubColumn(
                     it[0].replace("\\:", ":"),
@@ -86,7 +88,6 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
                 )
             }
         }
-        return subcolumns
     }
 
     public fun stringifyList(columns: List<Column>): String {
