@@ -1,4 +1,5 @@
 import ca.uhn.fhir.context.FhirContext
+import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.model.Bundle
@@ -15,7 +16,6 @@ fun main() {
     val parser = forR4.newJsonParser()
     val bundle =
         parser.parseResource(FileReader("C:\\Users\\Johannes\\IdeaProjects\\fhirextinguisher\\src\\main\\resources\\test-patient.json")) as Bundle
-    val rt = SubTable()
 
 
     val c = Column(
@@ -37,27 +37,41 @@ fun main() {
         )
     )
     val c1 = Column("name", fpe.parseExpression("Patient.name.given"), ExplodeLong(emptyList()))
+    val c4 = Column("test", fpe.parseExpression("2"), ExplodeLong(emptyList()))
 
-    rt.addColumn(c2, bundle.entry[0].resource, fpe)
+//    rt.addColumn(c, bundle.entry[0].resource, fpe)
 
-    println(rt)
+    val subtables = mutableListOf<SubTable>()
+
+    for (entryComponent in bundle.entry) {
+        val st = SubTable()
+        st.addColumn(c2, entryComponent.resource, fpe)
+        st.addColumn(c1, entryComponent.resource, fpe)
+        st.addColumn(c4, entryComponent.resource, fpe)
+        println(st)
+        subtables += st
+    }
+
+    ResultTable(subtables).print(CSVFormat.EXCEL.printer())
+
 }
 
 
 class SubTable() {
-    val data = LinkedHashMap<String, List<String?>>()
+    val data = LinkedHashMap<Pair<Int, String>, List<String?>>()
     var currentLength = 1
+    var colIdx = 1
 
     fun addColumn(column: Column, base: IBase, fpe: FhirPathEngineWrapper) {
         val eval = fpe.evaluateToBase(base, column.expression)
         when (column.listProcessingMode) {
             is Singleton -> {
                 val value = eval.single()
-                this.data[column.name] = List(currentLength) { fpe.convertToString(value) }
+                this.data[colIdx to column.name] = List(currentLength) { fpe.convertToString(value) }
             }
             is Join -> {
                 val value = eval.joinToString(column.listProcessingMode.delimiter) { fpe.convertToString(it) }
-                this.data[column.name] = List(currentLength) { value }
+                this.data[colIdx to column.name] = List(currentLength) { value }
             }
             is ExplodeLong -> {
                 val sc = if (column.listProcessingMode.subcolumns.isEmpty()) {
@@ -71,14 +85,14 @@ class SubTable() {
                         for (s in sc) {
                             //TODO: Handle multiple return values: Throw error?
                             val subitem = fpe.evaluateToBase(eval[0], s.second)
-                            this.data[s.first] = List(currentLength) {
+                            this.data[colIdx to s.first] = List(currentLength) {
                                 if (subitem.size != 1) null else fpe.convertToString(subitem.first())
                             }
                         }
                     }
                     eval.isEmpty() -> {
                         for (s in sc) {
-                            this.data[s.first] = List(currentLength) { null }
+                            this.data[colIdx to s.first] = List(currentLength) { null }
                         }
                     }
                     else -> {
@@ -88,7 +102,7 @@ class SubTable() {
                         for (s in sc) {
                             val result: List<String?> = eval.map { fpe.evaluateToBase(it, s.second).firstOrNull() }
                                 .map { if (it != null) fpe.convertToString(it) else null }
-                            this.data[s.first] = stretchList(result, currentLength)
+                            this.data[colIdx to s.first] = stretchList(result, currentLength)
                         }
                         this.currentLength = currentLength * eval.size
                     }
@@ -108,18 +122,18 @@ class SubTable() {
                         val result: String? =
                             fpe.evaluateToBase(iBase, s.second, mapOf("index" to index)).map { fpe.convertToString(it) }
                                 .firstOrNull()
-                        this.data[s.first] = List(currentLength) { result }
+                        this.data[colIdx to s.first] = List(currentLength) { result }
                     }
                 }
             }
-
-
         }
+        colIdx++
     }
 
 
     fun addColumn(columnName: String, value: String) {
-        this.data[columnName] = List(currentLength) { value }
+        this.data[colIdx to columnName] = List(currentLength) { value }
+        colIdx++
     }
 
 
@@ -145,19 +159,22 @@ class SubTable() {
 
     override fun toString(): String {
         val maxLength = mutableMapOf<String, Int>()
-        for ((k, value) in data.entries) {
-            maxLength[k] = max(k.length, value.map { it?.length ?: "null".length }.max()!!)
+        for ((r, value) in data.entries) {
+            val columnName = r.second
+            maxLength[columnName] = max(columnName.length, value.map { it?.length ?: "null".length }.max()!!)
         }
         return buildString {
             for (key in data.keys) {
-                append(key).append(" ".repeat(maxLength[key]!! - key.length)).append(" | ")
+                val columnName = key.second
+                append(columnName).append(" ".repeat(maxLength[columnName]!! - columnName.length)).append(" | ")
             }
             append("\n")
             append("-".repeat(maxLength.values.sum() + maxLength.size * " | ".length))
             append("\n")
             for (i in data.values.first().indices) {
                 for ((key, value) in data) {
-                    append(value[i]).append(" ".repeat(maxLength[key]!! - (value[i]?.length ?: 4))).append(" | ")
+                    val columnName = key.second
+                    append(value[i]).append(" ".repeat(maxLength[columnName]!! - (value[i]?.length ?: 4))).append(" | ")
                 }
                 append("\n")
             }
@@ -170,7 +187,7 @@ class ResultTable(val subtables: List<SubTable>) {
 
     fun print(printer: CSVPrinter) {
         val colNames = getAllColumnNames()
-        printer.printRecord(colNames)
+        printer.printRecord(colNames.map { it.second })
 
         for (subtable in subtables) {
             for (i in subtable.data.values.first().indices) {
@@ -184,8 +201,8 @@ class ResultTable(val subtables: List<SubTable>) {
 
     }
 
-    private fun getAllColumnNames(): List<String> {
-        return this.subtables.map { it.data.keys }.flatten().distinct()
+    private fun getAllColumnNames(): List<Pair<Int, String>> {
+        return this.subtables.map { it.data.keys }.flatten().sortedBy { it.first }.distinct()
     }
 
 

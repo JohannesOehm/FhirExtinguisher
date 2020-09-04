@@ -1,0 +1,1313 @@
+{
+  "resourceType": "Bundle",
+  "id": "eb63f6d6-04a9-46e1-a185-7e2707ea6571",
+  "meta": {
+    "lastUpdated": "2020-08-24T10:06:16.432+00:00"
+  },
+  "type": "searchset",
+  "link": [
+    {
+      "relation": "self",
+      "url": "http://hapi.fhir.org/baseR4/Patient?_format=json"
+    },
+    {
+      "relation": "next",
+      "url": "http://hapi.fhir.org/baseR4?_getpages=eb63f6d6-04a9-46e1-a185-7e2707ea6571&_getpagesoffset=20&_count=20&_format=json&_pretty=true&_bundletype=searchset"
+    }
+  ],
+  "entry": [
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195373",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195373",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-06-10T09:22:52.073+00:00",
+          "source": "#jXzdttmHTZGlM85M"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">John era un Petit indi</div>"
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+            "valueString": "PETITINDI"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+            "valueAddress": {
+              "line": [
+                "Teeppee Brujo",
+                "Reserva india"
+              ],
+              "city": "Springfield",
+              "state": "Ontario",
+              "country": "CA"
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-cadavericDonor",
+            "valueString": "PETITINDI"
+          }
+        ],
+        "identifier": [
+          {
+            "fhir_comments": [
+              " Identificador Numero de Historia "
+            ],
+            "use": "usual",
+            "system": "urn:oid:2.16.840.1.113883.17.4112.2.2",
+            "value": "1234"
+          },
+          {
+            "fhir_comments": [
+              " Identificador por DNI/NIF "
+            ],
+            "use": "official",
+            "system": "urn:oid:1.3.6.1.4.1.19126.3",
+            "value": "12345678Z"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Jimenez",
+            "given": [
+              "Juanma"
+            ],
+            "prefix": [
+              "Sr"
+            ]
+          },
+          {
+            "use": "usual",
+            "family": "James",
+            "given": [
+              "Bond"
+            ],
+            "prefix": [
+              "Sr"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "666 666 666",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1975-10-04",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "Avda Gran Via de l'Hospitalet"
+            ],
+            "city": "Hospitalet",
+            "postalCode": "08908",
+            "country": "ESP"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "M"
+            }
+          ]
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195376",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195376",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-06-10T09:35:06.358+00:00",
+          "source": "#UXgAHyCbB5keu4fO"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Janardhan <b>BUDIGE </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Identifier</td><td>janardhan.budige</td></tr><tr><td>Address</td><td><span>3300 Washtenaw </span><br/><span>Ann Harbor </span><span>MI </span><span>US </span></td></tr><tr><td>Date of birth</td><td><span>03 June 2000</span></td></tr></tbody></table></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://clinfhir.com/fhir/NamingSystem/identifier",
+            "value": "janardhan.budige"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Janardhan Budige",
+            "family": "Budige",
+            "given": [
+              "Janardhan"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "(03) 5555 6789",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2000-06-03",
+        "address": [
+          {
+            "line": [
+              "3300 Washtenaw"
+            ],
+            "city": "Ann Harbor",
+            "district": "Washtenaw",
+            "state": "MI",
+            "postalCode": "48104",
+            "country": "US"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195377",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195377",
+        "meta": {
+          "versionId": "2",
+          "lastUpdated": "2020-06-10T09:39:22.354+00:00",
+          "source": "#22lRpaMiYs8kMaJt"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Janardhan <b>BUDIGE </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Identifier</td><td>janardhan.budige</td></tr><tr><td>Address</td><td><span>3300 Washtenaw </span><br/><span>Ann Harbor </span><span>MI </span><span>US </span></td></tr><tr><td>Date of birth</td><td><span>03 June 2000</span></td></tr></tbody></table></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://clinfhir.com/fhir/NamingSystem/identifier",
+            "value": "janardhan.budige"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Janardhan Budige",
+            "family": "Budige",
+            "given": [
+              "Janardhan"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "(03) 5555 6712",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2000-06-03",
+        "address": [
+          {
+            "line": [
+              "3300 Washtenaw1"
+            ],
+            "city": "Ann Harbor1",
+            "district": "Washtenaw1",
+            "state": "NW",
+            "postalCode": "48104",
+            "country": "US"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195379",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195379",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-06-10T09:51:01.142+00:00",
+          "source": "#QPkxIQ9MSP4coYBt"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">adyasa priyadarshini</div>"
+        },
+        "identifier": [
+          {
+            "system": "http://fhir.hl7.org.nz/identifier",
+            "value": "jd"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "adyasa priyadarshini",
+            "family": "priyadarshini",
+            "given": [
+              "adyasa"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "(03) 5555 6789",
+            "use": "home",
+            "rank": 1
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1961-01-31",
+        "address": [
+          {
+            "use": "home",
+            "_use": {
+              "fhir_comments": [
+                " from Element: extension "
+              ]
+            },
+            "line": [
+              "3300 Washtenaw"
+            ],
+            "city": "Ann Harbor",
+            "district": "Washtenaw",
+            "state": "MI",
+            "postalCode": "48104",
+            "country": "US"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195387",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195387",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-06-10T10:22:20.300+00:00",
+          "source": "#UnuQHTd3O3ahuRp1"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Janardhan <b>BUDIGE </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Identifier</td><td>janardhan.budige</td></tr><tr><td>Address</td><td><span>3300 Washtenaw </span><br/><span>Ann Harbor </span><span>MI </span><span>US </span></td></tr><tr><td>Date of birth</td><td><span>03 June 2000</span></td></tr></tbody></table></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://clinfhir.com/fhir/NamingSystem/identifier",
+            "value": "janardhan.budige"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Janardhan Budige",
+            "family": "Budige",
+            "given": [
+              "Janardhan"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "(03) 5555 6789",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2000-06-03",
+        "address": [
+          {
+            "line": [
+              "3300 Washtenaw"
+            ],
+            "city": "Ann Harbor",
+            "district": "Washtenaw",
+            "state": "MI",
+            "postalCode": "48104",
+            "country": "US"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195391",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195391",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-06-10T10:45:54.123+00:00",
+          "source": "#WPy16b805nRNOK0z"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Hazel Evans</div>"
+        },
+        "identifier": [
+          {
+            "system": "http://clinfhir.com/fhir/NamingSystem/identifier",
+            "value": "Ivanildo Filho"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Hazel Evans",
+            "family": "Evans",
+            "given": [
+              "Hazel"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "2020-06-10"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632627",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632627",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-02-29T15:05:08.550+00:00",
+          "source": "#smy1VjCDkHJlrCJt"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\"><b>MED </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Date of birth</td><td><span>22 May 1999</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "family": "med"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1999-05-22"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/1195375",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "1195375",
+        "meta": {
+          "versionId": "4",
+          "lastUpdated": "2020-06-10T10:58:57.392+00:00",
+          "source": "#7mMXXjNlczxtgnxf"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">John era un Petit indi</div>"
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+            "valueString": "PETITINDI"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+            "valueAddress": {
+              "line": [
+                "Teeppee Brujo",
+                "Reserva india"
+              ],
+              "city": "Springfield",
+              "state": "Ontario",
+              "country": "CA"
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-cadavericDonor",
+            "valueString": "PETITINDI"
+          }
+        ],
+        "identifier": [
+          {
+            "fhir_comments": [
+              " Identificador Numero de Historia "
+            ],
+            "use": "usual",
+            "system": "urn:oid:2.16.840.1.113883.17.4112.2.2",
+            "value": "1234"
+          },
+          {
+            "fhir_comments": [
+              " Identificador por DNI/NIF "
+            ],
+            "use": "official",
+            "system": "urn:oid:1.3.6.1.4.1.19126.3",
+            "value": "12345678Z"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Jimenez2",
+            "given": [
+              "Juanma"
+            ],
+            "prefix": [
+              "Sr"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "666 666 666",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1975-10-04",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "Avda Gran Via de l'Hospitalet"
+            ],
+            "city": "Hospitalet",
+            "postalCode": "08908",
+            "country": "ESP"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "M"
+            }
+          ]
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/cf-1591782629653",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "cf-1591782629653",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-06-10T09:51:23.711+00:00",
+          "source": "#x36BHRfV3XzDCQd5"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><a name=\"mm\"/></div>"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/f9e7494a-bd8d-42ad-a0ed-42b676687b91",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "f9e7494a-bd8d-42ad-a0ed-42b676687b91",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-03-24T17:58:16.990+00:00",
+          "source": "#H2oNla27Tqo3TmFB",
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ],
+          "tag": [
+            {
+              "system": "https://smarthealthit.org/tags",
+              "code": "Covid19 synthetic population from Synthea"
+            }
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Generated by <a href=\"https://github.com/synthetichealth/synthea\">Synthea</a>.Version identifier: 7ff8db58\n .   Person seed: 8546261852412966863  Population seed: 12345</div>"
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "White"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Not Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+            "valueString": "Deloise241 Erdman779"
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "F"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+            "valueAddress": {
+              "city": "Sacramento",
+              "state": "California",
+              "country": "US"
+            }
+          },
+          {
+            "url": "http://synthetichealth.github.io/synthea/disability-adjusted-life-years",
+            "valueDecimal": 0
+          },
+          {
+            "url": "http://synthetichealth.github.io/synthea/quality-adjusted-life-years",
+            "valueDecimal": 72
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://github.com/synthetichealth/synthea",
+            "value": "9699e024-df4c-4cfb-b032-add83888d69a"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ],
+              "text": "Medical Record Number"
+            },
+            "system": "http://hospital.smarthealthit.org",
+            "value": "9699e024-df4c-4cfb-b032-add83888d69a"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "SS",
+                  "display": "Social Security Number"
+                }
+              ],
+              "text": "Social Security Number"
+            },
+            "system": "http://hl7.org/fhir/sid/us-ssn",
+            "value": "999-83-7271"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "DL",
+                  "display": "Driver's License"
+                }
+              ],
+              "text": "Driver's License"
+            },
+            "system": "urn:oid:2.16.840.1.113883.4.3.25",
+            "value": "S99940266"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "PPN",
+                  "display": "Passport Number"
+                }
+              ],
+              "text": "Passport Number"
+            },
+            "system": "http://standardhealthrecord.org/fhir/StructureDefinition/passportNumber",
+            "value": "X28034933X"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "Collier206",
+            "given": [
+              "Albertina684"
+            ],
+            "prefix": [
+              "Mrs."
+            ]
+          },
+          {
+            "use": "maiden",
+            "family": "Nitzsche158",
+            "given": [
+              "Albertina684"
+            ],
+            "prefix": [
+              "Mrs."
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "555-176-4630",
+            "use": "home"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1947-02-02",
+        "address": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+                "extension": [
+                  {
+                    "url": "latitude",
+                    "valueDecimal": 34.01709640867761
+                  },
+                  {
+                    "url": "longitude",
+                    "valueDecimal": -118.39492607372746
+                  }
+                ]
+              }
+            ],
+            "line": [
+              "995 Douglas Lane"
+            ],
+            "city": "Los Angeles",
+            "state": "CA",
+            "country": "US"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "M",
+              "display": "M"
+            }
+          ],
+          "text": "M"
+        },
+        "multipleBirthBoolean": false,
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en-US",
+                  "display": "English"
+                }
+              ],
+              "text": "English"
+            }
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/633072",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "633072",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-03-01T03:10:37.026+00:00",
+          "source": "#A7SUvAgtQIv7Ywcl"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">林小妹 <b>林 </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Date of birth</td><td><span>03 February 1985</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "text": "吳奇龍",
+            "family": "林",
+            "given": [
+              "林小妹"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1985-02-03"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/633073",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "633073",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-03-01T03:17:40.653+00:00",
+          "source": "#peeqjP8dlc8xnPlR"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">林小妹 <b>林 </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Date of birth</td><td><span>01 January 1999</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "text": "吳奇隆",
+            "family": "林",
+            "given": [
+              "林小妹"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1999-01-01",
+        "managingOrganization": {
+          "reference": "Organization/632757"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/633544",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "633544",
+        "meta": {
+          "versionId": "7",
+          "lastUpdated": "2020-03-02T09:16:10.570+00:00",
+          "source": "#RxFAchTgsfyUuduL"
+        },
+        "text": {
+          "status": "generated"
+        },
+        "gender": "female",
+        "birthDate": "1973-08-08"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/5d47f38b-0101-4e17-92cf-11cde70934d0",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "5d47f38b-0101-4e17-92cf-11cde70934d0",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-03-24T17:58:23.750+00:00",
+          "source": "#2CAf4uTY4hxJZUeg",
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ],
+          "tag": [
+            {
+              "system": "https://smarthealthit.org/tags",
+              "code": "Covid19 synthetic population from Synthea"
+            }
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">Generated by <a href=\"https://github.com/synthetichealth/synthea\">Synthea</a>.Version identifier: 2177cffc\n .   Person seed: 8954318016165294761  Population seed: 12345</div>"
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "detailed",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2131-1",
+                  "display": "Other Races"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Other"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2135-2",
+                  "display": "Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName",
+            "valueString": "Josefina523 Negrón227"
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "M"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+            "valueAddress": {
+              "city": "Bayamon",
+              "state": "Puerto Rico",
+              "country": "PR"
+            }
+          },
+          {
+            "url": "http://synthetichealth.github.io/synthea/disability-adjusted-life-years",
+            "valueDecimal": 0
+          },
+          {
+            "url": "http://synthetichealth.github.io/synthea/quality-adjusted-life-years",
+            "valueDecimal": 8
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://github.com/synthetichealth/synthea",
+            "value": "85e22bb7-348f-4c22-a495-202cbf3cb05b"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ],
+              "text": "Medical Record Number"
+            },
+            "system": "http://hospital.smarthealthit.org",
+            "value": "85e22bb7-348f-4c22-a495-202cbf3cb05b"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "SS",
+                  "display": "Social Security Number"
+                }
+              ],
+              "text": "Social Security Number"
+            },
+            "system": "http://hl7.org/fhir/sid/us-ssn",
+            "value": "999-80-4387"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "family": "Holguín308",
+            "given": [
+              "Alberto639"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "555-870-6636",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2011-09-29",
+        "address": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
+                "extension": [
+                  {
+                    "url": "latitude",
+                    "valueDecimal": 41.768679544379054
+                  },
+                  {
+                    "url": "longitude",
+                    "valueDecimal": -87.5634248219596
+                  }
+                ]
+              }
+            ],
+            "line": [
+              "278 Gislason Track"
+            ],
+            "city": "Chicago",
+            "state": "IL",
+            "postalCode": "60007",
+            "country": "US"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "S",
+              "display": "Never Married"
+            }
+          ],
+          "text": "Never Married"
+        },
+        "multipleBirthBoolean": false,
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "es",
+                  "display": "Spanish"
+                }
+              ],
+              "text": "Spanish"
+            }
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632718",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632718",
+        "meta": {
+          "versionId": "5",
+          "lastUpdated": "2020-02-29T16:38:32.926+00:00",
+          "source": "#AWtU2K7T8hBJtg5k"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Peter R.F. <b>PARKER </b></div><table class=\"hapiPropertyTable\"><tbody/></table></div>"
+        },
+        "name": [
+          {
+            "family": "Parker",
+            "given": [
+              "Peter R.F."
+            ]
+          }
+        ],
+        "gender": "male"
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632746",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632746",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-02-29T16:47:04.218+00:00",
+          "source": "#Trt2Hy0y6F7WBIbJ"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Test <b>TEST </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Address</td><td><span>hxfgcxhfghj </span><br/><span>fcdghbdfghdf </span><br/><span>fdhdfgh </span><br/></td></tr><tr><td>Date of birth</td><td><span>01 April 2019</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "family": "test",
+            "given": [
+              "Test"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+49 999999999999999999999",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2019-04-01T23:00:00.000Z",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "hxfgcxhfghj",
+              "fcdghbdfghdf",
+              "fdhdfgh"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632747",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632747",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-02-29T16:47:22.697+00:00",
+          "source": "#7GqRDpO41pboOnIq"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Test <b>TEST </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Address</td><td><span>hxfgcxhfghj </span><br/><span>fcdghbdfghdf </span><br/><span>fdhdfgh </span><br/></td></tr><tr><td>Date of birth</td><td><span>01 April 2019</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "family": "test",
+            "given": [
+              "Test"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+49 999999999999999999999",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2019-04-01T23:00:00.000Z",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "hxfgcxhfghj",
+              "fcdghbdfghdf",
+              "fdhdfgh"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632748",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632748",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-02-29T16:47:34.296+00:00",
+          "source": "#cMKMohGBGZ1fvJT7"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Test <b>TEST </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Address</td><td><span>hxfgcxhfghj </span><br/><span>fcdghbdfghdf </span><br/><span>fdhdfgh </span><br/></td></tr><tr><td>Date of birth</td><td><span>01 April 2019</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "family": "test",
+            "given": [
+              "Test"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+49 999999999999999999999",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2019-04-01T23:00:00.000Z",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "hxfgcxhfghj",
+              "fcdghbdfghdf",
+              "fdhdfgh"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632749",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632749",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-02-29T16:47:47.432+00:00",
+          "source": "#McMLmhNfRsQzsuK2"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Test <b>TEST </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Address</td><td><span>hxfgcxhfghj </span><br/><span>fcdghbdfghdf </span><br/><span>fdhdfgh </span><br/></td></tr><tr><td>Date of birth</td><td><span>01 April 2019</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "family": "test",
+            "given": [
+              "Test"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+49 999999999999999999999",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2019-04-01T23:00:00.000Z",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "hxfgcxhfghj",
+              "fcdghbdfghdf",
+              "fdhdfgh"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "http://hapi.fhir.org/baseR4/Patient/632752",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "632752",
+        "meta": {
+          "versionId": "1",
+          "lastUpdated": "2020-02-29T16:58:14.466+00:00",
+          "source": "#IBORDGPNBkBOiYF3"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><div class=\"hapiHeaderText\">Test <b>MIYAZAKI </b></div><table class=\"hapiPropertyTable\"><tbody><tr><td>Address</td><td><span>hxfgcxhfghj </span><br/><span>fcdghbdfghdf </span><br/><span>fdhdfgh </span><br/></td></tr><tr><td>Date of birth</td><td><span>01 April 2019</span></td></tr></tbody></table></div>"
+        },
+        "name": [
+          {
+            "use": "official",
+            "family": "Miyazaki",
+            "given": [
+              "Test"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+49 999999999999999999999",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2019-04-01T23:00:00.000Z",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "hxfgcxhfghj",
+              "fcdghbdfghdf",
+              "fdhdfgh"
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    }
+  ]
+}
