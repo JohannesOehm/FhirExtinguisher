@@ -163,7 +163,7 @@ fun main(args: Array<String>) {
  * Reverse proxy method
  */
 private fun Routing.redirect(prefix: String, target: String) {
-    route("$prefix/*") {
+    route("$prefix/{...}") {
         handle {
             val client = HttpClient()
             val redirectUrl =
