@@ -13,7 +13,7 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.2.0"
+    version = "1.2.1"
 }
 
 
