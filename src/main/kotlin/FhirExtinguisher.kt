@@ -97,7 +97,7 @@ class FhirExtinguisher(
 
         call.response.header(
             "Content-Disposition",
-            "attachment; filename=\"${defaultCsvFileName(bundleUrl, fhirParams)}.csv\"');"
+            "attachment; filename=\"${defaultCsvFileName(bundleUrl, fhirParams)}.csv\""
         )
 
 

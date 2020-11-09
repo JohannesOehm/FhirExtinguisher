@@ -7,7 +7,9 @@ There are alternative ways to do this:
  The main advantage is that you can use the full set of SQL operations like JOIN, etc., but You have to export 
  your entire dataset first.
 * Using the [FHIR GraphQL API](http://hl7.org/fhir/graphql.html), you can use operators like "@flatten" to transform it 
-into a flatter format. However, the result is still a JSON, and the GraphQL API must be supported by the server.  
+into a flatter format. However, the result is still a JSON, and the GraphQL API must be supported by the server.
+* [fhircrackr](https://cran.r-project.org/web/packages/fhircrackr/index.html) and FHIRton, which are XML-based implementations 
+for usage with R or Python. 
 
 ## How does this work?
 This project is a simple WebServer, that connects to a FHIR server and forwards the requests. This way you can use all 
