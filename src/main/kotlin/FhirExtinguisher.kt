@@ -27,7 +27,7 @@ class FhirExtinguisher(
 
     val fhirClient = fhirContext.newRestfulGenericClient(fhirServerUrl)
 
-    private val fhirPathEngine = if (fhirContext.version.version == FhirVersionEnum.DSTU3) {
+    val fhirPathEngine = if (fhirContext.version.version == FhirVersionEnum.DSTU3) {
         FhirPathEngineWrapperSTU3(fhirContext, fhirClient)
     } else {
         FhirPathEngineWrapperR4(fhirContext, fhirClient)

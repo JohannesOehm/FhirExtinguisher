@@ -25,6 +25,7 @@
     <DialogAbout/>
     <DialogQueryLoad @import-link="importLink"/>
     <DialogQuerySave/>
+    <DialogTestFhirpath :resource="resource"/>
   </div>
 </template>
 
@@ -39,6 +40,7 @@ import DialogResource from './dialog-resource.vue';
 import DialogQueryLoad from './dialog-query-load.vue';
 import DialogQuerySave from './dialog-query-save.vue';
 import DialogShowResource from './dialog-show-resource.vue';
+import DialogTestFhirpath from './dialog-test-fhirpath.vue';
 import DialogAbout from './dialog-about.vue';
 import DialogCheatSheet from "./dialog-cheat-sheet.vue";
 import {ColumnsParser} from "../column-parser-antlr";
@@ -159,6 +161,7 @@ export default {
     DialogShowResource,
     DialogQueryLoad,
     DialogQuerySave,
+    DialogTestFhirpath,
   },
   methods: {
     handleAddColumn: function () {

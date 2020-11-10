@@ -1,33 +1,24 @@
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
-import io.ktor.application.call
-import io.ktor.client.HttpClient
-import io.ktor.client.request.request
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.OutgoingContent
-import io.ktor.http.content.defaultResource
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
-import io.ktor.request.receiveText
-import io.ktor.request.uri
-import io.ktor.response.header
-import io.ktor.response.respond
-import io.ktor.response.respondText
+import io.ktor.application.*
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import io.ktor.util.filter
-import io.ktor.utils.io.ByteWriteChannel
-import io.ktor.utils.io.copyAndClose
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.util.*
+import io.ktor.utils.io.*
 import mu.KotlinLogging
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
+import org.hl7.fhir.exceptions.FHIRException
 import java.io.File
 
 private val log = KotlinLogging.logger {}
@@ -106,6 +97,33 @@ fun main(args: Array<String>) {
             redirect("/redirect", fhirServerUrl)
             post("/processBundle") {
                 fhirExtinguisher.processBundle(call)
+            }
+            post("/fhirPath") {
+                val expr = call.parameters["expr"]
+                if (expr == null) {
+                    call.respondText("GET-param expr must be set!")
+                } else {
+                    val expr = try {
+                        fhirExtinguisher.fhirPathEngine.parseExpression(expr)
+                    } catch (e: FHIRException) {
+                        call.respondText(e.message ?: e.toString(), ContentType.Text.Plain, HttpStatusCode.BadRequest)
+                        return@post
+                    }
+                    val resource = fhirContext.newJsonParser().parseResource(call.receiveStream())
+                    val result = fhirExtinguisher.fhirPathEngine.evaluateToBase(resource, expr)
+                    val json =
+                        if (result.isEmpty()) "[]" else result.map { fhirExtinguisher.fhirPathEngine.convertToString(it) }
+                            .joinToString("\", \"", "[\"", "\"]") {
+                                it.replace("\\", "\\\\")
+                                    .replace("\"", "\"")
+                                    .replace("\n", "\\n")
+                                    .replace("\t", "\\t")
+                                    .replace("\r", "\\r")
+                            }//TODO: Use JSON library instead
+                    call.respondText(json, contentType = ContentType.Application.Json)
+
+                }
+
             }
             get("/query") {
                 call.respondText(
