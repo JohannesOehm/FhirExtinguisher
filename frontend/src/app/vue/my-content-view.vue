@@ -100,7 +100,7 @@ export default {
     return {
       // table: {data:null, loading: false, error: null},
       // raw: {data:null, loading: false, error: null},
-      showRaw: true,
+      showRaw: false,
       tableData: null,
       tableError: null,
       tableLoading: false,
