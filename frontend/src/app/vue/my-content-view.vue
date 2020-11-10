@@ -40,8 +40,8 @@
         </tr>
         </tbody>
         <caption>
-                    This is only a preview, where only the resources in the first Bundle returned by the server was processed.
-                    Click download to process as many Bundles as needed to fulfill the limit.
+          This is only a preview, where only the resources in the first Bundle returned by the server was processed.
+          Click download to process as many Bundles as needed to fulfill the limit.
         </caption>
       </table>
       <div v-else>
@@ -158,7 +158,7 @@ export default {
       if (!this.rawData) {
         return
       }
-
+      this.tableLoading = true;
       let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
       let response = await fetch("/processBundle?" + encodeURI(params), {
         method: 'POST',
@@ -174,13 +174,15 @@ export default {
         }).done((it: TableData) => {
           this.tableData = it;
           this.tableError = null;
+          this.tableLoading = false;
         }).catch((it: any) => {
           this.tableData = null;
           this.tableError = it;
-            }
-        );
+          this.tableLoading = false;
+        });
       } else {
         this.tableData = null;
+        this.tableLoading = false;
         this.tableError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
         this.tableError += "\n\n" + await response.text();
       }
