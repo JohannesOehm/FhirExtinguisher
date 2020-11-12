@@ -20,6 +20,10 @@ import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
 import org.hl7.fhir.exceptions.FHIRException
 import java.io.File
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.SocketException
+
 
 private val log = KotlinLogging.logger {}
 
@@ -92,8 +96,17 @@ fun main(args: Array<String>) {
         if (savedQueriesFile.exists()) deserialize(savedQueriesFile.readText()) else mutableListOf()
 
     val fhirExtinguisher = FhirExtinguisher(fhirServerUrl, fhirContext, interceptors)
+
+
     embeddedServer(Netty, 8080) {
         routing {
+            intercept(ApplicationCallPipeline.Features) {
+                val ip = call.request.local.remoteHost
+                if (!external && !isThisMyIpAddress(InetAddress.getByName(ip))) {
+                    call.respondText("The request origin '$ip' is not a localhost address. Please start the FhirExtinguisher with '-ext'!")
+                    this.finish()
+                }
+            }
             redirect("/redirect", fhirServerUrl)
             post("/processBundle") {
                 fhirExtinguisher.processBundle(call)
@@ -174,6 +187,16 @@ fun main(args: Array<String>) {
         }
     }.start(wait = true)
 
+}
+
+fun isThisMyIpAddress(addr: InetAddress): Boolean {
+    // Check if the address is a valid special local or loop back
+    return if (addr.isAnyLocalAddress || addr.isLoopbackAddress) true else try {
+        // Check if the address is defined on any interface
+        NetworkInterface.getByInetAddress(addr) != null
+    } catch (e: SocketException) {
+        false
+    }
 }
 
 

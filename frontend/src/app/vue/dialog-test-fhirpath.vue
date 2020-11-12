@@ -34,20 +34,6 @@
 <script lang="ts">
 import * as _ from "lodash";
 
-// const debounce = (func: any, wait: number) => {
-//   let timeout: any;
-//
-//   return function executedFunction(...args: any) {
-//     const later = () => {
-//       clearTimeout(timeout);
-//       func(...args);
-//     };
-//
-//     clearTimeout(timeout);
-//     timeout = setTimeout(later, wait);
-//   };
-// };
-
 export default {
   name: "DialogTestFhirpath",
   data: function (): { fhirpath: string, text: string[], error: string | null, stringify: boolean } {
@@ -63,7 +49,6 @@ export default {
   props: ["resource"],
   methods: {
     evaluateExpression: _.debounce(async function (fhirpath: string, resource: string, stringify: boolean): Promise<void> {
-      //TODO: Use debounce!!
       try {
         let expr = stringify ? `stringify(${fhirpath})` : fhirpath;
         let response = await fetch("/fhirPath?expr=" + encodeURIComponent(expr), {
