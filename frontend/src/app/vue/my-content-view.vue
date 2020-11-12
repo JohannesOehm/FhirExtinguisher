@@ -40,12 +40,15 @@
         </tr>
         </tbody>
         <caption>
-          This is only a preview, where only the resources in the first Bundle returned by the server was processed.
-          Click download to process as many Bundles as needed to fulfill the limit.
+          This is just a preview, where only the resources in the first Bundle returned by the server were processed.
+          To fetch as many bundle pages from the FHIR server as needed to fulfill the limit, use the download link
+          above.
         </caption>
       </table>
       <div v-else>
         Table data is not available.<br><br>
+        <span v-if="!tableLoading && !dataLoading && tableError == null && rawError == null">
+          Please enter a valid FHIR Search query in the text field above and press GET!</span>
         <span v-if="dataLoading">Raw data is loading...</span>
         <span v-if="tableLoading">Table data is loading...</span>
         <div v-if="tableError != null"><br>

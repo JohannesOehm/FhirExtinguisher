@@ -127,21 +127,21 @@
 </template>
 
 <script lang="ts">
-    import * as $ from 'jquery';
-    import {Column, SubColumn} from "./my-app.vue";
+import * as $ from 'jquery';
+import {Column, SubColumn} from "./my-app.vue";
 
 
-    export default {
-        name: "DialogColumn",
-        data: function (): { name: string, type: string, joinStr: string, expression: string, subcolumns: SubColumn[], discriminator: string } {
-            return {
-                name: "",
-                type: "join",
-                joinStr: ", ",
-                expression: "",
-                subcolumns: [],
-                discriminator: "%index"
-            }
+export default {
+  name: "DialogColumn",
+  data: function (): { name: string, type: string, joinStr: string, expression: string, subcolumns: SubColumn[], discriminator: string } {
+    return {
+      name: "",
+      type: "join",
+      joinStr: ", ",
+      expression: "",
+      subcolumns: [],
+      discriminator: "%index"
+    }
         },
         methods: {
             getData: function (): Column {
@@ -184,9 +184,11 @@
                 this.subcolumns = (newData.subColumns ?? []).filter(it => it.name !== "$disc");
                 this.expression = newData.expression;
                 let disc = (newData.subColumns ?? []).filter(it => it.name === "$disc");
-                if (disc.length != 0) {
-                    this.discriminator = disc[0].expression;
-                }
+              if (disc.length != 0) {
+                this.discriminator = disc[0].expression;
+              } else {
+                this.discriminator = "%index";
+              }
             }
         },
         mounted: function () {
