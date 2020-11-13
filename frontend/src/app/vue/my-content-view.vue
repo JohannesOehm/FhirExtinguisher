@@ -17,7 +17,7 @@
           </button>
         </div>
         <div class="btn-group mr-2">
-          <button @click="openUrl(getDownloadUrl())" class="btn btn-sm btn-outline-secondary" type="submit">
+          <button @click="makeDownload()" class="btn btn-sm btn-outline-secondary" type="submit">
             Download
           </button>
           <button class="btn btn-sm btn-outline-secondary" v-on:click="editLimit">Limit:
@@ -162,14 +162,33 @@ export default {
         return
       }
       this.tableLoading = true;
+
       let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
-      let response = await fetch("/processBundle?" + encodeURI(params), {
-        method: 'POST',
-        body: this.rawData,
-        headers: {
-          "Content-Type": this.rawDataFormat == "json" ? "application/json" : "application/xml",
-        }
-      });
+      let resourceFormat = this.rawDataFormat == "json" ? "application/json" : "application/xml";
+      let response;
+      if (params.length < 1000) {
+        response = await fetch("/processBundle?" + encodeURI(params), {
+          method: 'POST',
+          body: this.rawData,
+          headers: {
+            "Content-Type": resourceFormat,
+          }
+        });
+      } else {
+        let formData = new FormData();
+        formData.append("bundle", this.rawData);
+        formData.append("bundleFormat", resourceFormat);
+        formData.append("__limit", this.limit);
+        formData.append("__columns", columnsToString(this.columns));
+
+        response = await fetch("/processBundle", {
+          method: 'POST',
+          body: formData,
+          headers: {
+            // "Content-Type": this.rawDataFormat == "json" ? "application/json" : "application/xml",
+          }
+        });
+      }
       if (response.ok) {
         let csvString = await response.text();
         (<any>CSV).fetch({
@@ -214,6 +233,26 @@ export default {
     },
     openRawDialog: function (value: string) {
       this.$emit("show-resource", value);
+    },
+    makeDownload: function () {
+      let downloadUrl = this.getDownloadUrl();
+
+      if (downloadUrl.length < 1000) {
+        this.openUrl(downloadUrl);
+      } else {
+        let target = this.$parent.getDownloadUrl(false);
+        console.log(target);
+        let html = `
+          <form id="post-download-dummy" method="post" action="${target}">
+            <input type="hidden" name="__columns" id="post-download-dummy-columns"/>
+            <input type="hidden" name="__limit" id="post-download-dummy-limit"/>
+          </form>
+        `;
+        document.body.insertAdjacentHTML("beforeend", html);
+        (<HTMLInputElement>document.getElementById("post-download-dummy-columns")).value = columnsToString(this.columns);
+        (<HTMLInputElement>document.getElementById("post-download-dummy-limit")).value = this.limit;
+        (<HTMLFormElement>document.getElementById("post-download-dummy")).submit();
+      }
     }
   },
 

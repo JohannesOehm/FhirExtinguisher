@@ -237,8 +237,8 @@ export default {
       }
 
     },
-    getDownloadUrl: function () {
-      let params = `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}`;
+    getDownloadUrl: function (addParams: boolean = true) {
+      let params = addParams ? `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}` : "";
       let fhirQuery = (<any>window).searchEditor?.getValue() ?? "";
       if (fhirQuery.endsWith("?")) {
         return "/fhir/" + fhirQuery + params;

@@ -45,22 +45,37 @@ class FhirExtinguisher(
         val columns: List<Column>?
     )
 
-
+    /**
+     * Process a bundle resource which is submitted with the users call
+     */
     suspend fun processBundle(call: ApplicationCall) {
+        val jsonParser = fhirContext.newJsonParser()
         val sb = StringBuilder()
-        val (fhirParams, myParams) = processQueryParams(call.parameters) //TODO: Only parse my_params
-//        log.debug { "uri = '${call.uri}'; queryParams = ${session.queryParameterString}" }
-        log.debug { "fhirParams = $fhirParams, myParams = $myParams" }
+        val contentType = call.request.headers["Content-Type"]
+
+        val myParams: MyParams
+        val resourceType: String
+        val resourceString: String
+        if (call.request.contentType().contentType == "multipart" && call.request.contentType().contentSubtype == "form-data") {
+            val receiveParameters = call.receiveParameters()
+            myParams = processQueryParams(receiveParameters).second
+            resourceType = receiveParameters["bundleFormat"] ?: throw Exception("bundleFormat parameter must be set!")
+            resourceString = receiveParameters["bundle"] ?: throw Exception("bundle must be set!")
+        } else {
+            myParams = processQueryParams(call.parameters).second
+            resourceType =
+                contentType ?: throw Exception("Content-Type header must be set and either xml, json or formData!")
+            resourceString = call.receiveText()
+        }
+
+        val resource = if (resourceType == "application/json") {
+            jsonParser.parseResource(resourceString)
+        } else {
+            fhirContext.newXmlParser().parseResource(resourceString)
+        }
+
         //TODO: Abort when user cancels request
         val printer = CSVPrinter(sb, myParams.csvFormat)
-
-
-        val jsonParser = fhirContext.newJsonParser()
-        val resource = if (call.request.headers["Content-Type"] == "application/json") {
-            jsonParser.parseResource(call.receiveStream())
-        } else {
-            fhirContext.newXmlParser().parseResource(call.receiveStream())
-        }
 
         val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
         val bundleWrapper = BundleWrapper(bundleDefinition, resource)
@@ -76,10 +91,17 @@ class FhirExtinguisher(
         call.respondText(sb.toString()) //TODO: Streamify this
     }
 
+    /**
+     * Redirect request to the FHIR server and fetch bundles from there
+     */
     suspend fun processUrl(call: ApplicationCall) {
-        println("call.request.uri= " + call.request.uri)
         val bundleUrl = URI(call.request.uri.removePrefix("/fhir/")).path
-        val (fhirParams, myParams) = processQueryParams(call.parameters)
+
+        val (fhirParams, myParams) = if (call.request.httpMethod == HttpMethod.Post) {
+            processQueryParams(call.receiveParameters())
+        } else {
+            processQueryParams(call.parameters)
+        }
 
         val sb = StringBuilder()
         val printer = CSVPrinter(sb, myParams.csvFormat)
@@ -88,7 +110,7 @@ class FhirExtinguisher(
                 processWithColumns(bundleUrl, fhirParams, myParams, printer, myParams.columns)
             }
         } catch (e: Exception) {
-            log.error(e) { "An error occured while serving $bundleUrl !" }
+            log.error(e) { "An error occured while serving $bundleUrl!" }
             return call.respond(
                 HttpStatusCode.InternalServerError,
                 "Error: " + e.message
