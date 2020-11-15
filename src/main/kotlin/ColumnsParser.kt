@@ -60,7 +60,7 @@ class ColumnsParser(private val fhirPathEngine: FhirPathEngineWrapper) {
                     Explode()
                 }
                 "explodeLong" -> {
-                    val subcolumns = parseSubColumns(columnType.typeParam().text)
+                    val subcolumns = parseSubColumns(columnType.typeParam()?.text ?: "")
                     ExplodeLong(subcolumns)
                 }
                 "explodeWide" -> {
