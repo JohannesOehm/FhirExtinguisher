@@ -2,6 +2,10 @@
 This project's goal is to simplify data analysis on HL7 FHIR by easing conversion 
 of the hierarchical structure into a flat list for analysing R DataFrames.
 
+## Video manual
+If you're a lazy reader, you can also watch a short presentation on [Vimeo](https://vimeo.com/479525872)!
+
+## Alternatives
 There are alternative ways to do this:
 * Using [Cerner Bunsen](https://github.com/cerner/bunsen), you can load FHIR resources as DataFrames in Spark and query them using Spark-SQL.
  The main advantage is that you can use the full set of SQL operations like JOIN, etc., but You have to export 
@@ -42,7 +46,7 @@ The returned bundle(s) are evaluated against the FHIRPath expressions using the 
 
 
 ## Building
-**Note that you can download pre-compiled binaries in the Release-section of the Gitlab**!
+**Note that you can download pre-compiled binaries in the Release-section of the [Gitlab](https://imigitlab.uni-muenster.de/published/fhirextinguisher/-/releases)**!
 
 Requirements: **Java 8, npm 6.13.x**
 
