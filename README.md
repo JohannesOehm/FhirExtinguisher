@@ -88,7 +88,7 @@ You can use the GUI, which will be available under `http://localhost:[portnumber
 There, you can enter your query in the editor on the top using the [FHIR Search API](https://www.hl7.org/fhir/search.html) 
 and add the columns in the sidebar on the left. 
 
-![Screenshot](img/Screenshot.PNG)
+![Screenshot](img/Launch-And-Usage-Short.gif)
 
 Note that the table shown in the GUI **is only a preview based on the first Bundle returned by the server**. Note also, that the *Import Resource...* 
 function is providing suggestions based on the Resource's StructureDefinintion, there is **no guarantee of completeness**.
