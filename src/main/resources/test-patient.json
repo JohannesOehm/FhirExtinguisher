@@ -84,9 +84,10 @@
           },
           {
             "use": "usual",
-            "family": "James",
+            "family": "Bond",
             "given": [
-              "Bond"
+              "James",
+              "Ian"
             ],
             "prefix": [
               "Sr"

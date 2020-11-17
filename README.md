@@ -34,7 +34,7 @@ All parameters are forwarded as they are, except:
     Inside the subexpression, use `$this` to refer to the current element.<br>
     The resulting columns will be named `name.subcolumnname`. <br>
     If you omit the subcolumns, the column itself will be exploded.
-
+    ![image](img/join-long-wide.png)
     Please escape `@` and `:` in the column name with `\@` and respectively `\:`. In the FHIRPath expression, escape `,` with `\,`!
 * `__limit` FhirExtinguisher **automatically fetches Bundle pages until limit is met**. This way you can limit the 
 number of resources processed.
