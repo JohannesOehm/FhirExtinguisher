@@ -43,11 +43,10 @@ number of resources processed.
 
 The returned bundle(s) are evaluated against the FHIRPath expressions using the HAPI FHIRPath engine, and returned to the client.
 
-
+## Download
+You can download pre-compiled binaries in the Release-section of the [Gitlab](https://imigitlab.uni-muenster.de/published/fhirextinguisher/-/releases)!
 
 ## Building
-**Note that you can download pre-compiled binaries in the Release-section of the [Gitlab](https://imigitlab.uni-muenster.de/published/fhirextinguisher/-/releases)**!
-
 Requirements: **Java 8, npm 6.13.x**
 
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
@@ -82,7 +81,7 @@ To stop the FhirExtinguisher, press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the command 
 
 ### Usage by URL
 You can create your own links using the specifications above. In R, you can use 
-`data <- read.csv('http://localhost:8082/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always 
+`data <- read.csv('http://localhost:8080/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always 
 start with a fresh version from the server. However, the FhirExtinguisher must be running during execution of the script. 
 
 You can create a link using the GUI and copy it into your R script.
@@ -105,7 +104,7 @@ statement on HAPI FHIR using FHIR R4. Note that actual query options on your ser
 * `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
 * `.resolve()` resolves a reference to another resource.
 
-Custom functions:
+Custom functions introduced by FhirExtinguisher:
 * `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
 * `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
 * `stringify()` returns a recursive serialization of all the element's fields  
