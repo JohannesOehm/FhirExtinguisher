@@ -26,7 +26,7 @@ export class ColumnsParser {
                 if (type === "explodeWide" || type === "explodeLong") {
                     let columnsStr = ColumnsParser.split(columnContext.columnType().typeParam().text.replace("\\)", ")"))
                     subcolumns = [];
-                    for (let columnStr in columnsStr) {
+                    for (let columnStr of columnsStr) {
                         let [name, expression] = ColumnsParser.split(columnStr, ":")
                         subcolumns.push({
                             name: this.unescape(name),
@@ -34,6 +34,8 @@ export class ColumnsParser {
                         });
                     }
 
+                } else {
+                    type = columnContext.columnType().text
                 }
             } else {
                 type = 'join(" ")'
