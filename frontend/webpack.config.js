@@ -6,8 +6,8 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: './src/app/index.ts',
-    devtool: 'inline-source-map',
-    mode: 'development',
+    // devtool: 'inline-source-map',
+    mode: 'production',
     module: {
         rules: [
             {
