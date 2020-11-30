@@ -1,6 +1,5 @@
 <template>
   <b-modal id="modal-show-resource" title="Raw resource" size="xl" hide-footer="true">
-    <!--    <pre>{{ text }}</pre>-->
     <a href="#" class="text-muted" v-b-modal.modal-test-fhirpath>Test FHIRPath...</a>
     <div id="resourceView"></div>
   </b-modal>
@@ -13,7 +12,6 @@ export default {
   name: "DialogShowResource",
   mounted() {
     this.$root.$on('bv::modal::shown', (bvEvent: any, modalId: any) => {
-
       if (modalId === "modal-show-resource") {
         let elementById = document.getElementById("resourceView");
         elementById.style.height = (window.innerHeight - 200) + "px";
@@ -32,11 +30,9 @@ export default {
           // hideCursorInOverviewRuler: true,
           readOnly: true
         });
+
+        (<any>window).resourceEditor.setValue(this.text);
       }
-
-      (<any>window).resourceEditor.setValue(this.text);
-
-
     })
   },
   props: ["resource"],

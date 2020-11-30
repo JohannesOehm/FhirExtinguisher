@@ -12,36 +12,24 @@
                         </option>
                     </select>
                 </div>
-                <!--                <div class="form-group">-->
-                <!--                    <div class="custom-control custom-checkbox">-->
-                <!--                        <input class="custom-control-input" id="updateSearch" type="checkbox" v-model="updateSearch">-->
-                <!--                        <label class="custom-control-label" for="updateSearch">{{fhirSearch}}</label>-->
-                <!--                        <input class="custom-control-input" id="updateLimit" type="checkbox" v-model="updateLimit">-->
-                <!--                        <label class="custom-control-label" for="updateLimit">Limit {{limit}}</label>-->
-                <!--                        <input class="custom-control-input" id="updateColumns" type="checkbox" v-model="updateColumns">-->
-                <!--                        <label class="custom-control-label" for="updateColumns">Columns </label>-->
-                <!--                    </div>-->
-                <!--                </div>-->
             </div>
         </form>
     </b-modal>
 </template>
 
 <script lang="ts">
-    import {ResourceSuggestionService} from '../ResourceSuggestionService'
-    import {Column} from "../index";
-    import * as CSV from "../csv";
-    import {parseLink} from "./my-app.vue";
+import * as CSV from "../csv";
+import {parseLink} from "./my-app.vue";
 
-    type StoredQuery = { name: string, url: string }
+type StoredQuery = { name: string, url: string }
 
-    export default {
-        name: "DialogQueryLoad",
-        data: function (): { queries: StoredQuery[], query: StoredQuery, updateSearch: boolean, updateLimit: boolean, updateColumns: boolean } {
-            return {
-                queries: [],
-                query: null,
-                updateSearch: true,
+export default {
+  name: "DialogQueryLoad",
+  data: function (): { queries: StoredQuery[], query: StoredQuery, updateSearch: boolean, updateLimit: boolean, updateColumns: boolean } {
+    return {
+      queries: [],
+      query: null,
+      updateSearch: true,
                 updateLimit: true,
                 updateColumns: true
             }
@@ -61,8 +49,8 @@
             handleChange: function (e: any) {
             },
             handleShown: async function () {
-                let response = await fetch("/query")
-                let csvString = await response.text();
+              let response = await fetch("query-storage")
+              let csvString = await response.text();
                 (<any>CSV).fetch({
                     data: csvString
                 }).done((it: any) => {

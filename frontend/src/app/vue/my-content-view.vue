@@ -9,7 +9,7 @@
           </button>
         </div>
         <div class="btn-group mr-2">
-          <button @click="copyToClipboard(getDownloadUrl())" class="btn btn-sm btn-outline-secondary">
+          <button @click="copyToClipboard()" class="btn btn-sm btn-outline-secondary">
             Copy Link
           </button>
           <button @click="importLink()" class="btn btn-sm btn-outline-secondary">
@@ -49,6 +49,8 @@
         Table data is not available.<br><br>
         <span v-if="!tableLoading && !dataLoading && tableError == null && rawError == null">
           Please enter a valid FHIR Search query in the text field above and press GET!</span>
+        <span v-if="columns.length === 0">
+          There are no columns speicified</span>
         <span v-if="dataLoading">Raw data is loading...</span>
         <span v-if="tableLoading">Table data is loading...</span>
         <div v-if="tableError != null"><br>
@@ -135,7 +137,10 @@ export default {
       this.rawError = null;
 
       let url = (<any>window).searchEditor.getValue();
-      let response = await fetch("/redirect/" + url, {
+      if (url.includes("_summary=count")) {
+        this.showRaw = true;
+      }
+      let response = await fetch("redirect/" + url, {
         headers: {"Accept": "application/json"}
       });
       this.rawDataFormat = response.headers.get("Content-Type").includes("json") ? "json" : "xml";
@@ -167,7 +172,7 @@ export default {
       let resourceFormat = this.rawDataFormat == "json" ? "application/json" : "application/xml";
       let response;
       if (params.length < 1000) {
-        response = await fetch("/processBundle?" + encodeURI(params), {
+        response = await fetch("processBundle?" + encodeURI(params), {
           method: 'POST',
           body: this.rawData,
           headers: {
@@ -181,7 +186,7 @@ export default {
         formData.append("__limit", this.limit);
         formData.append("__columns", columnsToString(this.columns));
 
-        response = await fetch("/processBundle", {
+        response = await fetch("processBundle", {
           method: 'POST',
           body: formData,
           headers: {
@@ -215,8 +220,8 @@ export default {
         this.$emit("import-link", link);
       }
     },
-    copyToClipboard: function (str: string) {
-      let stringToCopy = window.location.host + str;
+    copyToClipboard: function () {
+      let stringToCopy = window.location.href.split("#")[0] + this.getDownloadUrl();
 
       const el = document.createElement('textarea');
       el.value = stringToCopy;

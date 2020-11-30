@@ -241,18 +241,18 @@ export default {
       let params = addParams ? `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}` : "";
       let fhirQuery = (<any>window).searchEditor?.getValue() ?? "";
       if (fhirQuery.endsWith("?")) {
-        return "/fhir/" + fhirQuery + params;
+        return "fhir/" + fhirQuery + params;
       } else if (fhirQuery.includes("?")) {
-        return "/fhir/" + fhirQuery + "&" + params;
+        return "fhir/" + fhirQuery + "&" + params;
       } else {
-        return "/fhir/" + fhirQuery + "?" + params;
+        return "fhir/" + fhirQuery + "?" + params;
       }
 
     }
   },
   computed: {},
   mounted: function () {
-    fetch("/info")
+    fetch("info")
         .then(res => res.json())
         .then(res => {
           this.endpointUrl = res.server + "/";

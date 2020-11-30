@@ -14,12 +14,16 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import mu.KotlinLogging
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
 import org.hl7.fhir.exceptions.FHIRException
-import java.io.File
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
@@ -59,7 +63,7 @@ fun main(args: Array<String>) {
     val cmd = DefaultParser().parse(options, args)
 
     val portnumber: Int? = cmd.getOptionValue("portNumber")?.toInt()
-    val fhirServerUrl: String? = cmd.getOptionValue("fhirServer").dropLastWhile { it == '/' }
+    val fhirServerUrl: String? = cmd.getOptionValue("fhirServer")?.dropLastWhile { it == '/' }
     val fhirVersion: String? = cmd.getOptionValue("fhirVersion")
     val authorization: String? = cmd.getOptionValue("authorization")
     val external: Boolean = cmd.hasOption("allowExternalConnection")
@@ -75,6 +79,99 @@ fun main(args: Array<String>) {
     }
 
 
+    val instanceConfiguration = createInstanceConfiguration(
+        fhirVersion,
+        authorization,
+        fhirServerUrl,
+        external
+    )
+
+
+    embeddedServer(Netty, portnumber, module = application2(instanceConfiguration)).start(wait = true)
+}
+
+fun Application.application() {
+    val myConfig = environment.config.config("FhirExtinguisher")
+    val instanceConfiguration = createInstanceConfiguration(
+        fhirServerUrl = myConfig.propertyOrNull("fhirServerUrl")?.getString()!!,
+        fhirVersion = myConfig.propertyOrNull("fhirVersion")?.getString()!!,
+        authorization = myConfig.propertyOrNull("authorization")?.getString(),
+        external = true
+    )
+    application2(instanceConfiguration)()
+}
+
+private fun application2(
+    instanceConfiguration: InstanceConfiguration
+): Application.() -> Unit = {
+
+    val fhirExtinguisher = FhirExtinguisher(
+        instanceConfiguration.fhirServerUrl,
+        instanceConfiguration.fhirVersion,
+        instanceConfiguration.interceptors
+    )
+    routing {
+        intercept(ApplicationCallPipeline.Features) {
+            val ip = call.request.local.remoteHost
+            if (instanceConfiguration.blockExternalRequests && !isThisMyIpAddress(InetAddress.getByName(ip))) {
+                call.respondText("The request origin '$ip' is not a localhost address. Please start the FhirExtinguisher with '-ext'!")
+                this.finish()
+            }
+        }
+
+        redirect("/redirect", instanceConfiguration.fhirServerUrl)
+        savedQueries("/query-storage")
+        post("/processBundle") {
+            fhirExtinguisher.processBundle(call)
+        }
+        post("/fhirPath") {
+            val expr = call.parameters["expr"]
+            if (expr == null) {
+                call.respondText("GET-param expr must be set!", status = HttpStatusCode.BadRequest)
+            } else {
+                val resource = instanceConfiguration.fhirVersion.newJsonParser().parseResource(call.receiveStream())
+                val expressionWrapper = try {
+                    fhirExtinguisher.fhirPathEngine.parseExpression(expr)
+                } catch (e: FHIRException) {
+                    call.respondText(e.message ?: e.toString(), ContentType.Text.Plain, HttpStatusCode.BadRequest)
+                    return@post
+                }
+                val results = fhirExtinguisher.fhirPathEngine.evaluateToBase(resource, expressionWrapper)
+                val json = buildJsonArray {
+                    for (result in results) {
+                        add(fhirExtinguisher.fhirPathEngine.convertToString(result))
+                    }
+                }
+                call.respondText(json.toString(), contentType = ContentType.Application.Json)
+            }
+        }
+        route("/fhir/*") {
+            handle {
+                fhirExtinguisher.processUrl(call)
+            }
+        }
+        get("/info") {
+            call.respond(buildJsonObject {
+                put("server", instanceConfiguration.fhirServerUrl)
+                put("version", instanceConfiguration.fhirVersion.version.version.fhirVersionString)
+            }.toString())
+        }
+        get("/") {
+            call.respondText(index_html(context.request.uri), contentType = ContentType.Text.Html)
+        }
+        static("/") {
+            resources("static")
+//            defaultResource("index.html", "static")
+        }
+    }
+}
+
+private fun createInstanceConfiguration(
+    fhirVersion: String?,
+    authorization: String?,
+    fhirServerUrl: String,
+    external: Boolean
+): InstanceConfiguration {
     val fhirContext = when (fhirVersion) {
         "stu3", "dstu3" -> FhirContext.forDstu3()
         else -> FhirContext.forR4()
@@ -88,105 +185,7 @@ fun main(args: Array<String>) {
 
     //TODO: Validate FHIR server URL
 
-    val instanceConfiguration =
-        InstanceConfiguration(fhirServerUrl, fhirContext, basicAuth, interceptors, !external)
-
-    val savedQueriesFile = File("storedQueries.csv")
-    val savedQueries: MutableList<StoredQuery> =
-        if (savedQueriesFile.exists()) deserialize(savedQueriesFile.readText()) else mutableListOf()
-
-    val fhirExtinguisher = FhirExtinguisher(fhirServerUrl, fhirContext, interceptors)
-
-
-    embeddedServer(Netty, 8080) {
-        routing {
-            intercept(ApplicationCallPipeline.Features) {
-                val ip = call.request.local.remoteHost
-                if (!external && !isThisMyIpAddress(InetAddress.getByName(ip))) {
-                    call.respondText("The request origin '$ip' is not a localhost address. Please start the FhirExtinguisher with '-ext'!")
-                    this.finish()
-                }
-            }
-            redirect("/redirect", fhirServerUrl)
-            post("/processBundle") {
-                fhirExtinguisher.processBundle(call)
-            }
-            post("/fhirPath") {
-                val expr = call.parameters["expr"]
-                if (expr == null) {
-                    call.respondText("GET-param expr must be set!")
-                } else {
-                    val expr = try {
-                        fhirExtinguisher.fhirPathEngine.parseExpression(expr)
-                    } catch (e: FHIRException) {
-                        call.respondText(e.message ?: e.toString(), ContentType.Text.Plain, HttpStatusCode.BadRequest)
-                        return@post
-                    }
-                    val resource = fhirContext.newJsonParser().parseResource(call.receiveStream())
-                    val result = fhirExtinguisher.fhirPathEngine.evaluateToBase(resource, expr)
-                    val json =
-                        if (result.isEmpty()) "[]" else result.map { fhirExtinguisher.fhirPathEngine.convertToString(it) }
-                            .joinToString("\", \"", "[\"", "\"]") {
-                                it.replace("\\", "\\\\")
-                                    .replace("\"", "\"")
-                                    .replace("\n", "\\n")
-                                    .replace("\t", "\\t")
-                                    .replace("\r", "\\r")
-                            }//TODO: Use JSON library instead
-                    call.respondText(json, contentType = ContentType.Application.Json)
-
-                }
-
-            }
-            get("/query") {
-                call.respondText(
-                    serialize(savedQueries),
-                    contentType = ContentType.Text.CSV,
-                    status = HttpStatusCode.OK
-                )
-            }
-            post("/query/{name}") {
-                val queryName = call.parameters["name"]
-                val force = call.parameters["force"] == "true"
-                if (queryName != null) {
-                    if (!force && savedQueries.any { it.name == queryName }) {
-                        call.respond(HttpStatusCode.Conflict, "Query name already in use")
-                    } else {
-                        if (force) {
-                            savedQueries.removeIf { it.name == queryName }
-                        }
-                        savedQueries += StoredQuery(queryName, call.receiveText())
-                    }
-                    savedQueriesFile.writeText(serialize(savedQueries))
-                }
-            }
-            delete("/query/{name}") {
-                val queryName = call.parameters["name"]
-                if (queryName != null) {
-                    savedQueries.removeIf { it.name == queryName }
-                    savedQueriesFile.writeText(serialize(savedQueries))
-                }
-            }
-            route("/fhir/*") {
-                handle {
-                    fhirExtinguisher.processUrl(call)
-                }
-            }
-            get("/info") {
-                call.respond(
-                    """{
-                            "server": "${instanceConfiguration.fhirServerUrl}",
-                            "version": "${instanceConfiguration.fhirVersion.version.version.fhirVersionString}"
-                    }"""
-                )
-            }
-            static("/") {
-                resources("static")
-                defaultResource("index.html", "static")
-            }
-        }
-    }.start(wait = true)
-
+    return InstanceConfiguration(fhirServerUrl, fhirContext, basicAuth, interceptors, !external)
 }
 
 fun isThisMyIpAddress(addr: InetAddress): Boolean {
@@ -203,50 +202,96 @@ fun isThisMyIpAddress(addr: InetAddress): Boolean {
 /**
  * Reverse proxy method
  */
-private fun Routing.redirect(prefix: String, target: String) {
+fun Routing.redirect(prefix: String, target: String) {
     route("$prefix/{...}") {
         handle {
             val client = HttpClient()
-            val redirectUrl =
-                "${target.dropLastWhile { it == '/' }}/${call.request.uri.removePrefix(prefix).removePrefix("/")}"
+
+            val originalUri = call.request.uri
+
+            val redirectUrl = target.dropLastWhile { it == '/' } + "/" + originalUri.substringAfter("$prefix/")
             log.info { "redirecting to $redirectUrl" }
-            val response = client.request<HttpResponse>(redirectUrl)
+            try {
+                val response = client.request<HttpResponse>(redirectUrl)
+                log.info { "response = $response" }
 
 
-            //TODO: Add Query Parameters
+                //TODO: Add Query Parameters
 
-            // Get the relevant headers of the client response.
-            val proxiedHeaders = response.headers
-            val location = proxiedHeaders[HttpHeaders.Location]
-            val contentType = proxiedHeaders[HttpHeaders.ContentType]
-            val contentLength = proxiedHeaders[HttpHeaders.ContentLength]
+                // Get the relevant headers of the client response.
+                val proxiedHeaders = response.headers
+                val location = proxiedHeaders[HttpHeaders.Location]
+                val contentType = proxiedHeaders[HttpHeaders.ContentType]
+                val contentLength = proxiedHeaders[HttpHeaders.ContentLength]
 
-            // Propagates location header, removing the wikipedia domain from it
-            if (location != null) {
-                call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
+                // Propagates location header, removing the wikipedia domain from it
+                if (location != null) {
+                    call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
+                }
+                //TODO: Find a solution that works in tomcat behind reverse proxy but does not block
+                val bytes = runBlocking { response.content.toByteArray() }
+                log.info { "Received bytes $bytes" }
+
+//                proxiedHeaders.filter { key, value ->  key.equals(HttpHeaders.ContentType, ignoreCase = true)
+//                                   && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+//                                   && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)}.forEach { key, value ->
+//                    call.response.header(key, value)
+//                }
+                call.respondBytes(
+                    bytes = bytes,
+                    contentType = contentType?.let { ContentType.parse(it) },
+                    status = response.status
+                )
+
+
+                // In the case of other content, we simply pipe it. We return a [OutgoingContent.WriteChannelContent]
+                // propagating the contentLength, the contentType and other headers, and simply we copy
+                // the ByteReadChannel from the HTTP client response, to the HTTP server ByteWriteChannel response.
+//                call.respond(object : OutgoingContent.ByteArrayContent() {
+//                    override val contentLength: Long? = contentLength?.toLong()
+//                    override val contentType: ContentType? =
+//                    override val headers: Headers = Headers.build {
+//                        appendAll(proxiedHeaders.filter { key, _ ->
+//                            !key.equals(HttpHeaders.ContentType, ignoreCase = true)
+//                                    && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+//                                    && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)
+//                        })
+//                    }
+//                    override val status: HttpStatusCode = response.status
+//                    override fun bytes(): ByteArray {
+//                        return bytes
+//                    }
+//                })
+                log.info { "responded to redirect!" }
+            } catch (e: Exception) {
+                call.respondText(
+                    "FhirExtinguisher/Ktor-Client-Exception: Cannot redirect to '$redirectUrl'!\n \n${e.stackTraceToString()}",
+                    status = HttpStatusCode.InternalServerError
+                )
             }
-
-
-            // In the case of other content, we simply pipe it. We return a [OutgoingContent.WriteChannelContent]
-            // propagating the contentLength, the contentType and other headers, and simply we copy
-            // the ByteReadChannel from the HTTP client response, to the HTTP server ByteWriteChannel response.
-            call.respond(object : OutgoingContent.WriteChannelContent() {
-                override val contentLength: Long? = contentLength?.toLong()
-                override val contentType: ContentType? = contentType?.let { ContentType.parse(it) }
-                override val headers: Headers = Headers.build {
-                    appendAll(proxiedHeaders.filter { key, _ ->
-                        !key.equals(HttpHeaders.ContentType, ignoreCase = true)
-                                && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
-                                && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)
-                    })
-                }
-                override val status: HttpStatusCode? = response.status
-                override suspend fun writeTo(channel: ByteWriteChannel) {
-                    response.content.copyAndClose(channel)
-                }
-            })
+            client.close()
         }
     }
 
 
 }
+
+fun index_html(baseHref: String = "/") = """<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+          name="viewport">
+    <meta content="ie=edge" http-equiv="X-UA-Compatible">
+    <title>FhirExtinguisher</title>
+    <link href="styles.css" rel="stylesheet"/>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <base href="$baseHref" />
+</head>
+<body>
+<div id="app"></div>
+<script src="bundle.js"></script>
+</body>
+</html>"""
+
+

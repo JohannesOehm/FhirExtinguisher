@@ -6,10 +6,10 @@ export class ResourceSuggestionService {
     structureDefinitionsTypes: any;
 
     constructor(fhirVersion: string) {
-        fetch(`/structuredefinitions/${fhirVersion}/profiles-resources.json`)
+        fetch(`structuredefinitions/${fhirVersion}/profiles-resources.json`)
             .then(res => res.json())
             .then(it => this.structureDefinitionsResource = it);
-        fetch(`/structuredefinitions/${fhirVersion}/profiles-types.json`)
+        fetch(`structuredefinitions/${fhirVersion}/profiles-types.json`)
             .then(res => res.json())
             .then(it => this.structureDefinitionsTypes = it);
     }

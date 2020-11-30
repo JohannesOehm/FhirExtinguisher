@@ -95,7 +95,7 @@ class FhirExtinguisher(
      * Redirect request to the FHIR server and fetch bundles from there
      */
     suspend fun processUrl(call: ApplicationCall) {
-        val bundleUrl = URI(call.request.uri.removePrefix("/fhir/")).path
+        val bundleUrl = URI(call.request.uri.substringAfter("/fhir/")).path
 
         val (fhirParams, myParams) = if (call.request.httpMethod == HttpMethod.Post) {
             processQueryParams(call.receiveParameters())
@@ -118,8 +118,9 @@ class FhirExtinguisher(
         }
 
         call.response.header(
-            "Content-Disposition",
-            "attachment; filename=\"${defaultCsvFileName(bundleUrl, fhirParams)}.csv\""
+            HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
+                ContentDisposition.Parameters.FileName, "\"${defaultCsvFileName(bundleUrl, fhirParams)}.csv\""
+            ).toString()
         )
 
 
@@ -151,7 +152,7 @@ class FhirExtinguisher(
         val subtables = mutableListOf<SubTable>()
 
         myloop@ do {
-            log.debug { "Loading Bundle from $nextUrl" }
+            log.info { "Loading Bundle from $nextUrl" }
             val bundle = fhirClient.fetchResourceFromUrl(bundleClass, nextUrl)
             val bundleWrapper = BundleWrapper(bundleDefintion, bundle)
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url

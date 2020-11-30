@@ -14,6 +14,7 @@ fun main() {
     println(parser.parseString("test@explodeWide(\$disc:Patient.name):Patient"))
 
     println(parser.parseString("name@explodeWide(given:\$this.given[0],family:\$this.family,\$disc:iif(\$this.use.empty(\\)\\, 'foo'\\, \$this.use\\)):Patient.name"))
+    println("emptyString=" + parser.parseString(""))
 
 }
 

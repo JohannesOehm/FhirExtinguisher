@@ -1,8 +1,8 @@
 import {CancellationToken, editor, IRange, languages, Position as mPosition} from "monaco-editor";
 import {R4} from "@ahryman40k/ts-fhir-types";
+import {FixedValuesHelper} from "./url-completionitemprovider-fixedvalues";
 import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
-import {FixedValuesHelper} from "./url-completionitemprovider-fixedvalues";
 
 export class URLCompletionItemProvider implements languages.CompletionItemProvider {
     triggerCharacters = ["?", "&", ":", "=", "."];
@@ -23,15 +23,15 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
 
 
     constructor() {
-        fetch("/example-conformance.json")
+        fetch("example-conformance.json")
             .then(res => res.json())
             .then(res => this.conformanceStatement = res)
 
-        fetch("/structuredefinitions/reference-types-r4.json")
+        fetch("structuredefinitions/reference-types-r4.json")
             .then(res => res.json())
             .then(res => this.referenceTypes = res);
 
-        fetch(`/structuredefinitions/type-elements-r4.json`)
+        fetch(`structuredefinitions/type-elements-r4.json`)
             .then(res => res.json())
             .then(it => this.typeElements = it);
     }

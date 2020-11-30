@@ -18,12 +18,12 @@
         methods: {
             handleOk: async function () {
                 try {
-                    let response = await fetch(`query/${this.name}`, {
-                        method: "POST",
-                        body: this.$parent.getDownloadUrl()
+                    let response = await fetch(`query-storage/${this.name}`, {
+                      method: "POST",
+                      body: this.$parent.getDownloadUrl()
                     })
                     if (response.status == 409) {
-                        let overwrite = await this.$bvModal.msgBoxConfirm('Name already exists. Do you want to overwrite it?')
+                      let overwrite = await this.$bvModal.msgBoxConfirm("Name already exists. Do you want to overwrite it?");
                         if (overwrite) {
                             let response = await fetch(`query/${this.name}?force=true`, {
                                 method: "POST",

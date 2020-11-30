@@ -51,7 +51,7 @@ export default {
     evaluateExpression: _.debounce(async function (fhirpath: string, resource: string, stringify: boolean): Promise<void> {
       try {
         let expr = stringify ? `stringify(${fhirpath})` : fhirpath;
-        let response = await fetch("/fhirPath?expr=" + encodeURIComponent(expr), {
+        let response = await fetch("fhirPath?expr=" + encodeURIComponent(expr), {
           method: "POST",
           body: resource,
           headers: {

@@ -61,14 +61,14 @@
 
 
 <script lang="ts">
-    import {Column} from "../index";
+import {Column} from "../index";
 
-    type QuestionnaireSummary = {
-        id: string,
-        url: string,
-        title: string,
-        fullUrl: string
-    }
+type QuestionnaireSummary = {
+  id: string,
+  url: string,
+  title: string,
+  fullUrl: string
+}
 
     function getItems(items: any[], path: string[]): Column[] {
         let result: Column[] = [];
@@ -124,7 +124,7 @@
                     reader.readAsText(input.files[0]);
                 } else {
                     let questionnaireId = (<HTMLInputElement>document.getElementById("questionnaireId")).value;
-                    fetch("/redirect/Questionnaire/" + questionnaireId + "?_format=json", {headers: {"Accept": "application/fhir+json"}})
+                  fetch("redirect/Questionnaire/" + questionnaireId + "?_format=json", {headers: {"Accept": "application/fhir+json"}})
                         .then(res => res.json())
                         .then(res => {
                             console.log(res);
@@ -169,7 +169,7 @@
             }
         },
         mounted: function () {
-            fetch("/redirect/Questionnaire?_summary=true")
+          fetch("redirect/Questionnaire?_summary=true")
                 .then(res => res.json())
                 .then(res => {
                     this.questionnaires = res.entry.map((it: any) => ({
