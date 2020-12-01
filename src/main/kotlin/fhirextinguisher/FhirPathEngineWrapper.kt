@@ -1,4 +1,4 @@
-package wrappers
+package fhirextinguisher
 
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
@@ -36,10 +36,10 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
             }.dropWhile { it == '/' } //remove any leading slashes
 
             return if (cache.containsKey(reference)) {
-                log.info { "Resolving reference $url from cache" }
+                log.info { "Resolving reference '$url' from cache" }
                 cache[reference]
             } else {
-                log.info { "Resolving reference $url from server" }
+                log.info { "Resolving reference '$url' from server" }
                 val type = reference.split("/", limit = 2)[0] //TODO: There must be a better way to do this
                 val requiredClass: Class<IBaseResource> =
                     this.fhirContext.getResourceDefinition(type).implementingClass as Class<IBaseResource>

@@ -13,7 +13,7 @@
       <div class="col-auto">
         <div class="form-check mb-2">
           <input class="form-check-input" type="checkbox" id="stringify" v-model="stringify"
-                 @="evaluateExpression(fhirpath, resource, stringify)">
+                 @change="evaluateExpression(fhirpath, resource, stringify)">
           <label class="form-check-label" for="stringify">
             stringify()
           </label>
@@ -70,7 +70,7 @@ export default {
         this.error = e.toString();
       }
 
-    }, 500)
+    }, 300)
   }
 }
 </script>

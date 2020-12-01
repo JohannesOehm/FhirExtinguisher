@@ -1,9 +1,8 @@
-package wrappers
+package fhirextinguisher
 
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
-import org.hl7.fhir.dstu3.model.IntegerType
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.context.SimpleWorkerContext
 import org.hl7.fhir.r4.model.*

@@ -1,10 +1,10 @@
+package fhirextinguisher
+
 import ca.uhn.fhir.context.FhirContext
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.model.Bundle
-import wrappers.FhirPathEngineWrapper
-import wrappers.FhirPathEngineWrapperR4
 import java.io.FileReader
 import kotlin.math.max
 

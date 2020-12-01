@@ -1,5 +1,10 @@
+package fhirextinguisher
+
 import org.hl7.fhir.r4.context.SimpleWorkerContext
-import org.hl7.fhir.r4.model.*
+import org.hl7.fhir.r4.model.Base
+import org.hl7.fhir.r4.model.ExpressionNode
+import org.hl7.fhir.r4.model.TypeDetails
+import org.hl7.fhir.r4.model.ValueSet
 import org.hl7.fhir.r4.utils.FHIRPathEngine
 
 fun main() {

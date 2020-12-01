@@ -269,14 +269,14 @@ export default {
     window.addEventListener("mousemove", function (e: MouseEvent) {
       if (dragging) {
         // e.preventDefault();
-        console.log("dragging", e);
+        // console.log("dragging", e);
         document.getElementById("sidebar").style.width = e.pageX + "px";
       }
     });
     window.addEventListener("mouseup", function (e: MouseEvent) {
       if (dragging) {
         // e.preventDefault();
-        console.log("dragend", e);
+        // console.log("dragend", e);
         document.body.style.cursor = null;
         dragging = false;
       }

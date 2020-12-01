@@ -1,3 +1,5 @@
+package fhirextinguisher
+
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
@@ -262,7 +264,7 @@ fun Routing.redirect(prefix: String, target: String) {
 //                        return bytes
 //                    }
 //                })
-                log.info { "responded to redirect!" }
+                log.info { "responded to fhirextinguisher.redirect!" }
             } catch (e: Exception) {
                 call.respondText(
                     "FhirExtinguisher/Ktor-Client-Exception: Cannot redirect to '$redirectUrl'!\n \n${e.stackTraceToString()}",

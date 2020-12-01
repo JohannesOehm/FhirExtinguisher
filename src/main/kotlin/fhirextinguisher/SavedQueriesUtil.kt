@@ -1,3 +1,5 @@
+package fhirextinguisher
+
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*

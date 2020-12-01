@@ -1,3 +1,5 @@
+package fhirextinguisher
+
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
@@ -9,10 +11,6 @@ import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBaseResource
-import wrappers.BundleEntryComponentWrapper
-import wrappers.BundleWrapper
-import wrappers.FhirPathEngineWrapperR4
-import wrappers.FhirPathEngineWrapperSTU3
 import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -52,27 +50,37 @@ class FhirExtinguisher(
         val jsonParser = fhirContext.newJsonParser()
         val sb = StringBuilder()
         val contentType = call.request.headers["Content-Type"]
+        log.info { "Processing bundle..." }
 
         val myParams: MyParams
         val resourceType: String
         val resourceString: String
         if (call.request.contentType().contentType == "multipart" && call.request.contentType().contentSubtype == "form-data") {
+            log.info { "is multipart" }
             val receiveParameters = call.receiveParameters()
             myParams = processQueryParams(receiveParameters).second
             resourceType = receiveParameters["bundleFormat"] ?: throw Exception("bundleFormat parameter must be set!")
             resourceString = receiveParameters["bundle"] ?: throw Exception("bundle must be set!")
+            log.info { "content received" }
         } else {
+            log.info { "is raw resource" }
             myParams = processQueryParams(call.parameters).second
+            log.info { "myParams = $myParams" }
             resourceType =
                 contentType ?: throw Exception("Content-Type header must be set and either xml, json or formData!")
             resourceString = call.receiveText()
+            log.info { "content received" }
         }
+
+        log.info { "params = $myParams" }
 
         val resource = if (resourceType == "application/json") {
             jsonParser.parseResource(resourceString)
         } else {
             fhirContext.newXmlParser().parseResource(resourceString)
         }
+
+        log.info { "Bundle received & parsed!" }
 
         //TODO: Abort when user cancels request
         val printer = CSVPrinter(sb, myParams.csvFormat)
@@ -88,7 +96,9 @@ class FhirExtinguisher(
             )
         }
         ResultTable(resultTables).print(printer)
-        call.respondText(sb.toString()) //TODO: Streamify this
+        val text = sb.toString()
+        log.info { "Processed bundle to $text" }
+        call.respondText(text) //TODO: Streamify this
     }
 
     /**
@@ -119,7 +129,7 @@ class FhirExtinguisher(
 
         call.response.header(
             HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
-                ContentDisposition.Parameters.FileName, "\"${defaultCsvFileName(bundleUrl, fhirParams)}.csv\""
+                ContentDisposition.Parameters.FileName, "${defaultCsvFileName(bundleUrl, fhirParams)}.csv"
             ).toString()
         )
 
