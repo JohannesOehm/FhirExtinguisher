@@ -23,19 +23,22 @@ the FHIR REST API filtering options provided by the server. For each resource in
 ![image](img/Concept.png)
 
 All parameters are forwarded as they are, except: 
-* `__columns` Must be `name:expression,name2:expression2`. You may add a list processing mode after the name:
+* `__columns` Must be `name:expression,name2:expression2`. You may add a list processing mode after the expression:
     * `@join(" ")` concatenates the strings into a single cell with a delimiter of your choice
-    * `@explodeWide($disc:expression,subcolumnname:subexpression,...)` will create new **columns** for each element. <br>
-    Inside the subexpression, use `$this` to refer to the current element.
-    `$disc` is the expression that will be evaluated for the column name using the following schema: `columnname.$disc.subcolumnname`. 
-    Use `%index` for the current index of the element returned by the main expression. <br>
-    You may leave the subcolumnname empty for one expression. <br>
+    * `@explodeWide($disc:expression,subcolumnname:subexpression,...)` will create new **columns** for each
+      element. <br>
+      Inside the subexpression, use `$this` to refer to the current element.
+      `$disc` is the expression that will be evaluated for the column name using the following
+      schema: `columnname.$disc.subcolumnname`. Use `%index` for the current index of the element returned by the main
+      expression. <br>
+      You may leave the subcolumnname empty for one expression. <br>
     * `@explodeLong(subcolumnname:subexpression,...)` will create a new **row** for each element returned.<br>
-    Inside the subexpression, use `$this` to refer to the current element.<br>
-    The resulting columns will be named `name.subcolumnname`. <br>
-    If you omit the subcolumns, the column itself will be exploded.
-    ![image](img/join-long-wide.png)
-    Please escape `@` and `:` in the column name with `\@` and respectively `\:`. In the FHIRPath expression, escape `,` with `\,`!
+      Inside the subexpression, use `$this` to refer to the current element.<br>
+      The resulting columns will be named `name.subcolumnname`. <br>
+      If you omit the subcolumns, the column itself will be exploded.
+      ![image](img/join-long-wide.png)
+      Please escape `:` in the column name with `\:`. In the FHIRPath expression, escape `,` with `\,` and `@`
+      with `\@`!
 * `__limit` FhirExtinguisher **automatically fetches Bundle pages until limit is met**. This way you can limit the 
 number of resources processed.
 * `__csvFormat` Change the output CSV style. Supported are: `Default`, `Excel`, `InformixUnload`, `InformixUnloadCsv`, 
