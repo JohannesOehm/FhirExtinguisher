@@ -41,6 +41,7 @@
     "popper.js": "^1.16.1",
     "vue": "^2.6.11",
     "vuedraggable": "^2.23.2",
-    "webpack-dev-server": "^3.10.3"
+    "webpack-dev-server": "^3.10.3",
+    "columns-parser": "file:../columns-parser/build/productionLibrary/"
   }
 }

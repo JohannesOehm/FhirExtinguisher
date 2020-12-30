@@ -5,8 +5,10 @@ import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
 import io.ktor.application.*
 import io.ktor.client.*
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
@@ -26,6 +28,7 @@ import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Options
 import org.hl7.fhir.exceptions.FHIRException
+import org.slf4j.event.Level
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
@@ -106,6 +109,9 @@ fun Application.application() {
 private fun application2(
     instanceConfiguration: InstanceConfiguration
 ): Application.() -> Unit = {
+    install(CallLogging) {
+        level = Level.DEBUG
+    }
 
     val fhirExtinguisher = FhirExtinguisher(
         instanceConfiguration.fhirServerUrl,
@@ -129,7 +135,7 @@ private fun application2(
         post("/fhirPath") {
             val expr = call.parameters["expr"]
             if (expr == null) {
-                call.respondText("GET-param expr must be set!", status = HttpStatusCode.BadRequest)
+                call.respondText("GET-param 'expr' must be set!", status = HttpStatusCode.BadRequest)
             } else {
                 val resource = instanceConfiguration.fhirVersion.newJsonParser().parseResource(call.receiveStream())
                 val expressionWrapper = try {
@@ -212,14 +218,10 @@ fun Routing.redirect(prefix: String, target: String) {
             val originalUri = call.request.uri
 
             val redirectUrl = target.dropLastWhile { it == '/' } + "/" + originalUri.substringAfter("$prefix/")
-            log.info { "redirecting to $redirectUrl" }
+            log.debug { "redirecting to $redirectUrl" }
             try {
                 val response = client.request<HttpResponse>(redirectUrl)
-                log.info { "response = $response" }
-
-
                 //TODO: Add Query Parameters
-
                 // Get the relevant headers of the client response.
                 val proxiedHeaders = response.headers
                 val location = proxiedHeaders[HttpHeaders.Location]
@@ -230,7 +232,7 @@ fun Routing.redirect(prefix: String, target: String) {
                 if (location != null) {
                     call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
                 }
-                //TODO: Find a solution that works in tomcat behind reverse proxy but does not block
+                //TODO: Find a solution that works in tomcat behind AJP reverse proxy but does not block
                 val bytes = runBlocking { response.content.toByteArray() }
                 log.info { "Received bytes $bytes" }
 
@@ -264,7 +266,11 @@ fun Routing.redirect(prefix: String, target: String) {
 //                        return bytes
 //                    }
 //                })
-                log.info { "responded to fhirextinguisher.redirect!" }
+            } catch (e: ServerResponseException) {
+                call.respondText(
+                    "Request got successfully redirected to '$redirectUrl', but server responded with '${e.response.status}'!\n\n${e.message}",
+                    status = HttpStatusCode.InternalServerError
+                )
             } catch (e: Exception) {
                 call.respondText(
                     "FhirExtinguisher/Ktor-Client-Exception: Cannot redirect to '$redirectUrl'!\n \n${e.stackTraceToString()}",

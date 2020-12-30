@@ -81,7 +81,7 @@
 <script lang="ts">
 import * as CSV from '../csv.js';
 import * as monaco from "monaco-editor";
-import {Column, columnsToString} from "./my-app";
+import {columnsToString, VmColumn} from "./my-app";
 
 
 type TableData = { records: string[][], fields: string[], metadata: any };
@@ -143,8 +143,8 @@ export default {
       let response = await fetch("redirect/" + url, {
         headers: {"Accept": "application/json"}
       });
-      this.rawDataFormat = response.headers.get("Content-Type").includes("json") ? "json" : "xml";
       if (response.ok) {
+        this.rawDataFormat = response.headers.get("Content-Type").includes("json") ? "json" : "xml";
         this.rawData = await response.text();
       } else {
         this.rawError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
@@ -270,7 +270,7 @@ export default {
         this.loadTableData();
       }
     },
-    columns: function (newData: Column[], oldData: Column[]) {
+    columns: function (newData: VmColumn[], oldData: VmColumn[]) {
       this.loadTableData();
     }
   }

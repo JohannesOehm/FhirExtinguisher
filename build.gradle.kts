@@ -20,6 +20,7 @@ tomcat {
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io") //Kotlin-ANTLR
 }
 
 kotlin {
@@ -32,7 +33,7 @@ subprojects {
     version = "1.2.3"
 }
 
-val ktor_version = "1.4.2"
+val ktor_version = "1.5.0"
 val tomcat_version = "9.0.4"
 
 dependencies {
@@ -57,6 +58,7 @@ dependencies {
     antlr("org.antlr:antlr4:4.8")
     tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
     tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")
+    implementation(project(":columns-parser"))
 }
 
 
@@ -78,7 +80,7 @@ tasks {
     }
     jar {
         manifest {
-            attributes("Main-Class" to "CLIKt")
+            attributes("Main-Class" to "fhirextinguisher.CLIKt")
         }
     }
     generateGrammarSource {

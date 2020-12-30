@@ -16,8 +16,7 @@
                        ref="content"/>
       </div>
     </div>
-    <DialogColumn :data="dialog.data" :title="dialog.title" :visible="dialog.visible"
-                  @clicked-abort="handleDialogAbort" @clicked-okay="handleDialogSubmit"/>
+    <DialogColumn :data="dialog.data" :title="dialog.title" @clicked-okay="handleDialogSubmit"/>
     <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
     <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
     <DialogCheatSheet/>
@@ -43,25 +42,74 @@ import DialogShowResource from './dialog-show-resource.vue';
 import DialogTestFhirpath from './dialog-test-fhirpath.vue';
 import DialogAbout from './dialog-about.vue';
 import DialogCheatSheet from "./dialog-cheat-sheet.vue";
-import {ColumnsParser} from "../column-parser-antlr";
+import {
+  Column,
+  ExplodeLong,
+  ExplodeWide,
+  Join,
+  ListProcessingMode,
+  parseColumns,
+  stringifyColumns
+} from "columns-parser";
 // import * as $ from ''
 
 // (<any>$("#sidebar")).resizable({handles: "e"});
 
-export function columnsToString(columns: Column[]) {
-  function escape(str: string) {
-    return str.replace(/,/g, "\\,").replace(/:/g, "\\:")
-  }
+// export function columnsToString(columns: Column[]) {
+//   function escape(str: string) {
+//     return str.replace(/,/g, "\\,").replace(/:/g, "\\:")
+//   }
+//
+//   return columns.map((it: Column) => {
+//     let name = it.name.replace(/:/g, "\\:").replace(/@/g, "\\@");
+//     let type = it.type.replace(/:/g, "\\:");
+//     if (it.subColumns) {
+//       type += "(" + it.subColumns.map(it => escape(it.name) + ":" + escape(it.expression)).join(",").replace(/\)/g, "\\)") + ")";
+//     }
+//     let expression = it.expression.replace(",", "\\,");
+//     return `${name}@${type}:${expression}`
+//   }).join(",");
+// }
 
-  return columns.map((it: Column) => {
-    let name = it.name.replace(/:/g, "\\:").replace(/@/g, "\\@");
-    let type = it.type.replace(/:/g, "\\:");
-    if (it.subColumns) {
-      type += "(" + it.subColumns.map(it => escape(it.name) + ":" + escape(it.expression)).join(",").replace(/\)/g, "\\)") + ")";
-    }
-    let expression = it.expression.replace(",", "\\,");
-    return `${name}@${type}:${expression}`
-  }).join(",");
+export function columnsToString(columns: VmColumn[]): string {
+  return stringifyColumns(columns.map((it: VmColumn) => convertFromVmColumn(it)));
+}
+
+export function columnsFromString(value: string): VmColumn[] {
+  return parseColumns(value).map((it: Column) => convertToVmColumn(it));
+}
+
+function convertToVmColumn(column: Column): VmColumn {
+  let subColumns: VmSubColumn[];
+  let type = column.type.toString();
+  if (column.type instanceof ExplodeLong || column.type instanceof ExplodeWide) {
+    subColumns = column.type.subcolumns.map((it: Column) => ({name: it.name, expression: it.expression}));
+    type = "explodeLong";
+  }
+  if (column.type instanceof ExplodeWide) {
+    subColumns.unshift({name: "$disc", expression: column.type.discriminator});
+    type = "explodeWide";
+  }
+  return {
+    name: column.name,
+    expression: column.expression,
+    type: type,
+    subColumns: subColumns
+  }
+}
+
+function convertFromVmColumn(vmColumn: VmColumn): Column {
+  let type: ListProcessingMode;
+  if (vmColumn.type.toString().startsWith("join")) {
+    let sep = /join\(\s*"([^"]*)"\s*\)/.exec(vmColumn.type)[1]
+    type = new Join(sep);
+  } else if (vmColumn.type.startsWith("explodeLong")) {
+    type = new ExplodeLong(vmColumn.subColumns.map((it: VmSubColumn) => new Column(it.name, it.expression, null)))
+  } else if (vmColumn.type.startsWith("explodeWide")) {
+    let disc = vmColumn.subColumns.filter((it: VmSubColumn) => it.name === "$disc")[0].expression;
+    type = new ExplodeWide(disc, vmColumn.subColumns.filter((it: VmSubColumn) => it.name !== "$disc").map(it => new Column(it.name, it.expression, null)));
+  }
+  return new Column(vmColumn.name, vmColumn.expression, type)
 }
 
 function getUrlParams(search: string): Map<string, string> {
@@ -90,23 +138,27 @@ export function parseLink(link: string): ParsedUrl {
 
   let limit = parseInt(urlParams.get("__limit"));
 
-  let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
+  // let columns = new ColumnsParser().parseColumns(decodeURIComponent(urlParams.get("__columns")));
+  let columns = parseColumns(decodeURIComponent(urlParams.get("__columns")));
 
   let url = urlToParse.split("?")[0];
   let query = [...urlParams.entries()] //TODO: Improve this somehow
       .filter(it => it[0] != "__columns" && it[0] != "__limit")
       .map(it => it[0] + "=" + it[1])
       .join("&");
-  return {url: url + "?" + query, columns, limit}
+  return {url: `${url}?${query}`, columns, limit}
 }
 
 (<any>window).parseLink = parseLink;
 
-export type Column = { name: string, type: string, expression: string, subColumns?: SubColumn[] }
-export type SubColumn = { name: string, expression: string };
+/**
+ * Vm = View Model
+ */
+export type VmColumn = { name: string, type: string, expression: string, subColumns?: VmSubColumn[] }
+export type VmSubColumn = { name: string, expression: string };
 
 type DialogConfig = {
-  visible: boolean, title: string, mode: "add" | "edit", idx: number, data: Column
+  title: string, mode: "add" | "edit", idx: number, data: VmColumn
 };
 
 export default {
@@ -136,7 +188,6 @@ export default {
       fhirQuery: "",
       resource: "",
       dialog: {
-        visible: false,
         title: "",
         mode: "add",
         idx: -1,
@@ -165,7 +216,6 @@ export default {
   },
   methods: {
     handleAddColumn: function () {
-      this.dialog.visible = true;
       this.dialog.title = "Add Column...";
       this.dialog.mode = "add";
       this.dialog.data = {
@@ -173,9 +223,9 @@ export default {
         type: 'join(", ")',
         expression: ""
       }
+      this.$bvModal.show("modal-column")
     },
     handleEditColumn: function (idx: number) {
-      this.dialog.visible = true;
       this.dialog.title = "Edit Column...";
       this.dialog.mode = "edit";
       this.dialog.idx = idx;
@@ -185,12 +235,9 @@ export default {
         expression: this.columns[idx].expression,
         subColumns: this.columns[idx].subColumns
       }
+      this.$bvModal.show("modal-column");
     },
-    handleDialogAbort: function () {
-      this.dialog.visible = false;
-    },
-    handleDialogSubmit: function (data: Column) {
-      this.dialog.visible = false;
+    handleDialogSubmit: function (data: VmColumn) {
       if (this.dialog.mode === "add") {
         this.columns.push(data);
       } else {
@@ -252,6 +299,8 @@ export default {
   },
   computed: {},
   mounted: function () {
+    (<any>window).parseColumns = parseColumns;
+
     fetch("info")
         .then(res => res.json())
         .then(res => {

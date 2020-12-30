@@ -3,6 +3,9 @@ import {ColumnsContext, ColumnsTokens} from "../antlr/ColumnsTokens";
 import {Column, SubColumn} from "./index";
 import {ColumnsLexer} from "../antlr/ColumnsLexer";
 
+// @ts-ignore
+import * as foo from "columns-parser/columns-parser";
+
 
 export class ColumnsParser {
     parseColumns(string: string): Column[] {

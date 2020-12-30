@@ -1,5 +1,10 @@
 package fhirextinguisher
 
+import Column
+import ExplodeLong
+import ExplodeWide
+import Join
+import Singleton
 import ca.uhn.fhir.context.FhirContext
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -10,34 +15,34 @@ import kotlin.math.max
 
 
 fun main() {
-
     val forR4 = FhirContext.forR4()
     val fpe = forR4.let { FhirPathEngineWrapperR4(it, it.newRestfulGenericClient("")) }
     val parser = forR4.newJsonParser()
     val bundle =
-        parser.parseResource(FileReader("C:\\Users\\Johannes\\IdeaProjects\\fhirextinguisher\\src\\main\\resources\\test-patient.json")) as Bundle
+        parser.parseResource(FileReader("C:\\Users\\oehmj\\IdeaProjects\\fhirextinguisher\\src\\main\\resources\\test-patient.json")) as Bundle
 
 
     val c = Column(
-        "name", fpe.parseExpression("Patient.name"), ExplodeLong(
-            listOf(
-                SubColumn("use", fpe.parseExpression("\$this.use")),
-                SubColumn("given", fpe.parseExpression("\$this.given")),
-                SubColumn("family", fpe.parseExpression("\$this.family"))
+        "name", "Patient.name", ExplodeLong(
+            arrayOf(
+                Column("use", "\$this.use"),
+                Column("given", "\$this.given"),
+                Column("family", "\$this.family")
             )
         )
     )
     val c2 = Column(
-        "name", fpe.parseExpression("Patient.name"), ExplodeWide(
-            discriminator = fpe.parseExpression("%index"),
-            subcolumns = listOf(
-                SubColumn("", fpe.parseExpression("\$this.given")),
-                SubColumn("family", fpe.parseExpression("\$this.family"))
+        "name", "Patient.name", ExplodeWide(
+            discriminator = "%index",
+            subcolumns = arrayOf(
+                Column("", "\$this.given"),
+                Column("family", "\$this.family")
             )
         )
     )
-    val c1 = Column("name", fpe.parseExpression("Patient.name.given"), ExplodeLong(emptyList()))
-    val c4 = Column("test", fpe.parseExpression("2"), ExplodeLong(emptyList()))
+    val c1 = Column("name", "Patient.name.given", ExplodeLong(emptyArray()))
+    val c4 = Column("test", "2", ExplodeLong(emptyArray()))
+    val c5 = Column("gender", "Patient.gender", Singleton)
 
 //    rt.addColumn(c, bundle.entry[0].resource, fpe)
 
@@ -48,6 +53,7 @@ fun main() {
         st.addColumn(c2, entryComponent.resource, fpe)
         st.addColumn(c1, entryComponent.resource, fpe)
         st.addColumn(c4, entryComponent.resource, fpe)
+        st.addColumn(c5, entryComponent.resource, fpe)
         println(st)
         subtables += st
     }
@@ -59,34 +65,52 @@ fun main() {
 
 class SubTable() {
     val data = LinkedHashMap<Pair<Int, String>, List<String?>>()
+    val dataType = object : HashMap<String, MutableSet<RDataType>>() {
+        override fun get(key: String): MutableSet<RDataType>? {
+            if (super.containsKey(key)) {
+                return super.get(key)
+            } else {
+                val default = hashSetOf<RDataType>()
+                this[key] = default
+                return default
+            }
+        }
+    }
     var currentLength = 1
     var colIdx = 1
 
     fun addColumn(column: Column, base: IBase, fpe: FhirPathEngineWrapper) {
-        val eval = fpe.evaluateToBase(base, column.expression)
-        when (column.listProcessingMode) {
+        fun String.expr() = fpe.parseExpression(this)
+
+        val eval = fpe.evaluateToBase(base, column.expression.expr())
+        when (val type = column.type) {
             is Singleton -> {
                 val value = eval.single()
                 this.data[colIdx to column.name] = List(currentLength) { fpe.convertToString(value) }
+                this.dataType[column.name]?.add(parseFhirType(value)) //TODO: Add singleton to GUI
             }
             is Join -> {
-                val value = eval.joinToString(column.listProcessingMode.delimiter) { fpe.convertToString(it) }
+                val value = eval.joinToString(type.delimiter) { fpe.convertToString(it) }
                 this.data[colIdx to column.name] = List(currentLength) { value }
+                this.dataType[column.name]?.add(RDataType.CHARACTER)
             }
             is ExplodeLong -> {
-                val sc = if (column.listProcessingMode.subcolumns.isEmpty()) {
+                val sc = if (type.subcolumns.isEmpty()) {
                     listOf(column.name to fpe.parseExpression("\$this"))
                 } else {
-                    column.listProcessingMode.subcolumns.map { column.name + "." + it.name to it.expression }
+                    type.subcolumns.map { column.name + "." + it.name to it.expression.expr() }
                 }
 
                 when {
                     eval.size == 1 -> {
-                        for (s in sc) {
+                        for ((name, expression) in sc) {
                             //TODO: Handle multiple return values: Throw error?
-                            val subitem = fpe.evaluateToBase(eval[0], s.second)
-                            this.data[colIdx to s.first] = List(currentLength) {
+                            val subitem = fpe.evaluateToBase(eval[0], expression)
+                            this.data[colIdx to name] = List(currentLength) {
                                 if (subitem.size != 1) null else fpe.convertToString(subitem.first())
+                            }
+                            if (subitem.size == 1) {
+                                this.dataType[name]?.add(parseFhirType(subitem.single()))
                             }
                         }
                     }
@@ -99,10 +123,12 @@ class SubTable() {
                         for ((i, col) in this.data) {
                             this.data[i] = repeatList(col, eval.size)
                         }
-                        for (s in sc) {
-                            val result: List<String?> = eval.map { fpe.evaluateToBase(it, s.second).firstOrNull() }
-                                .map { if (it != null) fpe.convertToString(it) else null }
-                            this.data[colIdx to s.first] = stretchList(result, currentLength)
+                        for ((name, expression) in sc) {
+                            val result = eval.map { fpe.evaluateToBase(it, expression).singleOrNull() }
+                            //TODO Handle multi-value results
+                            val resultString = result.map { if (it != null) fpe.convertToString(it) else null }
+                            this.data[colIdx to name] = stretchList(resultString, currentLength)
+                            this.dataType[name]?.addAll(result.filterNotNull().map { parseFhirType(it) })
                         }
                         this.currentLength = currentLength * eval.size
                     }
@@ -111,18 +137,18 @@ class SubTable() {
             is ExplodeWide -> {
                 for ((index, iBase) in eval.withIndex()) {
                     val disc =
-                        fpe.evaluateToBase(iBase, column.listProcessingMode.discriminator, mapOf("index" to index))
+                        fpe.evaluateToBase(iBase, type.discriminator.expr(), mapOf("index" to index))
                             .firstOrNull()?.let { fpe.convertToString(it) } ?: "empty"
-                    val sc = if (column.listProcessingMode.subcolumns.isNotEmpty()) {
-                        column.listProcessingMode.subcolumns.map { (column.name + "." + disc + if (it.name != "") ".${it.name}" else "") to it.expression }
+                    val sc = if (type.subcolumns.isNotEmpty()) {
+                        type.subcolumns.map { (column.name + "." + disc + if (it.name != "") ".${it.name}" else "") to it.expression.expr() }
                     } else {
                         listOf(column.name + "." + disc to fpe.parseExpression("\$this"))
                     }
-                    for (s in sc) {
-                        val result: String? =
-                            fpe.evaluateToBase(iBase, s.second, mapOf("index" to index)).map { fpe.convertToString(it) }
-                                .firstOrNull()
-                        this.data[colIdx to s.first] = List(currentLength) { result }
+                    for ((name, expression) in sc) {
+                        val resultBase = fpe.evaluateToBase(iBase, expression, mapOf("index" to index))
+                        val resultString: String? = resultBase.map { fpe.convertToString(it) }.singleOrNull()
+                        this.data[colIdx to name] = List(currentLength) { resultString }
+                        resultBase.singleOrNull()?.let { parseFhirType(it) }?.let { this.dataType[name]?.add(it) }
                     }
                 }
             }
@@ -159,13 +185,13 @@ class SubTable() {
 
     override fun toString(): String {
         val maxLength = mutableMapOf<String, Int>()
-        for ((r, value) in data.entries) {
+        for ((r, value) in this.data.entries) {
             val columnName = r.second
             maxLength[columnName] = max(columnName.length, value.map { it?.length ?: "null".length }.max()!!)
         }
         return buildString {
-            for (key in data.keys) {
-                val columnName = key.second
+            append("RDataTypes = ").append(dataType.toString()).append("\n\n")
+            for ((_, columnName) in data.keys) {
                 append(columnName).append(" ".repeat(maxLength[columnName]!! - columnName.length)).append(" | ")
             }
             append("\n")

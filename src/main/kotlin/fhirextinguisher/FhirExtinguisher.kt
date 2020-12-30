@@ -1,5 +1,6 @@
 package fhirextinguisher
 
+import Column
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
@@ -11,6 +12,7 @@ import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBaseResource
+import parseColumns
 import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -31,7 +33,6 @@ class FhirExtinguisher(
         FhirPathEngineWrapperR4(fhirContext, fhirClient)
     }
 
-    val columnsParser = ColumnsParser(fhirPathEngine)
 
     init {
         interceptors.forEach { fhirClient.registerInterceptor(it) }
@@ -66,8 +67,13 @@ class FhirExtinguisher(
             log.info { "is raw resource" }
             myParams = processQueryParams(call.parameters).second
             log.info { "myParams = $myParams" }
-            resourceType =
-                contentType ?: throw Exception("Content-Type header must be set and either xml, json or formData!")
+            if (contentType == null) {
+                log.info { "Content-Type is null" }
+                throw Exception("Content-Type header must be set and either xml, json or formData!")
+            } else {
+                log.info { "Content-Type is not null" }
+            }
+            resourceType = contentType
             resourceString = call.receiveText()
             log.info { "content received" }
         }
@@ -225,9 +231,9 @@ class FhirExtinguisher(
         } ?: CSVFormat.EXCEL
         val limit = map["__limit"]?.get(0)?.toInt()
         val columnsStr = map["__columns"]?.get(0)
-        val columns = if (columnsStr != null) columnsParser.parseString(columnsStr) else null
+        val columns = if (columnsStr != null) parseColumns(columnsStr) else null
 
-        return MyParams(csvFormat, limit, columns)
+        return MyParams(csvFormat, limit, columns?.toList())
     }
 
 }
