@@ -1,6 +1,7 @@
 import {CancellationToken, editor, IRange, languages, Position as mPosition} from "monaco-editor";
 import {R4} from "@ahryman40k/ts-fhir-types";
 import {FixedValuesHelper} from "./url-completionitemprovider-fixedvalues";
+import {ICapabilityStatement_SearchParam} from "@ahryman40k/ts-fhir-types/lib/R4";
 import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 
@@ -297,25 +298,34 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
             textUntilPosition.lastIndexOf(".")
         );
-        let strings: Set<string> = new Set();
-        if (paramName.includes(":")) { //?subject:Patient.
+        let strings: Set<ICapabilityStatement_SearchParam> = new Set();
+        if (paramName.startsWith("_has:")) { //?_has:MedicationStatement:patient:medication.<click>
+            let [_, revResourceName, revJoinParamName, revParam] = paramName.split(":");
+            if (!revResourceName || !revJoinParamName || !revParam) return [];
+            let referenceTypes = this.getReferenceType(revResourceName, revParam);
+            for (let referenceType of referenceTypes) {
+                let definition = this.getDefinitionForResourceName(referenceType);
+                definition.searchParam.forEach(it => strings.add(it));
+            }
+        } else if (paramName.includes(":")) { //?subject:Patient.
             let referencedResourceName = paramName.substring(paramName.indexOf(":") + 1);
-            this.getDefinitionForResourceName(referencedResourceName).searchParam.forEach(it => strings.add(it.name));
+            this.getDefinitionForResourceName(referencedResourceName).searchParam.forEach(it => strings.add(it));
         } else { //subject.<click>
             let referenceTypes = this.getReferenceType(resourceName, paramName);
             for (let referenceType of referenceTypes) {
                 let definition = this.getDefinitionForResourceName(referenceType);
-                definition.searchParam.forEach(it => strings.add(it.name));
+                definition.searchParam.forEach(it => strings.add(it));
             }
         }
 
         return Array.from(strings).map(it => (
             {
-                label: it,
+                label: it.name,
                 kind: CompletionItemKind.Function,
                 range: range,
-                detail: "",
-                insertText: it
+                detail: it.type,
+                documentation: it.documentation,
+                insertText: it.name
             }
         ));
 
@@ -403,7 +413,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                         kind: CompletionItemKind.Function,
                         range: range,
                         detail: it.type,
-                        insertText: it.name + "=",
+                        insertText: it.name + (it.type !== "reference" ? "=" : ""),
                         documentation: it.documentation
                     }))
                 );
