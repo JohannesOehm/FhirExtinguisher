@@ -279,7 +279,7 @@ export default {
 
 
       copyStringToClipboard(tmp + `data <- read.csv("${escapeRString(this.getDownloadLink())}",
-        header=TRUE,
+        header=TRUE, encoding="UTF-8",
         colClasses = c(${Object.entries(rTypes).filter(([name, _]) => name != "$raw")
           .map(([name, type]) => `"${escapeRString(name)}"="${type !== "DATE" ? type.toLowerCase() : "Date"}"`).join(",")})
       );`);
