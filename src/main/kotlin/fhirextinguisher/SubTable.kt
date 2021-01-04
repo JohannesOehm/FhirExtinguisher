@@ -41,7 +41,8 @@ fun main() {
         )
     )
     val c1 = Column("name", "Patient.name.given", ExplodeLong(emptyArray()))
-    val c4 = Column("test", "2", ExplodeLong(emptyArray()))
+    val c4 = Column("test", "@2021-01-01", Singleton)
+    val c6 = Column("test2", "12", Singleton)
     val c5 = Column("gender", "Patient.gender", Singleton)
 
 //    rt.addColumn(c, bundle.entry[0].resource, fpe)
@@ -54,6 +55,7 @@ fun main() {
         st.addColumn(c1, entryComponent.resource, fpe)
         st.addColumn(c4, entryComponent.resource, fpe)
         st.addColumn(c5, entryComponent.resource, fpe)
+        st.addColumn(c6, entryComponent.resource, fpe)
         println(st)
         subtables += st
     }
@@ -67,12 +69,12 @@ class SubTable() {
     val data = LinkedHashMap<Pair<Int, String>, List<String?>>()
     val dataType = object : HashMap<String, MutableSet<RDataType>>() {
         override fun get(key: String): MutableSet<RDataType>? {
-            if (super.containsKey(key)) {
-                return super.get(key)
+            return if (super.containsKey(key)) {
+                super.get(key)
             } else {
                 val default = hashSetOf<RDataType>()
                 this[key] = default
-                return default
+                default
             }
         }
     }
@@ -85,14 +87,14 @@ class SubTable() {
         val eval = fpe.evaluateToBase(base, column.expression.expr())
         when (val type = column.type) {
             is Singleton -> {
-                val value = eval.single()
+                val value = eval.single() //TODO: Leere Liste erlaubt?
                 this.data[colIdx to column.name] = List(currentLength) { fpe.convertToString(value) }
                 this.dataType[column.name]?.add(parseFhirType(value)) //TODO: Add singleton to GUI
             }
             is Join -> {
                 val value = eval.joinToString(type.delimiter) { fpe.convertToString(it) }
                 this.data[colIdx to column.name] = List(currentLength) { value }
-                this.dataType[column.name]?.add(RDataType.CHARACTER)
+                this.dataType[column.name]?.add(if (eval.size == 1) parseFhirType(eval[0]) else RDataType.CHARACTER) //TODO: This means if using join type but no element has multiple entries, we get the type of single element, which might lead to issues when dealing with changing data
             }
             is ExplodeLong -> {
                 val sc = if (type.subcolumns.isEmpty()) {
@@ -231,5 +233,14 @@ class ResultTable(val subtables: List<SubTable>) {
         return this.subtables.map { it.data.keys }.flatten().sortedBy { it.first }.distinct()
     }
 
+    fun getDataTypes(): Map<String, RDataType> {
+        return this.getAllColumnNames()
+            .map { (_, name) ->
+                Pair(
+                    name,
+                    subtables.flatMap { it.dataType[name] ?: emptySet() }.toSet().singleOrNull() ?: RDataType.CHARACTER
+                )
+            }.toMap()
+    }
 
 }

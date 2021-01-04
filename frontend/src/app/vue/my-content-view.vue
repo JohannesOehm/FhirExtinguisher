@@ -12,6 +12,9 @@
           <button @click="copyToClipboard()" class="btn btn-sm btn-outline-secondary">
             Copy Link
           </button>
+          <button @click="copyRCode()" class="btn btn-sm btn-outline-secondary">
+            Copy R code
+          </button>
           <button @click="importLink()" class="btn btn-sm btn-outline-secondary">
             Import Link
           </button>
@@ -95,6 +98,20 @@ function stringifyHeaders(headers: Headers) {
   return s;
 }
 
+function copyStringToClipboard(stringToCopy: string) {
+  const el = document.createElement('textarea');
+  el.value = stringToCopy;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+}
+
+let rTypes: { [name: string]: string } | null = null;
+
 export default {
   name: "ContentView",
   data: function (): {
@@ -168,11 +185,11 @@ export default {
       }
       this.tableLoading = true;
 
-      let params = `__limit=${this.limit}&__columns=${columnsToString(this.columns)}`;
+      let params = `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}`;
       let resourceFormat = this.rawDataFormat == "json" ? "application/json" : "application/xml";
-      let response;
+      let response: Response;
       if (params.length < 1000) {
-        response = await fetch("processBundle?" + encodeURI(params), {
+        response = await fetch("processBundle?" + params, {
           method: 'POST',
           body: this.rawData,
           headers: {
@@ -202,16 +219,19 @@ export default {
           this.tableData = it;
           this.tableError = null;
           this.tableLoading = false;
+          rTypes = JSON.parse(response.headers.get("R-DataTypes"));
         }).catch((it: any) => {
           this.tableData = null;
           this.tableError = it;
           this.tableLoading = false;
+          rTypes = null;
         });
       } else {
         this.tableData = null;
         this.tableLoading = false;
         this.tableError = (response.status + " " + response.statusText) + "\n" + stringifyHeaders(response.headers);
         this.tableError += "\n\n" + await response.text();
+        rTypes = null;
       }
     },
     importLink: function () {
@@ -220,24 +240,49 @@ export default {
         this.$emit("import-link", link);
       }
     },
+    getDownloadLink: function () {
+      return window.location.href.split("#")[0] + this.getDownloadUrl();
+    },
     copyToClipboard: function () {
-      let stringToCopy = window.location.href.split("#")[0] + this.getDownloadUrl();
-
-      const el = document.createElement('textarea');
-      el.value = stringToCopy;
-      el.setAttribute('readonly', '');
-      el.style.position = 'absolute';
-      el.style.left = '-9999px';
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
+      let stringToCopy = this.getDownloadLink();
+      copyStringToClipboard(stringToCopy)
     },
     openUrl: function (url: string) {
       window.open(url);
     },
     openRawDialog: function (value: string) {
       this.$emit("show-resource", value);
+    },
+    copyRCode: function () {
+      function escapeRString(value: string): string {
+        return value.replace("\\", "\\\\").replace('"', '\\"');
+      }
+
+      if (!rTypes) {
+        alert("Type info is not available. \n You must click on GET to download the table preview data first!");
+        return;
+      }
+
+      let tmp: string = "";
+
+      if (Object.values(rTypes).indexOf("DATETIME") !== -1 || Object.values(rTypes).indexOf("TIME") !== -1) {
+        tmp += "library(readr)\n"
+      }
+      if (Object.values(rTypes).indexOf("DATETIME") !== -1) {
+        tmp += "setClass(\"fhirDateTime\")\n" +
+            "setAs(\"character\", \"fhirDateTime\", function(from) parse_datetime(from))\n"
+      }
+      if (Object.values(rTypes).indexOf("TIME") !== -1) {
+        tmp += "setClass(\"fhirTime\")\n" +
+            "setAs(\"character\", \"fhirTime\", function(from) parse_time(from))\n"
+      }
+
+
+      copyStringToClipboard(tmp + `data <- read.csv("${escapeRString(this.getDownloadLink())}",
+        header=TRUE,
+        colClasses = c(${Object.entries(rTypes).filter(([name, _]) => name != "$raw")
+          .map(([name, type]) => `"${escapeRString(name)}"="${type !== "DATE" ? type.toLowerCase() : "Date"}"`).join(",")})
+      );`);
     },
     makeDownload: function () {
       let downloadUrl = this.getDownloadUrl();

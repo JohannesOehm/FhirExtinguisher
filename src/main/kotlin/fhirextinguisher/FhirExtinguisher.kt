@@ -8,6 +8,9 @@ import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json.Default.encodeToString
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -51,34 +54,27 @@ class FhirExtinguisher(
         val jsonParser = fhirContext.newJsonParser()
         val sb = StringBuilder()
         val contentType = call.request.headers["Content-Type"]
-        log.info { "Processing bundle..." }
 
         val myParams: MyParams
         val resourceType: String
         val resourceString: String
         if (call.request.contentType().contentType == "multipart" && call.request.contentType().contentSubtype == "form-data") {
-            log.info { "is multipart" }
             val receiveParameters = call.receiveParameters()
             myParams = processQueryParams(receiveParameters).second
             resourceType = receiveParameters["bundleFormat"] ?: throw Exception("bundleFormat parameter must be set!")
             resourceString = receiveParameters["bundle"] ?: throw Exception("bundle must be set!")
-            log.info { "content received" }
         } else {
-            log.info { "is raw resource" }
             myParams = processQueryParams(call.parameters).second
             log.info { "myParams = $myParams" }
             if (contentType == null) {
                 log.info { "Content-Type is null" }
                 throw Exception("Content-Type header must be set and either xml, json or formData!")
-            } else {
-                log.info { "Content-Type is not null" }
             }
             resourceType = contentType
             resourceString = call.receiveText()
             log.info { "content received" }
         }
 
-        log.info { "params = $myParams" }
 
         val resource = if (resourceType == "application/json") {
             jsonParser.parseResource(resourceString)
@@ -101,9 +97,14 @@ class FhirExtinguisher(
                 jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource)
             )
         }
-        ResultTable(resultTables).print(printer)
+        val resultTable = ResultTable(resultTables)
+        call.response.header(
+            "R-DataTypes",
+            encodeToString(MapSerializer(String.serializer(), RDataType.serializer()), resultTable.getDataTypes())
+        )
+        resultTable.print(printer)
         val text = sb.toString()
-        log.info { "Processed bundle to $text" }
+        log.debug { "Processed bundle to $text" }
         call.respondText(text) //TODO: Streamify this
     }
 
@@ -138,7 +139,9 @@ class FhirExtinguisher(
                 ContentDisposition.Parameters.FileName, "${defaultCsvFileName(bundleUrl, fhirParams)}.csv"
             ).toString()
         )
-
+        //TODO
+//        call.response.header("R-DataTypes",
+//            encodeToString(MapSerializer(String.serializer(), RDataType.serializer()), resultTable.getDataTypes()))
 
         call.respondText(text = sb.toString(), contentType = ContentType.Text.CSV)
 
