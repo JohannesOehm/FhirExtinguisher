@@ -143,7 +143,7 @@ export function parseLink(link: string): ParsedUrl {
 
   let url = urlToParse.split("?")[0];
   let query = [...urlParams.entries()] //TODO: Improve this somehow
-      .filter(it => it[0] != "__columns" && it[0] != "__limit")
+      .filter(it => it[0] !== "__columns" && it[0] !== "__limit")
       .map(it => it[0] + "=" + it[1])
       .join("&");
   return {url: `${url}?${query}`, columns, limit}

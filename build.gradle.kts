@@ -4,18 +4,18 @@ plugins {
     antlr
     id("com.github.johnrengelman.shadow") version "5.2.0"
     id("war")
-    id("com.bmuschko.tomcat") version "2.5"
+//    id("com.bmuschko.tomcat") version "2.5"
 }
 
 war {
     webAppDirName = "webapp"
 }
 
-tomcat {
-    contextPath = "/"
-    httpProtocol = "org.apache.coyote.http11.Http11Nio2Protocol"
-    ajpProtocol = "org.apache.coyote.ajp.AjpNio2Protocol"
-}
+//tomcat {
+//    contextPath = "/"
+//    httpProtocol = "org.apache.coyote.http11.Http11Nio2Protocol"
+//    ajpProtocol = "org.apache.coyote.ajp.AjpNio2Protocol"
+//}
 
 
 repositories {
@@ -25,12 +25,12 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.2.3"
+    version = "1.3.0"
 }
 
 
 subprojects {
-    version = "1.2.3"
+    version = "1.3.0"
 }
 
 val ktor_version = "1.5.0"
@@ -56,8 +56,8 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktor_version")
     implementation("io.ktor:ktor-server-servlet:$ktor_version")
     antlr("org.antlr:antlr4:4.8")
-    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
-    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")
+//    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
+//    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")
     implementation(project(":columns-parser"))
 }
 

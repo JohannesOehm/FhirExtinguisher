@@ -65,16 +65,13 @@ class FhirExtinguisher(
             resourceString = receiveParameters["bundle"] ?: throw Exception("bundle must be set!")
         } else {
             myParams = processQueryParams(call.parameters).second
-            log.info { "myParams = $myParams" }
             if (contentType == null) {
                 log.info { "Content-Type is null" }
                 throw Exception("Content-Type header must be set and either xml, json or formData!")
             }
             resourceType = contentType
             resourceString = call.receiveText()
-            log.info { "content received" }
         }
-
 
         val resource = if (resourceType == "application/json") {
             jsonParser.parseResource(resourceString)
@@ -82,7 +79,7 @@ class FhirExtinguisher(
             fhirContext.newXmlParser().parseResource(resourceString)
         }
 
-        log.info { "Bundle received & parsed!" }
+        log.info { "Received bundle to process with params = $myParams" }
 
         //TODO: Abort when user cancels request
         val printer = CSVPrinter(sb, myParams.csvFormat)
@@ -119,13 +116,27 @@ class FhirExtinguisher(
         } else {
             processQueryParams(call.parameters)
         }
+        if (myParams.columns == null) {
+            call.respond(HttpStatusCode.BadGateway, "Please set __columns parameter!")
+            return
+        }
 
-        val sb = StringBuilder()
-        val printer = CSVPrinter(sb, myParams.csvFormat)
+
         try {
-            if (myParams.columns != null) {
-                processWithColumns(bundleUrl, fhirParams, myParams, printer, myParams.columns)
-            }
+
+            val resultTable = processWithColumns(bundleUrl, fhirParams, myParams.limit, myParams.columns)
+            call.response.header(
+                HttpHeaders.ContentDisposition, attachment("${defaultCsvFileName(bundleUrl, fhirParams)}.csv")
+            )
+            call.response.header(
+                "R-DataTypes",
+                encodeToString(MapSerializer(String.serializer(), RDataType.serializer()), resultTable.getDataTypes())
+            )
+
+            val sb = StringBuilder()
+            val printer = CSVPrinter(sb, myParams.csvFormat)
+            resultTable.print(printer)
+            call.respondText(text = sb.toString(), contentType = ContentType.Text.CSV)
         } catch (e: Exception) {
             log.error(e) { "An error occured while serving $bundleUrl!" }
             return call.respond(
@@ -133,19 +144,11 @@ class FhirExtinguisher(
                 "Error: " + e.message
             )
         }
-
-        call.response.header(
-            HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(
-                ContentDisposition.Parameters.FileName, "${defaultCsvFileName(bundleUrl, fhirParams)}.csv"
-            ).toString()
-        )
-        //TODO
-//        call.response.header("R-DataTypes",
-//            encodeToString(MapSerializer(String.serializer(), RDataType.serializer()), resultTable.getDataTypes()))
-
-        call.respondText(text = sb.toString(), contentType = ContentType.Text.CSV)
-
     }
+
+    private fun attachment(filename: String) = ContentDisposition.Attachment.withParameter(
+        ContentDisposition.Parameters.FileName, filename
+    ).toString()
 
     private fun defaultCsvFileName(bundleUrl: String, fhirParams: String): String {
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
@@ -155,13 +158,9 @@ class FhirExtinguisher(
     private fun processWithColumns(
         uri: String?,
         fhirParams: String,
-        myParams: MyParams,
-        printer: CSVPrinter,
+        limit: Int?,
         columns: List<Column>
-    ) {
-
-//        printer.printRecord(columns.map { it.name })
-
+    ): ResultTable {
         var count = 0
         var nextUrl: String? = "$uri?$fhirParams"
 
@@ -177,15 +176,14 @@ class FhirExtinguisher(
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
             for (bundleEntry in bundleWrapper.entry) {
                 subtables += processBundleEntry(columns, bundleEntry)
-                count++;
-                if (myParams.limit != null && count >= myParams.limit) {
+                count++
+                if (limit != null && count >= limit) {
                     break@myloop;
                 }
             }
         } while (nextUrl != null)
 
-        ResultTable(subtables).print(printer)
-
+        return ResultTable(subtables)
     }
 
 

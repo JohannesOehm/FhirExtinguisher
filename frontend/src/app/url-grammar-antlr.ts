@@ -1,23 +1,16 @@
-import {
-    ANTLRInputStream,
-    CommonTokenStream,
-    DiagnosticErrorListener, ParserRuleContext,
-    ProxyParserErrorListener, RecognitionException,
-    Recognizer, RuleContext,
-    Token
-} from 'antlr4ts';
+import {ANTLRInputStream, RecognitionException, Recognizer, Token} from 'antlr4ts';
 import {QueryLexer} from "../antlr/QueryLexer";
 import {languages} from "monaco-editor";
+import {ParserErrorListener} from "antlr4ts/ParserErrorListener";
 import IState = languages.IState;
 import ILineTokens = languages.ILineTokens;
 import IToken = languages.IToken;
 import TokensProvider = languages.TokensProvider;
 import EOF = Token.EOF;
-import {ParserErrorListener} from "antlr4ts/ParserErrorListener";
-import {AbstractParseTreeVisitor, ErrorNode, ParseTree, RuleNode, TerminalNode} from "antlr4ts/tree";
-import {QueryTokens} from "../antlr/QueryTokens";
 
-
+/**
+ * Only one state because all we parse only one line, so there has no state to be remembered.
+ */
 export class UrlState implements IState {
     clone(): IState {
         return new UrlState();
@@ -44,10 +37,7 @@ export class UrlTokensProvider implements TokensProvider {
     }
 
     tokenize(line: string, state: IState): ILineTokens {
-        // So far we ignore the state, which is not great for performance reasons
-        let foo = tokensForLine(line);
-        // console.log(foo);
-        return foo;
+        return tokensForLine(line);
 
         // let inputStream = new ANTLRInputStream(line);
         // let lexer = new QueryLexer(inputStream);

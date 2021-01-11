@@ -34,8 +34,8 @@ fun deserialize(string: String): MutableList<StoredQuery> {
 }
 
 
-object QueryStorage {
-    val savedQueriesFile = File("storedQueries.csv")
+class QueryStorage(val savedQueriesFile: File) {
+    //    val savedQueriesFile = File("storedQueries.csv")
     val savedQueries: MutableList<StoredQuery> =
         if (savedQueriesFile.exists()) deserialize(savedQueriesFile.readText()) else mutableListOf()
 
@@ -59,11 +59,12 @@ object QueryStorage {
 }
 
 
-fun Routing.savedQueries(path: String) {
+fun Routing.savedQueries(path: String, savedQueriesFile: File) {
+    val queryStorage = QueryStorage(savedQueriesFile)
     route(path) {
         get {
             call.respondText(
-                serialize(QueryStorage.savedQueries),
+                serialize(queryStorage.savedQueries),
                 contentType = ContentType.Text.CSV,
                 status = HttpStatusCode.OK
             )
@@ -72,18 +73,18 @@ fun Routing.savedQueries(path: String) {
             val queryName = call.parameters["name"]
             val force = call.parameters["force"] == "true"
             if (queryName != null) {
-                if (!force && QueryStorage.hasQuery(queryName)) {
-                    call.respond(HttpStatusCode.Conflict, "Query name already in use")
+                if (!force && queryStorage.hasQuery(queryName)) {
+                    call.respond(HttpStatusCode.Conflict, "Query name already in use!")
                 } else {
-                    QueryStorage.storeQuery(queryName, url = call.receiveText())
+                    queryStorage.storeQuery(queryName, url = call.receiveText())
                 }
             }
         }
         delete("/{name}") {
             val queryName = call.parameters["name"]
             if (queryName != null) {
-                if (QueryStorage.hasQuery(queryName)) {
-                    QueryStorage.deleteQuery(queryName)
+                if (queryStorage.hasQuery(queryName)) {
+                    queryStorage.deleteQuery(queryName)
                     call.respond("Deleted!")
                 } else {
                     call.respond("Cannot find any query with name '$queryName'!")

@@ -86,9 +86,7 @@ import * as CSV from '../csv.js';
 import * as monaco from "monaco-editor";
 import {columnsToString, VmColumn} from "./my-app";
 
-
 type TableData = { records: string[][], fields: string[], metadata: any };
-
 
 function stringifyHeaders(headers: Headers) {
   let s = "";
@@ -286,12 +284,11 @@ export default {
     },
     makeDownload: function () {
       let downloadUrl = this.getDownloadUrl();
-
+      //For short URLs we can use GET, otherwise we have to use POST and put parameters into body
       if (downloadUrl.length < 1000) {
         this.openUrl(downloadUrl);
       } else {
         let target = this.$parent.getDownloadUrl(false);
-        console.log(target);
         let html = `
           <form id="post-download-dummy" method="post" action="${target}">
             <input type="hidden" name="__columns" id="post-download-dummy-columns"/>

@@ -30,10 +30,4 @@
         <servlet-name>KtorServlet</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
-
-    <!--env-entry>
-        <env-entry-name>FHIR_SERVER_URL</env-entry-name>
-        <env-entry-value>https:://fodapl-fhir.ukmuenster.de/fhir</env-entry-value>
-        <env-entry-type>java.lang.String</env-entry-type>
-    </env-entry -->
 </web-app>

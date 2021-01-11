@@ -1,35 +1,34 @@
 import {KeyCode} from "monaco-editor";
 <template>
-    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-        <b-dropdown variant="link" toggle-class="text-decoration-none" no-caret>
-            <template v-slot:button-content>
-                <img src="logo.png" style="height:28px; width:28px;"/><span class="sr-only">FhirExtinguisher</span>
-            </template>
-            <b-dropdown-item href="#" v-b-modal.modal-cheat-sheet>FHIR Search Cheat Sheet</b-dropdown-item>
-            <b-dropdown-item href="#" v-b-modal.modal-query-save>Save query...</b-dropdown-item>
-            <b-dropdown-item href="#" v-b-modal.modal-query-load>Load query...</b-dropdown-item>
-            <b-dropdown-item href="#" v-b-modal.modal-about>About</b-dropdown-item>
-        </b-dropdown>
-        <a :href="endpointUrl" class="navbar-brand col-sm-3 col-md-3 mr-0" href="#" id="fhirServerUrl" target="_blank">{{endpointUrl}}</a>
-        <div aria-label="Search" class="form-control form-control-dark w-100" id="searchbar"
-             style="padding:0;margin:2px;">
-            SearchBar
-        </div>
-        <ul class="navbar-nav px-3">
-            <li class="nav-item text-nowrap">
-                <a @click="$emit('startRequest', editor.getValue())" class="nav-link" href="#">GET</a>
-            </li>
-        </ul>
-    </nav>
+  <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+    <b-dropdown variant="link" toggle-class="text-decoration-none" no-caret>
+      <template v-slot:button-content>
+        <img src="logo.png" style="height:28px; width:28px;"/><span class="sr-only">FhirExtinguisher</span>
+      </template>
+      <b-dropdown-item href="#" v-b-modal.modal-cheat-sheet>FHIR Search Cheat Sheet</b-dropdown-item>
+      <b-dropdown-item href="#" v-b-modal.modal-query-save>Save query...</b-dropdown-item>
+      <b-dropdown-item href="#" v-b-modal.modal-query-load>Load query...</b-dropdown-item>
+      <b-dropdown-item href="#" v-b-modal.modal-about>About</b-dropdown-item>
+    </b-dropdown>
+    <a :href="endpointUrl" class="navbar-brand col-sm-3 col-md-3 mr-0" href="#" id="fhirServerUrl"
+       target="_blank">{{ endpointUrl }}</a>
+    <div aria-label="Search" class="form-control form-control-dark w-100" id="searchbar"
+         style="padding:0;margin:2px;">
+      SearchBar
+    </div>
+    <ul class="navbar-nav px-3">
+      <li class="nav-item text-nowrap">
+        <a @click="$emit('startRequest', editor.getValue())" class="nav-link" href="#">GET</a>
+      </li>
+    </ul>
+  </nav>
 </template>
 
 <script lang="ts">
 import * as monaco from "monaco-editor";
-import {editor, IKeyboardEvent, KeyCode} from "monaco-editor";
+import {IKeyboardEvent, KeyCode} from "monaco-editor";
 import {URLCompletionItemProvider} from "../url-completionitemprovider";
 import {UrlTokensProvider} from "../url-grammar-antlr";
-
-type TableData = { records: string[][], fields: string[], metadata: any };
 
 
 export default {
@@ -39,9 +38,7 @@ export default {
     let that = this;
     this.editor = (function () {
       monaco.languages.register({id: 'url'});
-
       monaco.languages.setTokensProvider("url", new UrlTokensProvider());
-
       monaco.languages.registerCompletionItemProvider("url", new URLCompletionItemProvider());
 
       let literalFg = '#000000';
@@ -97,7 +94,6 @@ export default {
         (<any>window).searchEditor.layout();
       });
       // let myBinding = searchEditor.addCommand(monaco.KeyCode.Enter,
-      // );
       searchEditor.onKeyDown(function (e: IKeyboardEvent) {
         if (e.keyCode === KeyCode.Enter) {
           //TODO: Maybe there is a public API for this?
@@ -105,8 +101,6 @@ export default {
             that.$emit('startRequest', searchEditor.getValue());
             e.stopPropagation();
             e.preventDefault();
-          } else {
-
           }
         }
 
@@ -115,6 +109,7 @@ export default {
 
       return searchEditor;
     })();
+    /* prevent user from inserting newline via clipboard */
     window.addEventListener('paste', (e: ClipboardEvent) => {
       let items = e.clipboardData.items;
       if (this.editor.hasTextFocus()) {
@@ -125,31 +120,13 @@ export default {
         }, 250);
       }
     });
-    // let selection = this.editor.getSelection();
-    // for (let i = 0; i < items.length; i++) {
-    //   let item = items[0];
-    //   console.log("item", item)
-    //   if (item.type === "text/plain" || item.type === "vscode-editor-data") {
-    //     item.getAsString( (content)  => {
-    //       console.log("content", content);
-    //       this.editor.executeEdits("", [{
-    //           range: new monaco.Range(selection.endLineNumber, selection.endColumn, selection.endLineNumber, selection.endColumn),
-    //           text: content.replace("\n", "")
-    //         }])
-    //       let {endLineNumber, endColumn} = this.editor.getSelection()
-    //       this.editor.setPosition({lineNumber: endLineNumber, column: endColumn})
-    //     });
-    //   }
-    // }
-    // }
-    // });
   },
-        methods: {
-            setQueryUrl: function (url: string) {
-                this.editor.setValue(url);
-            }
-        }
+  methods: {
+    setQueryUrl: function (url: string) {
+      this.editor.setValue(url);
     }
+  }
+}
 
 
 </script>
