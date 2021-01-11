@@ -25,12 +25,12 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.3.0"
+    version = "1.4.0"
 }
 
 
 subprojects {
-    version = "1.3.0"
+    version = "1.4.0"
 }
 
 val ktor_version = "1.5.0"

@@ -74,22 +74,35 @@ By default, FhirExtinguisher assumes, the server is FHIR R4. If you want to conn
 `-v stu3` to the command line arguments.
 
 Available command line options:
+
 * `-f [url]` FHIR server URL
-* `-v ["r4"|"stu3"]` FHIR version of the server 
+* `-v ["r4"|"stu3"]` FHIR version of the server
 * `-a [username]:[password]` Basic authentication credentials, if required by FHIR server
-* `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available at `http://localhost:8080/`
+* `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available
+  at `http://localhost:8080/`
 * `-ext` Allow connections of non-localhost machines
 
 To stop the FhirExtinguisher, press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the command line window!
 
+## WAR deployment
+
+Besides running the FhirExtinguisher on your local machine using the built-in Jetty engine, it is also possible to
+deploy the FhirExtinguisher via Tomcat. Therefore, you can download the pre-compiled war file, open it as zip file and
+edit the parameters in `WEB-INF\classes\application.conf`. Currently, there seems to be a bug in ktor, which prevents
+the UI from loading if the FhirExtinguisher is not deployed on the root path. Also, having an Apache Web Server ahead of
+Tomcat can cause some issues when using AJP, so I recommend using plain HTTP instead. I will update this text as well as
+the Ktor version as soon as these issues are resolved.
+
 ### Usage by URL
-You can create your own links using the specifications above. In R, you can use 
-`data <- read.csv('http://localhost:8080/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always 
-start with a fresh version from the server. However, the FhirExtinguisher must be running during execution of the script. 
+
+You can create your own links using the specifications above. In R, you can use
+`data <- read.csv('http://localhost:8080/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always start
+with a fresh version from the server. However, the FhirExtinguisher must be running during execution of the script.
 
 You can create a link using the GUI and copy it into your R script.
 
 ### Graphical User Interface
+
 You can use the GUI, which will be available under `http://localhost:[portnumber]/`, to download/export a CSV.
 There, you can enter your query in the editor on the top using the [FHIR Search API](https://www.hl7.org/fhir/search.html) 
 and add the columns in the sidebar on the left. 
@@ -113,7 +126,6 @@ Custom functions introduced by FhirExtinguisher:
 * `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
 * `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
 * `stringify()` returns a recursive serialization of all the element's fields  
-
 
 # Authors
 * **Johannes Oehm** | (+49) 251 / 83-5 82 47 | johannes.oehm@uni-muenster.de
