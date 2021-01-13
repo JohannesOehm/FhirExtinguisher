@@ -93,10 +93,12 @@ the UI from loading if the FhirExtinguisher is not deployed on the root path. Al
 Tomcat can cause some issues when using AJP, so I recommend using plain HTTP instead. I will update this text as well as
 the Ktor version as soon as these issues are resolved.
 
-### Usage by URL
+## Usage
+
+### By URL
 
 You can create your own links using the specifications above. In R, you can use
-`data <- read.csv('http://localhost:8080/fhir/Patient?__limit=50&__columns=id@join(" "):Patient.id')` to always start
+`data <- read.csv('http://localhost:8080/fhir/Patient?__limit=50&__columns=id:Patient.id@join(" ")')` to always start
 with a fresh version from the server. However, the FhirExtinguisher must be running during execution of the script.
 
 You can create a link using the GUI and copy it into your R script.
