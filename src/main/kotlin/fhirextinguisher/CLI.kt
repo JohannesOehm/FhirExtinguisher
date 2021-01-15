@@ -65,12 +65,5 @@ fun main(args: Array<String>) {
         queryStorageFile = "savedQueries.csv"
     ).toInstanceConfiguration()
 
-    listOf(1, 2, 3).drop(3)
-
-
     embeddedServer(Netty, portnumber, module = application2(instanceConfiguration)).start(wait = true)
-}
-
-fun <T> List<T>.sublist(from: Int): List<T> {
-    return this.subList(2, this.size)
 }

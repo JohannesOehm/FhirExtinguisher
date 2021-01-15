@@ -3,6 +3,7 @@ package fhirextinguisher
 
 import io.ktor.application.*
 import io.ktor.client.*
+import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -104,7 +105,6 @@ fun application2(
             }.toString())
         }
         get("/") {
-            println("responded to '/'!!!!!")
             call.respondText(index_html(context.request.uri), contentType = ContentType.Text.Html)
         }
         static("/") {
@@ -132,7 +132,13 @@ fun isThisMyIpAddress(addr: InetAddress): Boolean {
 fun Routing.redirect(prefix: String, target: String) {
     route("$prefix/{...}") {
         handle {
-            val client = HttpClient()
+            val client = HttpClient(Apache) {
+                engine {
+                    connectTimeout = 30_000
+                    socketTimeout = 30_000
+                    connectionRequestTimeout = 30_000
+                }
+            }
 
             val originalUri = call.request.uri
 

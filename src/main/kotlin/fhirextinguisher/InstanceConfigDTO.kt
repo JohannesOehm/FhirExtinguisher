@@ -27,6 +27,8 @@ data class InstanceConfigDTO(
             listOf(BasicAuthInterceptor(username, passwd)) to BasicAuthData(username, passwd)
         } else emptyList<IClientInterceptor>() to null
 
+        fhirContext.restfulClientFactory.connectTimeout = 50_000
+        fhirContext.restfulClientFactory.socketTimeout = 50_000
         fhirContext.newRestfulGenericClient(fhirServerUrl).forceConformanceCheck()
 
         return InstanceConfiguration(
