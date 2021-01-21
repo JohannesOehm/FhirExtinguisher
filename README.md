@@ -120,7 +120,7 @@ Array fields are inserted like single elements, so there might be unintended beh
 In the searchbar, you can use <kbd>Ctrl</kbd>+<kbd>Space</kbd> for autocompletion. This is based on the server conformance 
 statement on HAPI FHIR using FHIR R4. Note that actual query options on your server might differ.
 
-# Useful FHIRPath expressions
+## Useful FHIRPath expressions
 * `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
 * `.resolve()` resolves a reference to another resource.
 
@@ -129,11 +129,11 @@ Custom functions introduced by FhirExtinguisher:
 * `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
 * `stringify()` returns a recursive serialization of all the element's fields  
 
-# Authors
+## Authors
 * **Johannes Oehm** | (+49) 251 / 83-5 82 47 | johannes.oehm@uni-muenster.de
 
-# License
+## License
 Apache Licence 2.0
 
-# Acknowledgement
+## Acknowledgement
 Supported by BMBF grant No. 01ZZ1802V (HiGHmed/Münster) 
