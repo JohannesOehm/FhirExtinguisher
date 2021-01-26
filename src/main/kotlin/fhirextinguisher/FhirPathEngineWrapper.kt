@@ -5,8 +5,16 @@ import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.instance.model.api.IBaseResource
+import java.util.*
+
 
 private val log = KotlinLogging.logger {}
+
+class MaxSizeHashMap<K, V>(private val maxSize: Int) : LinkedHashMap<K, V>() {
+    override fun removeEldestEntry(eldest: Map.Entry<K, V>): Boolean {
+        return size > maxSize
+    }
+}
 
 /**
  * There is also the {@link FhirContext#fluentPath}
@@ -21,7 +29,8 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
 
     abstract fun convertToString(base: IBase): String
 
-    private val cache = mutableMapOf<String, IBaseResource>()
+    private val cache = MaxSizeHashMap<String, IBaseResource>(1000)
+
 
     fun resolve(url: String?): IBaseResource? {
         if (url == null) {

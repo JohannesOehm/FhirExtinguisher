@@ -63,7 +63,8 @@ export default {
           this.text = await response.json();
         } else {
           this.text = [];
-          this.error = await response.text();
+          this.error = response.status;
+          this.error = response.status + "\n" + await response.text();
         }
       } catch (e) {
         this.text = [];
