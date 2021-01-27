@@ -128,8 +128,8 @@ type ParsedUrl = { limit: number, url: string, columns: Column[] };
 
 export function parseLink(link: string): ParsedUrl {
   let urlToParse: string;
-  if (link.indexOf("/fhir/") != null) {
-    urlToParse = link.substring(link.indexOf("/fhir/") + "/fhir/".length);
+  if (link.indexOf("fhir/") != -1) {
+    urlToParse = link.substring(link.indexOf("fhir/") + "fhir/".length);
   } else {
     urlToParse = link;
   }
@@ -251,7 +251,7 @@ export default {
       this.resource = value;
       this.$bvModal.show('modal-show-resource');
     },
-    updateColumns: function (columns: Column[], replace: Boolean) {
+    updateColumns: function (columns: VmColumn[], replace: Boolean) {
       if (replace) {
         this.columns = [];
       }
@@ -272,7 +272,7 @@ export default {
         console.log(e);
       }
       try {
-        this.updateColumns(parseLink(link).columns, true);
+        this.updateColumns(parseLink(link).columns.map((it: Column) => convertToVmColumn(it)), true);
       } catch (e) {
         console.log(e);
       }

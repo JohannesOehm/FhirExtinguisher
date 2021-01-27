@@ -171,13 +171,17 @@ export default {
   mounted: function () {
     fetch("redirect/Questionnaire?_summary=true")
         .then(res => res.json())
-        .then(res => {
-          this.questionnaires = res.entry.map((it: any) => ({
-            id: it.resource.id,
-            url: it.resource.url,
-            title: it.resource.title,
-            fullUrl: it.fullUrl
-          }));
+        .then(bundle => {
+          if (bundle.total === 0) { //res.entry might be undefined in this case just use a empty list
+            this.questionnaires = [];
+          } else {
+            this.questionnaires = bundle.entry.map((it: any) => ({
+              id: it.resource.id,
+              url: it.resource.url,
+              title: it.resource.title,
+              fullUrl: it.fullUrl
+            }));
+          }
         });
   }
 }
