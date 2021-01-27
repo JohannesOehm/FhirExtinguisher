@@ -17,7 +17,9 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -72,12 +74,26 @@ fun application2(
         post("/processBundle") {
             fhirExtinguisher.processBundle(call)
         }
+        get("/fhirPath") {
+            val expr = call.parameters["expr"]
+            if (expr == null) {
+                call.respondText("GET-param 'expr' must be set!", status = HttpStatusCode.BadRequest)
+            } else {
+                try {
+                    fhirExtinguisher.fhirPathEngine.parseExpression(expr)
+                    call.respondText("OK", contentType = ContentType.Text.Plain)
+                } catch (e: FHIRException) {
+                    call.respondText(e.message ?: e.toString(), ContentType.Text.Plain, HttpStatusCode.BadRequest)
+                }
+            }
+        }
         post("/fhirPath") {
             val expr = call.parameters["expr"]
             if (expr == null) {
                 call.respondText("GET-param 'expr' must be set!", status = HttpStatusCode.BadRequest)
             } else {
-                val resource = instanceConfiguration.fhirVersion.newJsonParser().parseResource(call.receiveStream())
+                val jsonParser = instanceConfiguration.fhirVersion.newJsonParser()
+                val resource = withContext(Dispatchers.IO) { jsonParser.parseResource(call.receiveStream()) }
                 val expressionWrapper = try {
                     fhirExtinguisher.fhirPathEngine.parseExpression(expr)
                 } catch (e: FHIRException) {

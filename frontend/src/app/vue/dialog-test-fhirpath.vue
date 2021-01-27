@@ -61,10 +61,13 @@ export default {
         if (response.status == 200) {
           this.error = null;
           this.text = await response.json();
+        } else if (response.status == 400) {
+          this.text = [];
+          this.error = await response.text();
         } else {
           this.text = [];
-          this.error = response.status;
-          this.error = response.status + "\n" + await response.text();
+          this.error = response.status + " " + response.statusText;
+          this.error += await response.text();
         }
       } catch (e) {
         this.text = [];
