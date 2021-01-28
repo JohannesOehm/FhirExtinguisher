@@ -84,6 +84,8 @@ fun application2(
                     call.respondText("OK", contentType = ContentType.Text.Plain)
                 } catch (e: FHIRException) {
                     call.respondText(e.message ?: e.toString(), ContentType.Text.Plain, HttpStatusCode.BadRequest)
+                } catch (e: NullPointerException) {
+                    call.respondText("Invalid FHIRPath expression!", ContentType.Text.Plain, HttpStatusCode.BadRequest)
                 }
             }
         }

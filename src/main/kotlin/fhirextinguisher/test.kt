@@ -16,7 +16,10 @@ fun main() {
         }
 
         override fun executeFunction(
-            appContext: Any?, functionName: String, parameters: MutableList<MutableList<Base>>
+            appContext: Any?,
+            focus: MutableList<Base>?,
+            functionName: String?,
+            parameters: MutableList<MutableList<Base>>
         ): MutableList<Base> {
             return mutableListOf<Base>()
         }

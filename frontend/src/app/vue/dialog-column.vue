@@ -50,8 +50,10 @@
           <!-- div class="border" id="fhirPathEditor" style="min-height:38px;"><span
                   onclick="loadFhirPathMonaco();">Patient.name.first().given.first()</span></div -->
           <input class="form-control" id="addColumnExpression" type="text"
-                 v-model="expression"
-                 value='join(", ")'>
+                 v-model="expression" v-on:keyup="evaluateExpression(expression)">
+          <small class="form-text">
+            <span class="text-danger" v-if="error != null">{{ error }}</span>
+          </small>
           <small class="form-text">
             <a class="text-muted" href="http://hl7.org/fhirpath/"
                target="_blank">Open FHIRPath Specification...</a>
@@ -114,18 +116,20 @@
 <script lang="ts">
 import * as $ from 'jquery';
 import {VmColumn, VmSubColumn} from "./my-app.vue";
+import * as _ from "lodash";
 
 
 export default {
   name: "DialogColumn",
-  data: function (): { name: string, type: string, joinStr: string, expression: string, subcolumns: VmSubColumn[], discriminator: string } {
+  data: function (): { name: string, type: string, joinStr: string, expression: string, subcolumns: VmSubColumn[], discriminator: string, error: string | null } {
     return {
       name: "",
       type: "join",
       joinStr: ", ",
       expression: "",
       subcolumns: [],
-      discriminator: "%index"
+      discriminator: "%index",
+      error: null
     }
   },
   methods: {
@@ -155,7 +159,23 @@ export default {
     },
     removeSubColumn: function (index: number) {
       this.subcolumns.splice(index, 1)
-    }
+    },
+    evaluateExpression: _.debounce(async function (fhirpath: string): Promise<void> {
+      try {
+        let response = await fetch("fhirPath?expr=" + encodeURIComponent(fhirpath))
+        if (response.status == 200) {
+          this.error = null;
+        } else if (response.status == 400) {
+          this.error = await response.text();
+        } else {
+          this.error = response.status + " " + response.statusText;
+          this.error += await response.text();
+        }
+      } catch (e) {
+        this.error = e.toString();
+      }
+
+    }, 300)
   },
   watch: {
     visible: function (newData: boolean, oldData: boolean) {

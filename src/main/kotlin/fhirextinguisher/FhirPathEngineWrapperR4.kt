@@ -49,7 +49,10 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
 
             override fun executeFunction(
-                appContext: Any?, functionName: String, parameters: MutableList<MutableList<Base>>
+                appContext: Any?,
+                focus: MutableList<Base>?,
+                functionName: String?,
+                parameters: MutableList<MutableList<Base>>
             ): MutableList<Base> {
                 return when (functionName) {
                     "getIdPart" -> parameters[0].map { StringType((it as IdType).idPart) }.toMutableList()
@@ -58,6 +61,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                     else -> mutableListOf<Base>()
                 }
             }
+
 
             override fun checkFunction(
                 appContext: Any?,
