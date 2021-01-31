@@ -276,11 +276,15 @@ export default {
       }
 
 
-      copyStringToClipboard(tmp + `data <- read.csv("${escapeRString(this.getDownloadLink())}",
-        header=TRUE, encoding="UTF-8",
-        colClasses = c(${Object.entries(rTypes).filter(([name, _]) => name != "$raw")
-          .map(([name, type]) => `"${escapeRString(name)}"="${type !== "DATE" ? type.toLowerCase() : "Date"}"`).join(",")})
-      );`);
+      copyStringToClipboard(tmp +
+          `data <- read.csv("${escapeRString(this.getDownloadLink())}",
+  header=TRUE, encoding="UTF-8",
+  colClasses = c(${Object.entries(rTypes).filter(([name, _]) => name != "$raw")
+              .map(([name, type]) => `"${escapeRString(name)}"="${type !== "DATE" ? type.toLowerCase() : "Date"}"`).join(",")})
+  );
+  # Please note that downloading huge amounts of data might take some time and R might give you a timeout.
+  # In this case, please use either your browser to download a file or a library like RCurl where timeout is configurable.
+`);
     },
     makeDownload: function () {
       let downloadUrl = this.getDownloadUrl();
