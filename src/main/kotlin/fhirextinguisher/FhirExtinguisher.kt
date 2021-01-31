@@ -213,8 +213,12 @@ class FhirExtinguisher(
             .partition {
                 listOf("__csvFormat", "__limit", "__columns").any { prefix -> it.key.startsWith(prefix) }
             }
-        val fhirParams = passThruParams.flatMap { (key, value) -> value.map { "$key=$it" } }
-            .joinToString("&")
+
+        val fhirParams = Parameters.build {
+            for (passThruParam in passThruParams) {
+                appendAll(passThruParam.key, passThruParam.value)
+            }
+        }.formUrlEncode()
         return fhirParams to parseMyParams(myParams)
     }
 
