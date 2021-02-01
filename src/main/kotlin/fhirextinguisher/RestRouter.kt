@@ -240,6 +240,7 @@ fun index_html(baseHref: String = "/") = """<!doctype html>
 </head>
 <body>
 <div id="app"></div>
+<script>window.process = {env: {NODE_DEBUG: false}} //Hack to resolve problem with npm package "util"</script>
 <script src="bundle.js"></script>
 </body>
 </html>"""

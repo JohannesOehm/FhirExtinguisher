@@ -340,7 +340,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     }
 
     /**
-     * null is wildcard
+     * null is wildcard (search is not constraining resource type(s))
      */
     private getResourceName(textUntilPosition: string): string[] | null {
         let resourceName: string;

@@ -14,6 +14,7 @@ Vue.use(ModalPlugin);
 
 
 new Vue({
+    // @ts-ignore
     render: h => h(App)
 }).$mount("#app");
 

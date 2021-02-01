@@ -20,6 +20,9 @@ module.exports = {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
                 exclude: /node_modules/,
+                // resolve: {
+                //     fallback: {assert: false}
+                // },
                 options: {
                     appendTsSuffixTo: [/\.vue$/]
                 }
@@ -36,10 +39,12 @@ module.exports = {
         new MonacoWebpackPlugin({
             languages: ['json', 'xml', 'html']
         }),
-        new CopyPlugin([
-            {from: 'src/public', to: ''},
-            {from: 'src/style', to: ''},
-        ]),
+        new CopyPlugin({
+            patterns: [
+                {from: 'src/style', to: ''},
+                {from: 'src/public', to: ''}
+            ]
+        }),
         new webpack.ProvidePlugin({
             $: "jquery",
             jQuery: "jquery"
