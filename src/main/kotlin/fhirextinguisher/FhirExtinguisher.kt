@@ -15,6 +15,7 @@ import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBaseResource
+import org.hl7.fhir.r4.model.*
 import parseColumns
 import java.net.URI
 import java.time.LocalDateTime
@@ -86,10 +87,11 @@ class FhirExtinguisher(
 
         val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
         val bundleWrapper = BundleWrapper(bundleDefinition, resource)
+        cacheBundleReference(bundleWrapper, myParams.columns!!)
         val resultTables = mutableListOf<SubTable>()
         for (bundleEntry in bundleWrapper.entry) {
             resultTables += processBundleEntry(
-                myParams.columns!!,
+                myParams.columns,
                 bundleEntry,
                 jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource)
             )
@@ -101,14 +103,15 @@ class FhirExtinguisher(
         )
         resultTable.print(printer)
         val text = sb.toString()
-        log.debug { "Processed bundle to $text" }
         call.respondText(text) //TODO: Streamify this
+        fhirPathEngine.clearCache()
     }
 
     /**
      * Redirect request to the FHIR server and fetch bundles from there
      */
     suspend fun processUrl(call: ApplicationCall) {
+        fhirPathEngine.clearCache()
         val bundleUrl = URI(call.request.uri.substringAfter("/fhir/")).path
 
         val (fhirParams, myParams) = if (call.request.httpMethod == HttpMethod.Post) {
@@ -139,6 +142,7 @@ class FhirExtinguisher(
             call.respondText(text = sb.toString(), contentType = ContentType.Text.CSV)
         } catch (e: Exception) {
             log.error(e) { "An error occured while serving $bundleUrl!" }
+            fhirPathEngine.clearCache()
             return call.respond(
                 HttpStatusCode.InternalServerError,
                 "Error: " + e.message
@@ -174,6 +178,7 @@ class FhirExtinguisher(
             val bundle = fhirClient.fetchResourceFromUrl(bundleClass, nextUrl)
             val bundleWrapper = BundleWrapper(bundleDefintion, bundle)
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
+            cacheBundleReference(bundleWrapper, columns)
             for (bundleEntry in bundleWrapper.entry) {
                 subtables += processBundleEntry(columns, bundleEntry)
                 count++
@@ -184,6 +189,33 @@ class FhirExtinguisher(
         } while (nextUrl != null)
 
         return ResultTable(subtables)
+    }
+
+    private fun cacheBundleReference(bundle: BundleWrapper, columns: List<Column>) {
+        try {
+            if (fhirPathEngine !is FhirPathEngineWrapperR4) return
+            val columns2 = columns.filter { it.expression.contains("resolve") }
+
+            val references = mutableListOf<String>()
+            for (entry in bundle.entry) {
+                for (column in columns2) {
+                    references.addAll(fhirPathEngine.extractReference(entry.resource as Base, column.expression))
+                }
+            }
+            val referencesByType = references.map { IdType(it) }.groupBy { it.resourceType }
+            for ((type, references) in referencesByType) {
+                val ids = references.map { it.idPart }.distinct()
+                log.info { "Resolving $type $ids from server!" }
+                val bundle2 =
+                    fhirClient.search<Bundle>().forResource(type).where(BaseResource.RES_ID.exactly().codes(ids))
+                        .count(1000).execute()
+                bundle2.entry.map { it.resource }
+                    .forEach { fhirPathEngine.addCacheEntry(type + "/" + it.idElement.idPart, it) }
+            }
+        } catch (e: Exception) {
+            log.debug(e) { "Cannot pre-fetch resources" }
+        }
+
     }
 
 
@@ -240,5 +272,6 @@ class FhirExtinguisher(
 
         return MyParams(csvFormat, limit, columns?.toList())
     }
+
 
 }

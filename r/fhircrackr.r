@@ -1,3 +1,5 @@
+library(fhircrackr)
+
 #create example bundle with multiple entries
 
 bundle <- xml2::read_xml(

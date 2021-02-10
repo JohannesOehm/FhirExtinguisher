@@ -31,13 +31,22 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
 
     private val cache = MaxSizeHashMap<String, IBaseResource>(1000)
 
+    fun clearCache() {
+        cache.clear()
+    }
+
+    fun addCacheEntry(id: String, base: IBaseResource) {
+        log.debug { "addCacheEntry('$id', $base). cache.size = ${cache.size}" }
+        cache[id] = base
+    }
+
 
     fun resolve(url: String?): IBaseResource? {
         if (url == null) {
             return null
         }
 
-        return try {
+        try {
             val reference = if (url.startsWith(fhirClient.serverBase)) {
                 url.substring(fhirClient.serverBase.length) //Vonk includes servername in references
             } else {
@@ -45,7 +54,7 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
             }.dropWhile { it == '/' } //remove any leading slashes
 
             return if (cache.containsKey(reference)) {
-                log.info { "Resolving reference '$url' from cache" }
+                log.debug { "Resolving reference '$url' from cache" }
                 cache[reference]
             } else {
                 log.info { "Resolving reference '$url' from server" }

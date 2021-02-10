@@ -25,12 +25,12 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.4.2"
+    version = "1.5.0"
 }
 
 
 subprojects {
-    version = "1.4.2"
+    version = "1.5.0"
 }
 
 val ktor_version = "1.5.0"
@@ -49,6 +49,8 @@ dependencies {
     implementation("ca.uhn.hapi.fhir", "hapi-fhir-client", "5.2.1")
     implementation("ca.uhn.hapi.fhir", "hapi-fhir-structures-r4", "5.2.1")
     implementation("ca.uhn.hapi.fhir", "hapi-fhir-structures-dstu3", "5.2.1")
+//    implementation("ca.uhn.hapi.fhir", "hapi-fhir-validation", "5.2.1")
+//    implementation("ca.uhn.hapi.fhir", "hapi-fhir-validation-resources-r4", "5.2.1")
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.3")
     implementation("org.apache.commons", "commons-csv", "1.5")
