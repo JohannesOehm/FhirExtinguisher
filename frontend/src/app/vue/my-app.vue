@@ -20,9 +20,9 @@
     <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
     <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
     <DialogCheatSheet/>
-    <DialogShowResource :resource="resource" ref="modalResource"/>
+    <DialogShowResource :resource="resource" ref="modalResource" :endpointUrl="endpointUrl"/>
     <DialogAbout/>
-    <DialogQueryLoad @import-link="importLink"/>
+    <DialogQueryLoad @import-link="importLink" @start-request="handleRequest"/>
     <DialogQuerySave/>
     <DialogTestFhirpath :resource="resource"/>
   </div>

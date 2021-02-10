@@ -44,6 +44,7 @@ export default {
                     // }
 
                     this.$emit("import-link", this.query.url);
+                  this.$emit("start-request")
                 }
             },
             handleChange: function (e: any) {
