@@ -178,11 +178,13 @@ fun Routing.redirect(prefix: String, target: String) {
                 //TODO: Find a solution that works in tomcat behind AJP reverse proxy but does not block
                 val bytes = runBlocking { response.content.toByteArray() }
 
-//                proxiedHeaders.filter { key, value ->  key.equals(HttpHeaders.ContentType, ignoreCase = true)
-//                                   && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
-//                                   && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)}.forEach { key, value ->
-//                    call.response.header(key, value)
-//                }
+                proxiedHeaders.filter { key, value ->
+                    !key.equals(HttpHeaders.ContentType, ignoreCase = true)
+                            && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                            && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)
+                }.forEach { key, value ->
+                    value.forEach { call.response.header(key, it) }
+                }
                 call.respondBytes(
                     bytes = bytes,
                     contentType = contentType?.let { ContentType.parse(it) },

@@ -74,7 +74,7 @@ class FhirExtinguisher(
             resourceString = call.receiveText()
         }
 
-        val resource = if (resourceType == "application/json") {
+        val resource = if (ContentType.parse(resourceType).contentSubtype == "json") {
             jsonParser.parseResource(resourceString)
         } else {
             fhirContext.newXmlParser().parseResource(resourceString)

@@ -191,7 +191,7 @@ export default {
           method: 'POST',
           body: this.rawData,
           headers: {
-            "Content-Type": resourceFormat,
+            "Content-Type": resourceFormat + "; charset=utf-8",
           }
         });
       } else {
