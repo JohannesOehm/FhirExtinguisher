@@ -165,11 +165,11 @@ export default {
   name: "MyApp",
   data: function (): { resource: string, limit: number, columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
     return {
-      columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(Patient.id)"},
+      columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(id)"},
         {
           name: "ssn",
           type: 'join(" ")',
-          expression: "Patient.identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
+          expression: "identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
         }, {
           name: "name", type: "explodeWide", expression: "Patient.name", subColumns: [
             {name: "$disc", "expression": "$this.use"},
@@ -179,7 +179,7 @@ export default {
         }, {
           name: "managingOrganization",
           type: 'join(" ")',
-          expression: "Patient.managingOrganization.resolve().name"
+          expression: "managingOrganization.resolve().name"
         },
       ],
       rawData: null,

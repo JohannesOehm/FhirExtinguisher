@@ -17,7 +17,6 @@ import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.*
 import parseColumns
-import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -112,7 +111,7 @@ class FhirExtinguisher(
      */
     suspend fun processUrl(call: ApplicationCall) {
         fhirPathEngine.clearCache()
-        val bundleUrl = URI(call.request.uri.substringAfter("/fhir/")).path
+        val bundleUrl = Url(call.request.uri.substringAfter("/fhir/")).encodedPath
 
         val (fhirParams, myParams) = if (call.request.httpMethod == HttpMethod.Post) {
             processQueryParams(call.receiveParameters())

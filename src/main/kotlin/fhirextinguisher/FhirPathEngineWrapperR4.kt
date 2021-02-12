@@ -127,7 +127,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                 parameters: MutableList<MutableList<Base>>
             ): MutableList<Base> {
                 return when (functionName) {
-                    "getIdPart" -> parameters[0].map { StringType((it as IdType).idPart) }.toMutableList()
+                    "getIdPart" -> parameters[0].map { getIdPart(it) }.toMutableList()
                     "getChildFields" -> parameters[0][0].children().map { StringType(it.name) }.toMutableList()
                     "stringify" -> parameters[0].map { StringType(stringifyElement(it)) }.toMutableList()
                     else -> mutableListOf<Base>()
@@ -174,7 +174,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
         }
 
         engine2.hostServices = object : FHIRPathEngine.IEvaluationContext {
-            override fun resolveFunction(functionName: String?) = TODO()
+            override fun resolveFunction(functionName: String?) = null
             override fun executeFunction(
                 appContext: Any?,
                 focus: MutableList<Base>?,
@@ -186,12 +186,12 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                 appContext: Any?,
                 functionName: String?,
                 parameters: MutableList<TypeDetails>?
-            ): TypeDetails = TODO("not implemented")
+            ): TypeDetails? = null
 
             override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean) = null
             override fun log(argument: String?, focus: MutableList<Base>?): Boolean = true
             override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
-                TODO("not implemented")
+                true
 
             override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails = TODO("not implemented")
             override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
@@ -204,6 +204,17 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
         }
 
+    }
+
+    private fun getIdPart(it: Base): StringType {
+        return when (it) {
+            is IdType -> StringType(it.idPart)
+            is StringType -> StringType(IdType(it.value).idPart)
+            is Reference -> StringType(IdType(it.reference).idPart) //TODO: What if identifier is provided and not reference
+            is Identifier -> StringType(it.value)
+            else -> StringType(it.toString())
+
+        }
     }
 
     private fun stringifyElement(it: Base): String? {
