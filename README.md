@@ -62,11 +62,11 @@ webpack error message.
 
 ## Building with Docker
 ###Build the image
-docker build --tag fireextinguisher .
+`docker build --tag fireextinguisher .`
 
 ###Start the image in a container
 
-docker run -p 8080:8080 --name fireextinguisher fireextinguisher -f http://hapi.fhir.org/baseR4 -p 8080 -ext
+`docker run -p 8080:8080 --name fireextinguisher fireextinguisher -f http://hapi.fhir.org/baseR4 -p 8080 -ext`
 
 #### Frontend Development
 You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend. Note 
