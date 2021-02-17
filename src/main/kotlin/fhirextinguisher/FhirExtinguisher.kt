@@ -6,6 +6,7 @@ import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.http.Parameters
 import io.ktor.request.*
 import io.ktor.response.*
 import kotlinx.serialization.builtins.MapSerializer
