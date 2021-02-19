@@ -54,29 +54,41 @@ Requirements: **Java 8, npm 6.13.x**
 
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
 
-At the first time, to compile the frontend, you have to run `npm install` (and eventually `npm install --only=dev`) in the 
-`/frontend` folder, as well as `npm run antlr4ts`, since the gradle build script will only invoke webpack and copy the files into the .jar file. 
+At the first time, to compile the frontend, you have to run `npm install` (and eventually `npm install --only=dev`) in
+the
+`/frontend` folder, as well as `npm run antlr4ts`, since the gradle build script will only invoke webpack and copy the
+files into the .jar file.
 
-If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"` for the 
-webpack error message.
+If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"`
+for the webpack error message.
 
 ## Building with Docker
-###Build the image
-`docker build --tag fireextinguisher .`
 
-###Start the image in a container
+### Build the image
 
-`docker run -p 8080:8080 --name fireextinguisher fireextinguisher -f http://hapi.fhir.org/baseR4 -p 8080 -ext`
+Check out the repository, run  `docker build --tag fhirextinguisher .`
 
-#### Frontend Development
-You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend. Note 
-that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is quite nice.
+### Start the image in a container
 
-## Running 
+Use `docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher fhirextinguisher -f http://hapi.fhir.org/baseR4 -p 8080 -ext`
+to start and `docker stop fhirextinguisher` to stop. Use `docker ps` to check if container is running.
+
+### Pull from docker hub
+
+`docker pull wwuimi/fhirextinguisher`
+
+## Frontend Development
+
+You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend.
+Note that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is
+quite nice.
+
+## Running
+
 Requirements: **Java 8**, GUI tested with **Firefox** and **Chrome**
 
-Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server on port 8080
-on your local machine and connect to the public FHIR R4 server. 
+Use `java -jar FhirExtinguisher-<version>-all.jar -f http://hapi.fhir.org/baseR4 -p 8080` to start the server on port
+8080 on your local machine and connect to the public FHIR R4 server.
 
 By default, FhirExtinguisher assumes, the server is FHIR R4. If you want to connect with a (D)STU3 server, please add 
 `-v stu3` to the command line arguments.
