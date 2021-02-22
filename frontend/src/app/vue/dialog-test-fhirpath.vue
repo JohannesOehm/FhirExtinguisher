@@ -36,8 +36,8 @@ import * as _ from "lodash";
 
 export default {
   name: "DialogTestFhirpath",
-  data: function (): { fhirpath: string, text: string[], error: string | null, stringify: boolean } {
-    return {fhirpath: "$this", text: [], error: null, stringify: true}
+  data: function (): { text: string[], error: string | null, stringify: boolean } {
+    return {text: [], error: null, stringify: true}
   },
   mounted() {
     this.$root.$on('bv::modal::shown', (bvEvent: any, modalId: any) => {
@@ -46,7 +46,7 @@ export default {
       }
     })
   },
-  props: ["resource"],
+  props: ["resource", "fhirpath"],
   methods: {
     evaluateExpression: _.debounce(async function (fhirpath: string, resource: string, stringify: boolean): Promise<void> {
       try {

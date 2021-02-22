@@ -25,12 +25,12 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.5.1"
+    version = "1.5.3"
 }
 
 
 subprojects {
-    version = "1.5.1"
+    version = "1.5.3"
 }
 
 val ktor_version = "1.5.0"
@@ -58,6 +58,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-client:$ktor_version")
     implementation("io.ktor:ktor-client-apache:$ktor_version")
+    implementation("io.ktor:ktor-client-auth-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-servlet:$ktor_version")
     antlr("org.antlr:antlr4:4.8")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")

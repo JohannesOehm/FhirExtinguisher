@@ -35,6 +35,7 @@ data class InstanceConfigDTO(
             fhirServerUrl,
             fhirContext,
             interceptors,
+            basicAuth,
             blockExternalRequests,
             File(queryStorageFile)
         )
@@ -50,6 +51,7 @@ data class InstanceConfiguration(
     val fhirServerUrl: String,
     val fhirVersion: FhirContext,
     val interceptors: List<IClientInterceptor>,
+    val basicAuth: BasicAuthData?,
     val blockExternalRequests: Boolean,
     val queryStorageFile: File
 )

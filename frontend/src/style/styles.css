@@ -134,3 +134,8 @@ body {
 .monaco-aria-container {
     display: none;
 }
+
+.show-resource-json-key:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}

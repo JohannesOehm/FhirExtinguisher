@@ -20,11 +20,12 @@
     <DialogQuestionnaireTs @start-request="handleRequest" @update-columns="updateColumns" @update-url="updateUrl"/>
     <DialogResource :fhirVersion="fhirVersion" @update-columns="updateColumns"/>
     <DialogCheatSheet/>
-    <DialogShowResource :resource="resource" ref="modalResource" :endpointUrl="endpointUrl"/>
+    <DialogShowResource :resource="resource" ref="modalResource" :endpointUrl="endpointUrl"
+                        v-on:test-fhirpath="handleTestFhirpathResource"/>
     <DialogAbout/>
     <DialogQueryLoad @import-link="importLink" @start-request="handleRequest"/>
     <DialogQuerySave/>
-    <DialogTestFhirpath :resource="resource"/>
+    <DialogTestFhirpath :resource="resource" :fhirpath="fhirpathToTest"/>
   </div>
 </template>
 
@@ -163,7 +164,7 @@ type DialogConfig = {
 
 export default {
   name: "MyApp",
-  data: function (): { resource: string, limit: number, columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
+  data: function (): { resource: string, fhirpathToTest: string, limit: number, columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
     return {
       columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(id)"},
         {
@@ -187,6 +188,7 @@ export default {
       fhirVersion: "r4",
       fhirQuery: "",
       resource: "",
+      fhirpathToTest: "$this",
       dialog: {
         title: "",
         mode: "add",
@@ -250,6 +252,11 @@ export default {
     handleShowResource: function (value: string) {
       this.resource = value;
       this.$bvModal.show('modal-show-resource');
+    },
+    handleTestFhirpathResource: function (resource: string, fhirpath: string) {
+      this.resource = resource;
+      this.fhirpathToTest = fhirpath;
+      this.$bvModal.show('modal-test-fhirpath');
     },
     updateColumns: function (columns: VmColumn[], replace: Boolean) {
       if (replace) {

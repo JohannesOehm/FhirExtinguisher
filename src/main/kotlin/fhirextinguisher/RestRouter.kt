@@ -5,6 +5,8 @@ import io.ktor.application.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
+import io.ktor.client.features.auth.*
+import io.ktor.client.features.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.features.*
@@ -69,7 +71,7 @@ fun application2(
             }
         }
 
-        redirect("/redirect", instanceConfiguration.fhirServerUrl)
+        redirect("/redirect", instanceConfiguration.fhirServerUrl, instanceConfiguration.basicAuth)
         savedQueries("/query-storage", instanceConfiguration.queryStorageFile)
         post("/processBundle") {
             fhirExtinguisher.processBundle(call)
@@ -147,7 +149,7 @@ fun isThisMyIpAddress(addr: InetAddress): Boolean {
 /**
  * Reverse proxy method
  */
-fun Routing.redirect(prefix: String, target: String) {
+fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData? = null) {
     route("$prefix/{...}") {
         handle {
             val client = HttpClient(Apache) {
@@ -155,6 +157,15 @@ fun Routing.redirect(prefix: String, target: String) {
                     connectTimeout = 30_000
                     socketTimeout = 30_000
                     connectionRequestTimeout = 30_000
+                }
+                if (basicAuth != null) {
+                    install(Auth) {
+                        basic {
+                            username = basicAuth.username
+                            password = basicAuth.password
+                            sendWithoutRequest = true
+                        }
+                    }
                 }
             }
 

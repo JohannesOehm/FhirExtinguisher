@@ -68,14 +68,14 @@ for the webpack error message.
 
 Check out the repository, run  `docker build --tag fhirextinguisher .`
 
+### Pull from Docker Hub
+
+`docker pull wwuimi/fhirextinguisher`
+
 ### Start the image in a container
 
 Use `docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher fhirextinguisher -f http://hapi.fhir.org/baseR4 -p 8080 -ext`
 to start and `docker stop fhirextinguisher` to stop. Use `docker ps` to check if container is running.
-
-### Pull from docker hub
-
-`docker pull wwuimi/fhirextinguisher`
 
 ## Frontend Development
 
