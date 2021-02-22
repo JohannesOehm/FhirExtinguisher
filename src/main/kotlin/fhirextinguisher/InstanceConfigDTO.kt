@@ -9,6 +9,7 @@ data class InstanceConfigDTO(
     val fhirServerUrl: String,
     val fhirVersion: String? = null,
     val basicAuth: String?,
+    val timeoutInMillis: Int,
     val blockExternalRequests: Boolean,
     val queryStorageFile: String,
 ) {
@@ -27,8 +28,8 @@ data class InstanceConfigDTO(
             listOf(BasicAuthInterceptor(username, passwd)) to BasicAuthData(username, passwd)
         } else emptyList<IClientInterceptor>() to null
 
-        fhirContext.restfulClientFactory.connectTimeout = 60_000
-        fhirContext.restfulClientFactory.socketTimeout = 60_000
+        fhirContext.restfulClientFactory.connectTimeout = timeoutInMillis
+        fhirContext.restfulClientFactory.socketTimeout = timeoutInMillis
         fhirContext.newRestfulGenericClient(fhirServerUrl).forceConformanceCheck()
 
         return InstanceConfiguration(
@@ -36,6 +37,7 @@ data class InstanceConfigDTO(
             fhirContext,
             interceptors,
             basicAuth,
+            timeoutInMillis,
             blockExternalRequests,
             File(queryStorageFile)
         )
@@ -52,6 +54,7 @@ data class InstanceConfiguration(
     val fhirVersion: FhirContext,
     val interceptors: List<IClientInterceptor>,
     val basicAuth: BasicAuthData?,
+    val timeoutInMillis: Int,
     val blockExternalRequests: Boolean,
     val queryStorageFile: File
 )

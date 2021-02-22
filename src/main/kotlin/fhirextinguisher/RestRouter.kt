@@ -45,6 +45,7 @@ fun Application.application() {
         fhirVersion = myConfig.propertyOrNull("fhirVersion")?.getString()!!,
         basicAuth = myConfig.propertyOrNull("authorization")?.getString(),
         queryStorageFile = myConfig.propertyOrNull("queryStorage")?.getString()!!,
+        timeoutInMillis = 60_000,
         blockExternalRequests = false
     ).toInstanceConfiguration()
     application2(instanceConfiguration)()
@@ -71,7 +72,12 @@ fun application2(
             }
         }
 
-        redirect("/redirect", instanceConfiguration.fhirServerUrl, instanceConfiguration.basicAuth)
+        redirect(
+            "/redirect",
+            instanceConfiguration.fhirServerUrl,
+            instanceConfiguration.basicAuth,
+            instanceConfiguration.timeoutInMillis
+        )
         savedQueries("/query-storage", instanceConfiguration.queryStorageFile)
         post("/processBundle") {
             fhirExtinguisher.processBundle(call)
@@ -149,14 +155,14 @@ fun isThisMyIpAddress(addr: InetAddress): Boolean {
 /**
  * Reverse proxy method
  */
-fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData? = null) {
+fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData?, timeoutInMillis: Int) {
     route("$prefix/{...}") {
         handle {
             val client = HttpClient(Apache) {
                 engine {
-                    connectTimeout = 60_000
-                    socketTimeout = 60_000
-                    connectionRequestTimeout = 60_000
+                    connectTimeout = timeoutInMillis
+                    socketTimeout = timeoutInMillis
+                    connectionRequestTimeout = timeoutInMillis
                 }
                 if (basicAuth != null) {
                     install(Auth) {

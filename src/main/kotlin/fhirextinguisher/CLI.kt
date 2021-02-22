@@ -2,6 +2,7 @@ package fhirextinguisher
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.withTimeoutOrNull
 import mu.KotlinLogging
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
@@ -26,6 +27,7 @@ fun main(args: Array<String>) {
             "Basic Authorization required to connect to the FHIR server (if any). \"username:password\"!"
         )
         .addOption("p", "portNumber", true, "The port number for this server to use.")
+        .addOption("t", "timeout", true, "The timeout in seconds for queries to the FHIR server (defaults to 60s)")
         .addOption(
             "ext",
             "allowExternalConnection",
@@ -44,6 +46,7 @@ fun main(args: Array<String>) {
     val fhirServerUrl: String? = cmd.getOptionValue("fhirServer")?.dropLastWhile { it == '/' }
     val fhirVersion: String? = cmd.getOptionValue("fhirVersion")
     val authorization: String? = cmd.getOptionValue("authorization")
+    val timeoutstr: String? = cmd.getOptionValue("timeout")
     val external: Boolean = cmd.hasOption("allowExternalConnection")
 
     if (portnumber == null) {
@@ -56,13 +59,24 @@ fun main(args: Array<String>) {
         return
     }
 
+    val timeout = if (timeoutstr == null) {
+        60_000
+    } else {
+        if (timeoutstr.toIntOrNull() == null) {
+            println("Please provide valid integer as timeout!")
+            return
+        } else {
+            timeoutstr.toInt() * 1000
+        }
+    }
 
     val instanceConfiguration = InstanceConfigDTO(
         fhirVersion = fhirVersion,
         fhirServerUrl = fhirServerUrl,
         blockExternalRequests = !external,
         basicAuth = authorization,
-        queryStorageFile = "savedQueries.csv"
+        queryStorageFile = "savedQueries.csv",
+        timeoutInMillis = timeout
     ).toInstanceConfiguration()
 
     embeddedServer(Netty, portnumber, module = application2(instanceConfiguration)).start(wait = true)
