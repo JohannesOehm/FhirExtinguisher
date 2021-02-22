@@ -56,7 +56,10 @@ module.exports = {
     ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.vue'],
-        alias: {vue: 'vue/dist/vue.esm.js'} //runtime rendering
+        alias: {vue: 'vue/dist/vue.esm.js'}, //runtime renderingp
+        // fallback: {
+        //      "assert": require.resolve("assert/")
+        // }
     },
     output: {
         filename: 'bundle.js',

@@ -154,9 +154,9 @@ fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData? =
         handle {
             val client = HttpClient(Apache) {
                 engine {
-                    connectTimeout = 30_000
-                    socketTimeout = 30_000
-                    connectionRequestTimeout = 30_000
+                    connectTimeout = 60_000
+                    socketTimeout = 60_000
+                    connectionRequestTimeout = 60_000
                 }
                 if (basicAuth != null) {
                     install(Auth) {
