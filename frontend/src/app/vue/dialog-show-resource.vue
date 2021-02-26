@@ -8,7 +8,8 @@
 <script lang="ts">
 import * as monaco from "monaco-editor";
 import {CancellationToken, editor, IPosition, IRange, languages} from "monaco-editor";
-import {getPositionOfReferences, getPositionOfKeys, getPathInObject, tokenize} from "../json-tokenize"
+import {getPositionOfKeys, getPositionOfReferences} from "../json-tokenize"
+import {AST, findAtPosition, parseTokens, Token, tokenize, isKeyInParent, getKeyInParent} from "json-parse-ast"
 import ILink = languages.ILink;
 import IEditorMouseEvent = editor.IEditorMouseEvent;
 import IModelDeltaDecoration = editor.IModelDeltaDecoration;
@@ -58,15 +59,15 @@ class ReferenceLinkProvider implements languages.LinkProvider {
   }
 }
 
-function provideDecorationsOnKeys(tokens: any): IModelDeltaDecoration[] {
+function provideDecorationsOnKeys(tokens: Token[]): IModelDeltaDecoration[] {
   let result: IModelDeltaDecoration[] = [];
   for (let token of tokens) {
-    let range: IRange = {
-      startLineNumber: token.start.lineno,
-      startColumn: token.start.column + 1,
-      endLineNumber: token.end.lineno,
-      endColumn: token.end.column
-    };
+    let range = {
+      startLineNumber: token.position.startLineNumber,
+      startColumn: token.position.startColumn,
+      endLineNumber: token.position.endLineNumber,
+      endColumn: token.position.endColumn - 2
+    }
     result.push({
       range: range,
       options: {
@@ -78,6 +79,7 @@ function provideDecorationsOnKeys(tokens: any): IModelDeltaDecoration[] {
   }
   return result;
 }
+
 
 function removeDataType(pathelement: string): string {
   let datatypes = [
@@ -133,38 +135,45 @@ function removeDataType(pathelement: string): string {
 
 }
 
-function findTokenAtPosition(tokens: any[], position: IPosition): [number, any] {
-  for (let i in tokens) {
-    let token = tokens[i];
-    console.log("i", i, "token", token);
-    if ((token.position.start
-        && token.position.start.lineno === position.lineNumber
-        && token.position.start.column < position.column
-        && token.position.end.column >= position.column)
-        ||
-        (!token.position.start
-            && token.position.lineno === position.lineNumber
-            && token.position.column === position.column)) {
-      return [parseInt(i), token];
-    }
-  }
-}
+// function findTokenAtPosition(tokens: Token[], position: IPosition): [number, any] {
+//   for (let i in tokens) {
+//     let token = tokens[i];
+//     console.log("i", i, "token", token);
+//     if ((token.position.start
+//         && token.position.start.lineno === position.lineNumber
+//         && token.position.start.column < position.column
+//         && token.position.end.column >= position.column)
+//         ||
+//         (!token.position.start
+//             && token.position.lineno === position.lineNumber
+//             && token.position.column === position.column)) {
+//       return [parseInt(i), token];
+//     }
+//   }
+// }
 
+let setWindowSize = function () {
+  console.log("setWindowSize()")
+  let elementById = document.getElementById("resourceView");
+  elementById.style.height = (window.innerHeight - 200) + "px";
+};
 
 export default {
   name: "DialogShowResource",
   mounted() {
     this.$root.$on('bv::modal::shown', (bvEvent: any, modalId: any) => {
       if (modalId === "modal-show-resource") {
-        let elementById = document.getElementById("resourceView");
-        elementById.style.height = (window.innerHeight - 200) + "px";
+        setWindowSize();
+        window.addEventListener('resize', setWindowSize);
+
 
         monaco.languages.registerLinkProvider("json", new ReferenceLinkProvider(this.endpointUrl, JSON.parse(this.resource).resourceType));
-
-        let editor = monaco.editor.create(elementById, {
+        let resourceView = document.getElementById("resourceView");
+        let editor = monaco.editor.create(resourceView, {
           value: "",
           language: "json",
           minimap: {enabled: false},
+          automaticLayout: true,
           // scrollbar: {
           //   vertical: "hidden",
           //   horizontal: "auto"
@@ -179,13 +188,43 @@ export default {
         editor.setValue(this.text);
 
         editor.onMouseDown((e: IEditorMouseEvent) => {
-          let tokens = tokenize(editor.getValue());
-          let [i, token] = findTokenAtPosition(tokens, e.target.position);
-          let [path, isKey] = <[string[], boolean]>getPathInObject(tokens.slice(0, i + 1));
-          if (isKey) {
-            let pathString = path.map(it => removeDataType(it)).join(".");
-            this.$emit("test-fhirpath", this.resource, pathString);
+          let ast = parseTokens(tokenize(editor.getValue()));
+          console.log("ast", ast);
+          let targetNode = findAtPosition(ast, e.target.position);
+          console.log("targetNode", targetNode);
+          console.log("isKeyInParent", isKeyInParent(targetNode));
+          if (targetNode === null || !isKeyInParent(targetNode)) return;
+          //TODO: Handle union types
+          //TODO: Handle extensions (_birthdate)
+          //TODO: Select discriminator for extension/modifierExtension / CodeableConcept / Questionnaire.item / identifier
+
+          let current = targetNode;
+          let result = "." + current.value;
+          while (current) {
+            let keyInParent = getKeyInParent(current);
+            console.log("current", current, "keyInParent", keyInParent);
+            if (typeof keyInParent === "undefined") {
+
+            } else if (typeof keyInParent === "number") {
+              result = "[" + keyInParent + "]" + result;
+            } else {
+              result = "." + keyInParent + result;
+            }
+            current = current.parent;
           }
+
+          console.log("result", result);
+
+          this.$emit("test-fhirpath", this.resource, result.substring(1));
+
+
+          // let [i, token] = findTokenAtPosition(tokens, e.target.position);
+          // let [path, isKey] = <[string[], boolean]>getPathInObject(tokens.slice(0, i + 1));
+          // let isKey = true;
+          // if (isKey) {
+          //   // let pathString = path.map(it => removeDataType(it)).join(".");
+          //   this.$emit("test-fhirpath", this.resource, "$this");
+          // }
         });
 
         let positionsOfKeys = getPositionOfKeys(tokenize(editor.getValue()));
@@ -196,6 +235,12 @@ export default {
         (<any>window).resourceEditor = editor;
       }
     })
+
+    this.$root.$on('bv::modal::shown', (bvEvent: any, modalId: any) => {
+      if (modalId === "modal-show-resource") {
+        window.removeEventListener('resize', setWindowSize);
+      }
+    });
   },
   props: ["resource", "endpointUrl"],
   computed: {

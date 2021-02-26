@@ -19,6 +19,7 @@
           </label>
         </div>
       </div>
+      <button type="submit" class="btn btn-primary mb-2" @click="handleAdd">Add...</button>
     </div>
     <div class="form-row" style="padding-top: 10px;">
       <ul>
@@ -48,6 +49,9 @@ export default {
   },
   props: ["resource", "fhirpath"],
   methods: {
+    handleAdd: function () {
+      this.$emit("add-column", this.fhirpath, this.fhirpath);
+    },
     evaluateExpression: _.debounce(async function (fhirpath: string, resource: string, stringify: boolean): Promise<void> {
       try {
         let expr = stringify ? `stringify(${fhirpath})` : fhirpath;

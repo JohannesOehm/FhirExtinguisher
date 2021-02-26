@@ -25,7 +25,7 @@
     <DialogAbout/>
     <DialogQueryLoad @import-link="importLink" @start-request="handleRequest"/>
     <DialogQuerySave/>
-    <DialogTestFhirpath :resource="resource" :fhirpath="fhirpathToTest"/>
+    <DialogTestFhirpath :resource="resource" :fhirpath="fhirpathToTest" @add-column="handleAddColumn"/>
   </div>
 </template>
 
@@ -217,13 +217,13 @@ export default {
     DialogTestFhirpath,
   },
   methods: {
-    handleAddColumn: function () {
+    handleAddColumn: function (name: string = "", expression: string = "") {
       this.dialog.title = "Add Column...";
       this.dialog.mode = "add";
       this.dialog.data = {
-        name: "",
+        name: name,
         type: 'join(", ")',
-        expression: ""
+        expression: expression
       }
       this.$bvModal.show("modal-column")
     },

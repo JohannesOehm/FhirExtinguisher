@@ -39,7 +39,11 @@
         </thead>
         <tbody>
         <tr v-for="row in tableData.records" v-on:dblclick="openRawDialog(row[0])">
-          <td v-for="(rowElem, idx) in row"><span v-if="idx !== 0"> {{ rowElem }}</span></td>
+          <td v-for="(rowElem, idx) in row">
+            <template v-if="idx !== 0"> {{ rowElem }}</template>
+            <template v-else><a href="#" v-on:click="openRawDialog(row[0])"><img src="external-link-wikipedia.svg"
+                                                                                 alt=""/></a></template>
+          </td>
         </tr>
         </tbody>
         <caption>
@@ -53,7 +57,7 @@
         <span v-if="!tableLoading && !dataLoading && tableError == null && rawError == null">
           Please enter a valid FHIR Search query in the text field above and press GET!</span>
         <span v-if="columns.length === 0">
-          There are no columns speicified</span>
+          There are no columns specified</span>
         <span v-if="dataLoading">Raw data is loading...</span>
         <span v-if="tableLoading">Table data is loading...</span>
         <div v-if="tableError != null"><br>

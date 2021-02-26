@@ -46,6 +46,7 @@
     "util": "^0.12.3",
     "vue": "^2.6.12",
     "vuedraggable": "^2.24.3",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "json-parse-ast": "1.0.8"
   }
 }
