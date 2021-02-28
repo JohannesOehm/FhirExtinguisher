@@ -4,10 +4,12 @@ const CopyPlugin = require('copy-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const webpack = require("webpack");
 
+const redirectServer = "http://localhost:8081";
+
 module.exports = {
     entry: './src/app/index.ts',
     // devtool: 'inline-source-map',
-    mode: 'production',
+    mode: 'development',
     module: {
         rules: [
             {
@@ -68,6 +70,13 @@ module.exports = {
     devServer: {
         contentBase: path.join(__dirname, "dist"),
         compress: true,
-        port: 9000
+        port: 9000,
+        proxy: {
+            '/redirect': redirectServer,
+            '/processBundle': redirectServer,
+            '/info': redirectServer,
+            '/fhir': redirectServer,
+            '/fhirPath': redirectServer
+        },
     }
 };

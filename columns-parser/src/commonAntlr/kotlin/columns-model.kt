@@ -28,7 +28,7 @@ sealed class ListProcessingMode
 @JsExport
 data class Join(val delimiter: String) : ListProcessingMode() {
     override fun toString(): String {
-        return "join(\"$delimiter\")"
+        return "join(\"${delimiter.replace("\n", "\\n")}\")"
     }
 }
 

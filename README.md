@@ -79,9 +79,8 @@ to start and `docker stop fhirextinguisher` to stop. Use `docker ps` to check if
 
 ## Frontend Development
 
-You can execute `"node_modules/.bin/webpack-dev-server"` to start an automatically updating version of the frontend.
-Note that the backend will not be executed, so there will not be actual function, but for CSS/Vue.js development this is
-quite nice.
+You can execute `node_modules\.bin\webpack-cli serve` to start an automatically updating version of the frontend. If you
+start the FhirExtinguisher using port 8081, even the backend will work.
 
 ## Running
 

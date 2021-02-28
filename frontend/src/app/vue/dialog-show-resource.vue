@@ -80,6 +80,23 @@ function provideDecorationsOnKeys(tokens: Token[]): IModelDeltaDecoration[] {
   return result;
 }
 
+function fhirpathEscape(raw: string): string {
+  return <string>(<any>raw).replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll('"', '\\"').replaceAll("`", "\\\`").replaceAll("\r", "\\r")
+      .replaceAll("\n", "\\n").replaceAll("\t", "\\t").replaceAll("\f", "\\f")
+}
+
+function findValue(ast: AST, key_: string): string {
+  if (ast.type !== "Object") return;
+  let values = <{ key: AST, value: AST }[]>ast.extractValues();
+  console.log("values", values);
+  for (let {key, value} of values) {
+    if (key.value === key_) {
+      return value.value;
+    }
+  }
+  return null;
+}
+
 
 function removeDataType(pathelement: string): string {
   let datatypes = [
@@ -156,6 +173,7 @@ let setWindowSize = function () {
   console.log("setWindowSize()")
   let elementById = document.getElementById("resourceView");
   elementById.style.height = (window.innerHeight - 200) + "px";
+  (<any>window).resourceEditor.layout();
 };
 
 export default {
@@ -163,17 +181,13 @@ export default {
   mounted() {
     this.$root.$on('bv::modal::shown', (bvEvent: any, modalId: any) => {
       if (modalId === "modal-show-resource") {
-        setWindowSize();
-        window.addEventListener('resize', setWindowSize);
-
-
         monaco.languages.registerLinkProvider("json", new ReferenceLinkProvider(this.endpointUrl, JSON.parse(this.resource).resourceType));
         let resourceView = document.getElementById("resourceView");
         let editor = monaco.editor.create(resourceView, {
           value: "",
           language: "json",
           minimap: {enabled: false},
-          automaticLayout: true,
+          // automaticLayout: true,
           // scrollbar: {
           //   vertical: "hidden",
           //   horizontal: "auto"
@@ -202,18 +216,28 @@ export default {
           let result = "." + current.value;
           while (current) {
             let keyInParent = getKeyInParent(current);
-            console.log("current", current, "keyInParent", keyInParent);
             if (typeof keyInParent === "undefined") {
 
             } else if (typeof keyInParent === "number") {
-              result = "[" + keyInParent + "]" + result;
+              if (current.parent) {
+                let upperKey = getKeyInParent(current.parent);
+                if (upperKey === "extension" || upperKey === "modifierExtension") {
+                  result = ".where(url='" + findValue(current, "url") + "')" + result;
+                } else if (upperKey === "coding" || upperKey === "identifier") {
+                  result = ".where(system='" + findValue(current, "system") + "')" + result;
+                } else {
+                  result = "[" + keyInParent + "]" + result;
+                }
+              } else {
+                result = "[" + keyInParent + "]" + result;
+              }
             } else {
+              keyInParent = keyInParent[0] === "_" ? keyInParent.substring(1) : keyInParent; //remove '_' prefix for extensions
               result = "." + keyInParent + result;
             }
             current = current.parent;
           }
 
-          console.log("result", result);
 
           this.$emit("test-fhirpath", this.resource, result.substring(1));
 
@@ -233,6 +257,8 @@ export default {
 
 
         (<any>window).resourceEditor = editor;
+        setWindowSize();
+        window.addEventListener('resize', setWindowSize);
       }
     })
 

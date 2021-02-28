@@ -1,33 +1,39 @@
 <template>
   <b-modal id="modal-test-fhirpath" title="Test FHIRPath" size="xl" hide-footer="true">
-    <div class="form-row align-items-center">
-      <div class="col-10">
-        <div class="input-group">
-          <div class="input-group-prepend">
-            <label class="input-group-text" for="fhirpathString">FHIRPath:</label>
+    <div class="container">
+      <div class="row align-items-center justify-content-center">
+        <div class="col-9">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for="fhirpathString">FHIRPath:</label>
+            </div>
+            <input type="text" class="form-control" id="fhirpathString" v-model="fhirpath"
+                   @keyup="evaluateExpression(fhirpath, resource, stringify)">
           </div>
-          <input type="text" class="form-control" id="fhirpathString" v-model="fhirpath"
-                 @keyup="evaluateExpression(fhirpath, resource, stringify)">
+        </div>
+        <div class="col-auto">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="stringify" v-model="stringify"
+                   @change="evaluateExpression(fhirpath, resource, stringify)">
+            <label class="form-check-label" for="stringify" v-b-tooltip.hover
+                   title="Wrap expression with stringify() for preview">
+              stringify()
+            </label>
+          </div>
+        </div>
+
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary" @click="handleAdd">Add...</button>
         </div>
       </div>
-      <div class="col-auto">
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="stringify" v-model="stringify"
-                 @change="evaluateExpression(fhirpath, resource, stringify)">
-          <label class="form-check-label" for="stringify">
-            stringify()
-          </label>
-        </div>
+      <div class="row" style="padding-top: 10px;">
+        <ul>
+          <li v-for="t in text">
+            <pre>{{ t }}</pre>
+          </li>
+        </ul>
+        <span style="color: darkred" v-if="error">{{ error }}</span>
       </div>
-      <button type="submit" class="btn btn-primary mb-2" @click="handleAdd">Add...</button>
-    </div>
-    <div class="form-row" style="padding-top: 10px;">
-      <ul>
-        <li v-for="t in text">
-          <pre>{{ t }}</pre>
-        </li>
-      </ul>
-      <span style="color: darkred" v-if="error">{{ error }}</span>
     </div>
   </b-modal>
 </template>

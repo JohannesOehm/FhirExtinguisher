@@ -151,11 +151,11 @@ export default {
     convertQuestionnaire: function (questionnaire: any) {
       let result: Column[] = getItems(questionnaire.item, []);
       result.unshift(
-          {name: "id", type: 'join("")', expression: "getIdPart(QuestionnaireResponse.id)"},
-          {name: "basedOn", type: 'join(" ")', expression: "QuestionnaireResponse.basedOn"},
-          {name: "status", type: 'join(" ")', expression: "QuestionnaireResponse.status"},
-          {name: "subject", type: 'join(" ")', expression: "QuestionnaireResponse.subject"},
-          {name: "authored", type: 'join(" ")', expression: "QuestionnaireResponse.authored"},
+          {name: "id", type: 'join("")', expression: "getIdPart(id)"},
+          {name: "basedOn", type: 'join(" ")', expression: "basedOn"},
+          {name: "status", type: 'join(" ")', expression: "status"},
+          {name: "subject", type: 'join(" ")', expression: "subject"},
+          {name: "authored", type: 'join(" ")', expression: "authored"},
       );
 
       this.$emit("update-columns", result, this.replace);

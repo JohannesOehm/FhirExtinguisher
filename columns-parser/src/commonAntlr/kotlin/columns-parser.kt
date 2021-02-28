@@ -38,7 +38,7 @@ private fun parseType(columnType: ColumnsTokens.ColumnTypeContext): ListProcessi
         "singleton" -> Singleton
         "join" -> {
             val separator = columnType.findTypeParam()?.text?.drop(1)?.dropLast(1)
-            Join(separator ?: ", ") //TODO: support \n as separator
+            Join(separator?.replace("\\n", "\n") ?: ", ") //TODO: support \n as separator
         }
         "explodeLong" -> {
             ExplodeLong(parseColumns(columnType.findTypeParam()?.text ?: ""))

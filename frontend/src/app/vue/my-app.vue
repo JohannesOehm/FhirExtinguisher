@@ -168,19 +168,13 @@ export default {
     return {
       columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(id)"},
         {
-          name: "ssn",
-          type: 'join(" ")',
-          expression: "identifier.where(system='http://hl7.org/fhir/sid/us-ssn').value"
+          name: "identifier",
+          type: 'join("\\n\\n")',
+          expression: "identifier"
         }, {
-          name: "name", type: "explodeWide", expression: "Patient.name", subColumns: [
-            {name: "$disc", "expression": "$this.use"},
-            {name: "given", "expression": "$this.given[0]"},
-            {name: "family", "expression": "$this.family"},
-          ]
-        }, {
-          name: "managingOrganization",
+          name: "lastUpdated",
           type: 'join(" ")',
-          expression: "managingOrganization.resolve().name"
+          expression: "meta.lastUpdated"
         },
       ],
       rawData: null,
