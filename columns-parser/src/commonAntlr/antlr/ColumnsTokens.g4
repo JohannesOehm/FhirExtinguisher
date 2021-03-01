@@ -6,7 +6,7 @@ options {
 
 columns: column (COLUMN_SEPARATOR column)*;
 
-column: columnName EXPRESSION_SEPARATOR fhirpathExpression (TYPE_SEPARATOR columnType)?;
+column: columnName? EXPRESSION_SEPARATOR fhirpathExpression (TYPE_SEPARATOR columnType)?;
 
 columnType: typeName (PAREN_OPEN typeParam? PAREN_CLOSE)?  ;
 

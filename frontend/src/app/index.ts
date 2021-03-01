@@ -12,13 +12,10 @@ Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 Vue.use(ModalPlugin);
 
-
 new Vue({
     // @ts-ignore
     render: h => h(App)
 }).$mount("#app");
 
-
 export type Column = { name: string, type: string, expression: string, subColumns?: SubColumn[] }
-
 export type SubColumn = { name: string, expression: string };

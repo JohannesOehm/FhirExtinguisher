@@ -21,10 +21,10 @@ fun parseColumns(inputStr: String): Array<Column> {
         val root = parser.columns()
         for (column in root.findColumn()) {
             result += Column(
-                name = column.findColumnName()!!.text.replace("\\:", ":").replace("\\\\", "\\"),
-                type = column.findColumnType()?.let { parseType(it) },
-                expression = column.findFhirpathExpression()!!.text.replace("\\@", "@").replace("\\,", ",")
-                    .replace("\\\\", "\\")
+                    name = (column.findColumnName()?.text ?: "").replace("\\:", ":").replace("\\\\", "\\"),
+                    type = column.findColumnType()?.let { parseType(it) },
+                    expression = column.findFhirpathExpression()!!.text.replace("\\@", "@").replace("\\,", ",")
+                            .replace("\\\\", "\\")
             )
         }
     } catch (e: Throwable) {

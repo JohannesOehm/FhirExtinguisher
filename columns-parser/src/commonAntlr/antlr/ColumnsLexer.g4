@@ -1,7 +1,6 @@
 lexer grammar ColumnsLexer;
 
 
-//TYPE_SEPARATOR: '@' -> pushMode(TYPE);
 EXPRESSION_SEPARATOR: ':' -> pushMode(EXPRESSION);
 COLUMN_STRING: (~[:]|'\\:')+;
 

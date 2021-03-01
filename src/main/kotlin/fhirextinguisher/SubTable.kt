@@ -100,7 +100,7 @@ class SubTable() {
                 val sc = if (type.subcolumns.isEmpty()) {
                     listOf(column.name to fpe.parseExpression("\$this"))
                 } else {
-                    type.subcolumns.map { column.name + "." + it.name to it.expression.expr() }
+                    type.subcolumns.map { column.name + (if (column.name.isNotEmpty()) "." else "") + it.name to it.expression.expr() }
                 }
 
                 when {
@@ -142,9 +142,9 @@ class SubTable() {
                         fpe.evaluateToBase(iBase, type.discriminator.expr(), mapOf("index" to index))
                             .firstOrNull()?.let { fpe.convertToString(it) } ?: "empty"
                     val sc = if (type.subcolumns.isNotEmpty()) {
-                        type.subcolumns.map { (column.name + "." + disc + if (it.name != "") ".${it.name}" else "") to it.expression.expr() }
+                        type.subcolumns.map { column.name + (if (column.name.isNotBlank()) "." else "") + disc + (if (it.name != "") ".${it.name}" else "") to it.expression.expr() }
                     } else {
-                        listOf(column.name + "." + disc to fpe.parseExpression("\$this"))
+                        listOf(column.name + (if (column.name.isNotBlank()) "." else "") + disc to fpe.parseExpression("\$this"))
                     }
                     for ((name, expression) in sc) {
                         val resultBase = fpe.evaluateToBase(iBase, expression, mapOf("index" to index))

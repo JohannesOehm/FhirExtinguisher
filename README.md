@@ -143,6 +143,8 @@ statement on HAPI FHIR using FHIR R4. Note that actual query options on your ser
 ## Useful FHIRPath expressions
 * `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
 * `.resolve()` resolves a reference to another resource.
+* `iif(gender = "female", "w", "m")` if-else-expression
+* `.substring(0, 1)` Return only the first letter of string
 
 Custom functions introduced by FhirExtinguisher:
 * `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
