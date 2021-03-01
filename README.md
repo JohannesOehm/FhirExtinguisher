@@ -49,39 +49,6 @@ The returned bundle(s) are evaluated against the FHIRPath expressions using the 
 ## Download
 You can download pre-compiled binaries in the Release-section of the [Gitlab](https://imigitlab.uni-muenster.de/published/fhirextinguisher/-/releases)!
 
-## Building
-Requirements: **Java 8, npm 6.13.x**
-
-Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
-
-At the first time, to compile the frontend, you have to run `npm install` (and eventually `npm install --only=dev`) in
-the
-`/frontend` folder, as well as `npm run antlr4ts`, since the gradle build script will only invoke webpack and copy the
-files into the .jar file.
-
-If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"`
-for the webpack error message.
-
-## Building with Docker
-
-### Build the image
-
-Check out the repository, run  `docker build --tag fhirextinguisher .`
-
-### Pull from Docker Hub
-
-`docker pull wwuimi/fhirextinguisher`
-
-### Start the image in a container
-
-Use `docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher fhirextinguisher -f http://hapi.fhir.org/baseR4 -p 8080 -ext`
-to start and `docker stop fhirextinguisher` to stop. Use `docker ps` to check if container is running.
-
-## Frontend Development
-
-You can execute `node_modules\.bin\webpack-cli serve` to start an automatically updating version of the frontend. If you
-start the FhirExtinguisher using port 8081, even the backend will work.
-
 ## Running
 
 Requirements: **Java 8**, GUI tested with **Firefox** and **Chrome**
@@ -97,21 +64,21 @@ Available command line options:
 * `-f [url]` FHIR server URL
 * `-v ["r4"|"stu3"]` FHIR version of the server
 * `-a [username]:[password]` Basic authentication credentials, if required by FHIR server
-* `-p [portnumber]` Port number on local machine to open, e.g. with `-p 8080`, the GUI will be available
+* `-p [portnumber]` Port number on your local machine to open, e.g. with `-p 8080`, the GUI will be available
   at `http://localhost:8080/`
 * `-t 30` Set timeout for FHIR server in seconds (60 is default)
 * `-ext` Allow connections of non-localhost machines
 
 To stop the FhirExtinguisher, press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the command line window!
 
-## WAR deployment
+## Running with Docker
 
-Besides running the FhirExtinguisher on your local machine using the built-in Jetty engine, it is also possible to
-deploy the FhirExtinguisher via Tomcat. Therefore, you can download the pre-compiled war file, open it as zip file and
-edit the parameters in `WEB-INF\classes\application.conf`. Currently, there seems to be a bug in ktor, which prevents
-the UI from loading if the FhirExtinguisher is not deployed on the root path. Also, having an Apache Web Server ahead of
-Tomcat can cause some issues when using AJP, so I recommend using plain HTTP instead. I will update this text as well as
-the Ktor version as soon as these issues are resolved.
+If you don't want to install Java on your local machine, you can use `docker pull wwuimi/fhirextinguisher` to pull a
+docker image.
+
+Use `docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher fhirextinguisher -f <fhir-server-url> -p 8080 -ext`
+to start and `docker stop fhirextinguisher` to stop the container. You can use `docker ps` to check if container is
+running.
 
 ## Usage
 
@@ -141,21 +108,59 @@ In the searchbar, you can use <kbd>Ctrl</kbd>+<kbd>Space</kbd> for autocompletio
 statement on HAPI FHIR using FHIR R4. Note that actual query options on your server might differ.
 
 ## Useful FHIRPath expressions
+
 * `.type().name` Get the name of the type, e.g. `Patient.deceased.type().name` is either `dateTime` or `boolean`
 * `.resolve()` resolves a reference to another resource.
 * `iif(gender = "female", "w", "m")` if-else-expression
 * `.substring(0, 1)` Return only the first letter of string
 
 Custom functions introduced by FhirExtinguisher:
+
 * `getIdPart()` circumvents some inconveniences with HAPI FHIR's `IdType` class
-* `getChildFields()` returns a list of possible field names, but the expression until this point must return at least one element
-* `stringify()` returns a recursive serialization of all the element's fields  
+* `getChildFields()` returns a list of possible field names, but the expression until this point must return at least
+  one element
+* `stringify()` returns a recursive serialization of all the element's fields
+
+## Building
+
+Requirements: **Java 8, npm 6.13.x**
+
+Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
+
+At the first time, to compile the frontend, you have to run `npm install` (and eventually `npm install --only=dev`) in
+the
+`/frontend` folder, as well as `npm run antlr4ts`, since the gradle build script will only invoke webpack and copy the
+files into the .jar file.
+
+If you get `Process 'command 'cmd'' finished with non-zero exit value 2`, please execute `"node_modules/.bin/webpack"`
+for the webpack error message.
+
+### Building with Docker
+
+Check out the repository, run  `docker build --tag fhirextinguisher .`
+
+### Frontend Development
+
+You can execute `node_modules\.bin\webpack-cli serve` to start an automatically updating version of the frontend. If you
+start the FhirExtinguisher using port 8081, even the backend will work.
+
+## WAR deployment
+
+Besides running the FhirExtinguisher on your local machine using the built-in Jetty engine, it is also possible to
+deploy the FhirExtinguisher via Tomcat. Therefore, you can download the pre-compiled war file, open it as zip file and
+edit the parameters in `WEB-INF\classes\application.conf`. Currently, there seems to be a bug in ktor, which prevents
+the UI from loading if the FhirExtinguisher is not deployed on the root path. Also, having an Apache Web Server ahead of
+Tomcat can cause some issues when using AJP, so I recommend using plain HTTP instead. I will update this text as well as
+the Ktor version as soon as these issues are resolved.
 
 ## Authors
+
 * **Johannes Oehm** | (+49) 251 / 83-5 82 47 | johannes.oehm@uni-muenster.de
 
 ## License
+
 Apache Licence 2.0
 
 ## Acknowledgement
+
 Supported by BMBF grant No. 01ZZ1802V (HiGHmed/Münster) 
