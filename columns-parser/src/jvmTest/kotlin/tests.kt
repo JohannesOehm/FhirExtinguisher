@@ -34,15 +34,24 @@ class Tests {
         selfTest(columns)
     }
 
+    @Test
+    fun emptyName() {
+        val columns = parseColumns(":Patient.name@singleton,gender:gender")
+        assertEquals(Column("", "Patient.name", Singleton), columns[0])
+        assertEquals(Column("gender", "gender", null), columns[1])
+
+        selfTest(columns)
+    }
+
 
     @Test
     fun explodeLong() {
         val columns = parseColumns("name:Patient.name@explodeLong(given:this.given,family:family),gender:gender")
         assertEquals(
-            Column(
-                name = "name",
-                type = ExplodeLong(
-                    arrayOf(
+                Column(
+                        name = "name",
+                        type = ExplodeLong(
+                                arrayOf(
                         Column("given", "this.given", null),
                         Column("family", "family", null)
                     )

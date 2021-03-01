@@ -40,10 +40,10 @@ class ReferenceLinkProvider implements languages.LinkProvider {
     let links: ILink[] = [];
     for (let token of tokens) {
       let range: IRange = {
-        startLineNumber: token.start.lineno,
-        startColumn: token.start.column + 1,
-        endLineNumber: token.end.lineno,
-        endColumn: token.end.column
+        startLineNumber: token.startLineNumber,
+        startColumn: token.startColumn,
+        endLineNumber: token.endLineNumber,
+        endColumn: token.endColumn - 1
       };
       links.push({
         range: range,
@@ -203,10 +203,7 @@ export default {
 
         editor.onMouseDown((e: IEditorMouseEvent) => {
           let ast = parseTokens(tokenize(editor.getValue()));
-          console.log("ast", ast);
           let targetNode = findAtPosition(ast, e.target.position);
-          console.log("targetNode", targetNode);
-          console.log("isKeyInParent", isKeyInParent(targetNode));
           if (targetNode === null || !isKeyInParent(targetNode)) return;
           //TODO: Handle union types
           //TODO: Handle extensions (_birthdate)
