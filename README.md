@@ -76,8 +76,13 @@ To stop the FhirExtinguisher, press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the command 
 If you don't want to install Java on your local machine, you can use `docker pull wwuimi/fhirextinguisher` to pull a
 docker image.
 
-Use `docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher fhirextinguisher -f <fhir-server-url> -p 8080 -ext`
-to start and `docker stop fhirextinguisher` to stop the container. You can use `docker ps` to check if container is
+
+If you pulled the docker image from the docker hub use `docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher wwuimi/fhirextinguisher -f <fhir-server-url> -p 8080 -ext` to start the container.
+
+If you build the image from the Dockerfile like its described in the Building section use 
+`docker run --rm -p 127.0.0.1:8080:8080 --name fhirextinguisher fhirextinguisher -f <fhir-server-url> -p 8080 -ext`  to start the container.
+
+Use `docker stop fhirextinguisher` to stop the container. You can use `docker ps` to check if container is
 running.
 
 ## Usage
