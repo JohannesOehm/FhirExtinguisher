@@ -307,6 +307,7 @@ export default {
         .then(res => {
           this.endpointUrl = res.server + "/";
           this.fhirVersion = res.version;
+          document.title = res.server.replace("https://", "").replace("http://", "");
         });
 
     let separator = document.getElementById("separator");

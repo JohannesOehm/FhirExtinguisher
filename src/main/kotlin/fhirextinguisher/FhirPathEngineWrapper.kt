@@ -62,7 +62,7 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
                 val requiredClass: Class<IBaseResource> =
                     this.fhirContext.getResourceDefinition(type).implementingClass as Class<IBaseResource>
                 val resource = this.fhirClient.fetchResourceFromUrl(requiredClass, url)
-                cache[reference] = resource
+                addCacheEntry(reference, resource)
                 resource
             }
 

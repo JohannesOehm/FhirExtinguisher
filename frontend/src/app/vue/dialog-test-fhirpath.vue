@@ -56,6 +56,7 @@ export default {
   props: ["resource", "fhirpath"],
   methods: {
     handleAdd: function () {
+      this.$bvModal.hide("modal-test-fhirpath")
       this.$emit("add-column", this.fhirpath, this.fhirpath);
     },
     evaluateExpression: _.debounce(async function (fhirpath: string, resource: string, stringify: boolean): Promise<void> {

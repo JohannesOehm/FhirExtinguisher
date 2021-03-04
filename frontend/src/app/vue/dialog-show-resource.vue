@@ -43,7 +43,7 @@ class ReferenceLinkProvider implements languages.LinkProvider {
         startLineNumber: token.startLineNumber,
         startColumn: token.startColumn,
         endLineNumber: token.endLineNumber,
-        endColumn: token.endColumn - 1
+        endColumn: token.endColumn - 2
       };
       links.push({
         range: range,
@@ -99,52 +99,32 @@ function findValue(ast: AST, key_: string): string {
 
 
 function removeDataType(pathelement: string): string {
-  let datatypes = [
-    "Base64Binary",
-    "Boolean",
-    "Canonical",
-    "Code",
-    "Date",
-    "DateTime",
-    "Decimal",
-    "Id",
-    "Instant",
-    "Integer",
-    "Markdown",
-    "Oid",
-    "PositiveInt",
-    "String",
-    "Time",
-    "UnsignedInt",
-    "Uri",
-    "Url",
-    "Uuid",
-    "Data Types",
-    "Address",
-    "Age",
-    "Annotation",
-    "Attachment",
-    "CodeableConcept",
-    "Coding",
-    "ContactPoint",
-    "Count",
-    "Distance",
-    "Duration",
-    "HumanName",
-    "Identifier",
-    "Money",
-    "Period",
-    "Quantity",
-    "Range",
-    "Ratio",
-    "Reference",
-    "SampledData",
-    "Signature",
-    "Timing"
-  ];
+  let nonUnionTypes = ["servicePeriod", "approvalDate", "lastReviewDate", "effectivePeriod", "recordedDate", "reasonCode",
+    "reasonReference", "minutesDuration", "requestedPeriod", "productCode", "instantiatesCanonical", "instantiatesUri",
+    "additionalIdentifier", "validityPeriod", "definitionUri", "definitionCanonical", "enteredDate", "derivedFromUri",
+    "billablePeriod", "preAuthPeriod", "formCode", "prognosisCodeableConcept", "prognosisReference", "groupIdentifier",
+    "dateTime", "subscriberId", "distinctIdentifier", "manufactureDate", "expirationDate", "udiDeviceIdentifier", "languageCode",
+    "measurementPeriod", "conclusionCode", "masterIdentifier", "preAuthRefPeriod", "benefitPeriod", "estimatedAge", "statusDate",
+    "outcomeCode", "outcomeReference", "requestIdentifier", "occurrenceDateTime", "serviceProvisionCode", "availableTime",
+    "procedureReference", "procedureCode", "vaccineCode", "doseQuantity", "packageId", "crossReference", "restoreDate",
+    "dataExclusivityPeriod", "internationalBirthDate", "batchIdentifier", "uniqueId", "referenceRange", "validCodedValueSet",
+    "normalCodedValueSet", "abnormalCodedValueSet", "criticalCodedValueSet", "birthDate", "paymentDate", "paymentIdentifier",
+    "usedReference", "usedCode", "locationCode", "locationReference", "accessionIdentifier", "receivedTime", "organismId",
+    "parentSubstanceId", "executionPeriod", "lockedDate", "validateCode", "postalCode", "maxDosePerPeriod", "contentReference",
+    "dateRange", "versionId"];
+
+  let datatypes = ["Base64Binary", "Boolean", "Canonical", "Code", "Date", "DateTime", "Decimal", "Id", "Instant",
+    "Integer", "Markdown", "Oid", "PositiveInt", "String", "Time", "UnsignedInt", "Uri", "Url", "Uuid", "Data Types",
+    "Address", "Age", "Annotation", "Attachment", "CodeableConcept", "Coding", "ContactPoint", "Count", "Distance",
+    "Duration", "HumanName", "Identifier", "Money", "Period", "Quantity", "Range", "Ratio", "Reference", "SampledData",
+    "Signature", "Timing"];
+
+  if (nonUnionTypes.includes(pathelement)) {
+    return pathelement;
+  }
 
   for (let datatype of datatypes) {
-    pathelement = pathelement.replace(new RegExp(datatype + "$"), "")
+    pathelement = pathelement.replace(new RegExp(datatype + "$"), "");
   }
   //TODO: This is not optimal, as for example Patient.birthDate becomes "birth"
 
@@ -210,7 +190,7 @@ export default {
           //TODO: Select discriminator for extension/modifierExtension / CodeableConcept / Questionnaire.item / identifier
 
           let current = targetNode;
-          let result = "." + current.value;
+          let result = "." + removeDataType(current.value);
           while (current) {
             let keyInParent = getKeyInParent(current);
             if (typeof keyInParent === "undefined") {
@@ -230,6 +210,7 @@ export default {
               }
             } else {
               keyInParent = keyInParent[0] === "_" ? keyInParent.substring(1) : keyInParent; //remove '_' prefix for extensions
+              keyInParent = removeDataType(keyInParent); //remove datatype for union types
               result = "." + keyInParent + result;
             }
             current = current.parent;
