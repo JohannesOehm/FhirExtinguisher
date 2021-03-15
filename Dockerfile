@@ -12,9 +12,7 @@ FROM openjdk:8-jre
 
 WORKDIR /fhirextinguisher
 
-COPY --from=builder /fhirextinguisher/build/libs/FhirExtinguisher-1.5.5-all.jar /fhirextinguisher/FhirExtinguisher-1.5.5-all.jar
+COPY --from=builder /fhirextinguisher/build/libs/FhirExtinguisher-* /fhirextinguisher/FhirExtinguisher-all.jar
 
-ENTRYPOINT ["java", "-jar", "FhirExtinguisher-1.5.5-all.jar"]
-
-#CMD ["java -jar build/libs/FhirExtinguisher-1.5.1-all.jar -f http://hapi.fhir.org/baseR4 -p 8080"]
+ENTRYPOINT ["java", "-jar", "FhirExtinguisher-all.jar"]
 
