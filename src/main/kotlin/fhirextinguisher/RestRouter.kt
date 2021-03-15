@@ -178,7 +178,7 @@ fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData?, 
             val originalUri = call.request.uri
 
             val redirectUrl = target.dropLastWhile { it == '/' } + "/" + originalUri.substringAfter("$prefix/")
-            log.debug { "redirecting to $redirectUrl" }
+            log.info { "redirecting to $redirectUrl" }
             try {
                 val response = client.request<HttpResponse>(redirectUrl)
                 //TODO: Add Query Parameters

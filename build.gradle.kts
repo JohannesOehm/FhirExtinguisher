@@ -30,7 +30,7 @@ kotlin {
 
 
 subprojects {
-    version = "1.6.1"
+    version = "1.6.2"
 }
 
 val ktor_version = "1.5.0"

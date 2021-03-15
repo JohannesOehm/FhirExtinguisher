@@ -3,7 +3,10 @@ package fhirextinguisher
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
+import mu.KotlinLogging
 import java.io.File
+
+private val log = KotlinLogging.logger {}
 
 data class InstanceConfigDTO(
     val fhirServerUrl: String,
@@ -30,7 +33,14 @@ data class InstanceConfigDTO(
 
         fhirContext.restfulClientFactory.connectTimeout = timeoutInMillis
         fhirContext.restfulClientFactory.socketTimeout = timeoutInMillis
-        fhirContext.newRestfulGenericClient(fhirServerUrl).forceConformanceCheck()
+
+        try {
+            val client = fhirContext.newRestfulGenericClient(fhirServerUrl)
+            interceptors.forEach { client.registerInterceptor(it) }
+            client.forceConformanceCheck()
+        } catch (e: Exception) {
+            log.error { "Error with servers conformance statement: ${e.message}" }
+        }
 
         return InstanceConfiguration(
             fhirServerUrl,
