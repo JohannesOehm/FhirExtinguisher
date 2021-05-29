@@ -3,7 +3,7 @@ This project's goal is to simplify data analysis on HL7 FHIR by easing conversio
 of the hierarchical structure into a flat list for analysing R DataFrames.
 
 ## Video manual
-If you're a lazy reader, you can also watch a [short 5 minute presentation](https://vimeo.com/manage/videos/556233461)
+If you're a lazy reader, you can also watch a [short 5 minute presentation](https://vimeo.com/556233461)
 or a longer [German presentation](https://vimeo.com/479525872) on Vimeo!
 
 ## Alternatives
