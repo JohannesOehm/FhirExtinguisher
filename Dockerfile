@@ -1,4 +1,4 @@
-FROM node:latest as builder
+FROM node:stretch as builder
 
 RUN apt-get -q update && apt-get -y -q install  openjdk-8-jdk
 
