@@ -9,7 +9,7 @@ const redirectServer = "http://localhost:8081";
 module.exports = {
     entry: './src/app/index.ts',
     // devtool: 'inline-source-map',
-    mode: 'production',
+    mode: 'development',
     module: {
         rules: [
             {

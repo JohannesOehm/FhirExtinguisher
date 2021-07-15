@@ -60,7 +60,7 @@
             handleShown: function () {
                 this.resourceNames = this.$options.resourceSuggestionService.getResourceNames();
                 try {
-                    let query = (<any>window).searchEditor.getValue();
+                    let query = this.$parent.getFhirSearchQuery();
 
                     let resourceName;
                     if (query.indexOf("/") !== -1) {

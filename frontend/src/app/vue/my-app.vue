@@ -268,7 +268,7 @@ export default {
     },
     importLink: function (link: string) {
       try {
-        (<any>window).searchEditor.setValue(parseLink(link).url);
+        this.updateUrl(parseLink(link).url);
       } catch (e) {
         console.log(e);
       }
@@ -287,7 +287,7 @@ export default {
     },
     getDownloadUrl: function (addParams: boolean = true) {
       let params = addParams ? `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}` : "";
-      let fhirQuery = (<any>window).searchEditor?.getValue() ?? "";
+      let fhirQuery = this.$refs.searchbar?.getFhirSearchQuery() ?? "";
       if (fhirQuery.endsWith("?")) {
         return "fhir/" + fhirQuery + params;
       } else if (fhirQuery.includes("?")) {
@@ -296,6 +296,9 @@ export default {
         return "fhir/" + fhirQuery + "?" + params;
       }
 
+    },
+    getFhirSearchQuery: function (): string {
+      return this.$refs.searchbar?.getFhirSearchQuery() ?? "";
     }
   },
   computed: {},

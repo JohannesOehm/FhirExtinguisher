@@ -30,18 +30,18 @@
 
       </div>
     </div>
-    <div class="table-responsive" v-if="!showRaw">
-      <table class="table table-striped table-sm" style="white-space: pre-wrap;" v-if="tableData != null">
-        <thead>
-        <tr>
-          <th v-for="(fieldName, idx) in tableData.fields"><span v-if="idx !== 0">{{ fieldName }}</span></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="row in tableData.records" v-on:dblclick="openRawDialog(row[0])">
-          <td v-for="(rowElem, idx) in row">
-            <template v-if="idx !== 0"> {{ rowElem }}</template>
-            <template v-else><a href="#" v-on:click="openRawDialog(row[0])"><img src="external-link-wikipedia.svg"
+    <!--    <div class="table-responsive" v-if="!showRaw">-->
+    <table class="table table-striped table-sm" style="white-space: pre-wrap;" v-if="!showRaw && tableData != null">
+      <thead>
+      <tr>
+        <th v-for="(fieldName, idx) in tableData.fields"><span v-if="idx !== 0">{{ fieldName }}</span></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="row in tableData.records" v-on:dblclick="openRawDialog(row[0])">
+        <td v-for="(rowElem, idx) in row">
+          <template v-if="idx !== 0"> {{ rowElem }}</template>
+          <template v-else><a href="#" v-on:click="openRawDialog(row[0])"><img src="external-link-wikipedia.svg"
                                                                                  alt=""/></a></template>
           </td>
         </tr>
@@ -64,7 +64,7 @@
           <pre>{{ tableError }}</pre>
         </div>
       </div>
-    </div>
+    <!--    </div>-->
     <div id="rawView" v-else>
       <div v-html="rawDataWithHighlighting" v-if="rawData != null">
       </div>
@@ -155,7 +155,7 @@ export default {
       this.dataLoading = true;
       this.rawError = null;
 
-      let url = (<any>window).searchEditor.getValue();
+      let url = this.$parent.getFhirSearchQuery();
       if (url.includes("_summary=count")) {
         this.showRaw = true;
       }

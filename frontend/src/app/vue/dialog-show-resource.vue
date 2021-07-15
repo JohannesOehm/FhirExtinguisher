@@ -216,8 +216,9 @@ export default {
             current = current.parent;
           }
 
+          result = result.substring(1).replace(".extension.where(url='", ".extension('");
 
-          this.$emit("test-fhirpath", this.resource, result.substring(1));
+          this.$emit("test-fhirpath", this.resource, result);
 
 
           // let [i, token] = findTokenAtPosition(tokens, e.target.position);
