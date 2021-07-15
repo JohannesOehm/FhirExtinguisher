@@ -1,0 +1,9 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  fhirextinguisher:
+    image: wwuimi/fhirextinguisher
+    restart: unless-stopped
+    ports:
+      - "8089:8080"
+    entrypoint: ["java", "-jar", "FhirExtinguisher-all.jar", "-f", "http://hapi.fhir.org/baseR4", "-p", "8080" ,"-ext"]
+
