@@ -115,8 +115,9 @@
 
 <script lang="ts">
 import * as $ from 'jquery';
-import {VmColumn, VmSubColumn} from "./my-app.vue";
 import * as _ from "lodash";
+import {VmColumn, VmSubColumn} from "../ui-types";
+// import VmSubColumn from "./my-app.vue";
 
 
 export default {

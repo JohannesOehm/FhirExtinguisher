@@ -19,7 +19,7 @@
 
 <script lang="ts">
 import * as CSV from "../csv";
-import {parseLink} from "./my-app.vue";
+import {parseLink} from "./utils";
 
 type StoredQuery = { name: string, url: string }
 

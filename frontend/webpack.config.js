@@ -1,14 +1,14 @@
 const path = require('path');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const {VueLoaderPlugin} = require('vue-loader');
 const webpack = require("webpack");
 
 const redirectServer = "http://localhost:8081";
 
 module.exports = {
     entry: './src/app/index.ts',
-    // devtool: 'inline-source-map',
+    devtool: 'inline-source-map',
     mode: 'development',
     module: {
         rules: [
@@ -33,13 +33,15 @@ module.exports = {
                 use: ['style-loader', 'css-loader']
             }, {
                 test: /\.ttf$/,
-                use: ['file-loader']
+                // use: ['file-loader']
+                type: "asset/resource"
             }
         ],
     },
     plugins: [
         new MonacoWebpackPlugin({
-            languages: ['json', 'xml', 'html']
+            languages: ['json', 'xml', 'html'],
+            globalAPI: true
         }),
         new CopyPlugin({
             patterns: [
@@ -58,10 +60,11 @@ module.exports = {
     ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.vue'],
-        alias: {vue: 'vue/dist/vue.esm.js'}, //runtime renderingp
-        // fallback: {
-        //      "assert": require.resolve("assert/")
-        // }
+        // alias: {vue: '@vue/runtime-dom'}, //runtime rendering https://stackoverflow.com/questions/50805384/module-not-found-error-cant-resolve-vue-path-not-correct/65249540
+        fallback: {
+            //      "assert": require.resolve("assert/")
+            "path": false //https://github.com/microsoft/monaco-editor/issues/2578
+        }
     },
     output: {
         filename: 'bundle.js',

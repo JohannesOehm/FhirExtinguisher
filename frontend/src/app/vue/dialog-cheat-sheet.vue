@@ -54,6 +54,7 @@
       <tr>
         <td><code class="highlight-url">Observation?subject=Patient/123</code></td>
         <td> The logical [id] of a resource of a specified type using a local reference</td>
+      </tr>
       <tr>
         <td><code class="highlight-url">Observation?subject=http://fh.ir/Patient/123</code></td>
         <td> A reference to a resource by its absolute location, or by it's canonical URL</td>

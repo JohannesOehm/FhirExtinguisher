@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import MonacoEditor from 'monaco-editor-vue'
+import MonacoEditor from './monaco-editor'
 // all options: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.istandaloneeditorconstructionoptions.html
 const DefaultOptions = {
   fontSize: '14px',
@@ -57,7 +57,7 @@ const DefaultOptions = {
   },
   minimap: {enabled: false},
   // see: https://github.com/microsoft/monaco-editor/issues/1746
-  wordBasedSuggestions: false,
+  wordBasedSuggestions: true,
   // avoid links underline
   links: false,
   // avoid highlight hover word
@@ -112,7 +112,7 @@ export default {
   },
   data() {
     return {
-      editor: '',
+      // editor: '',
       optionsLocal: {},
     }
   },
@@ -145,6 +145,7 @@ export default {
     },
     onEditorMounted(editor, monaco) {
       this.editor = editor
+      window.myEditor = editor
       // disable `Find` widget
       // see: https://github.com/microsoft/monaco-editor/issues/287#issuecomment-328371787
       // eslint-disable-next-line no-bitwise
@@ -152,6 +153,8 @@ export default {
       })
       // disable press `Enter` in case of producing line breaks
       editor.addCommand(monaco.KeyCode.Enter, () => {
+
+        console.log("Enter pressed!", this.editor)
         /**
          * Origin purpose: disable line breaks
          * Side Effect: If defining completions, will prevent `Enter` confirm selection
@@ -170,11 +173,11 @@ export default {
          * Finally, `acceptSelectedSuggestion` appears here:
          * - `editorExtensions.js` Line 288
          */
-        if (this.editor._contentWidgets["editor.widget.suggestWidget"].widget.state !== 3) {
-          this.onEnter(this.editor.getValue());
-        } else {
-          editor.trigger('', 'acceptSelectedSuggestion')
-        }
+        // if (this.editor._contentWidgets["editor.widget.suggestWidget"].widget.state !== 3) {
+        //   this.onEnter(this.editor.getValue());
+        // } else {
+        editor.trigger('', 'acceptSelectedSuggestion')
+        // }
       })
       // deal with user paste
       // see: https://github.com/microsoft/monaco-editor/issues/2009#issue-63987720

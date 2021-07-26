@@ -38,6 +38,8 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     }
 
     provideCompletionItems(model: editor.ITextModel, position: mPosition, context: languages.CompletionContext, token: CancellationToken): languages.CompletionList {
+        console.log("provideCompletionItems")
+
         if (!this.conformanceStatement) {
             return {suggestions: []};
         }

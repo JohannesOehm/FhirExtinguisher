@@ -88,7 +88,9 @@
 <script lang="ts">
 import * as CSV from '../csv.js';
 import * as monaco from "monaco-editor";
-import {columnsToString, VmColumn} from "./my-app";
+import {columnsToString} from "./utils";
+import {VmColumn} from "../ui-types";
+
 
 type TableData = { records: string[][], fields: string[], metadata: any };
 

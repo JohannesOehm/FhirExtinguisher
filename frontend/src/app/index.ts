@@ -6,6 +6,9 @@ import Vue from 'vue';
 import App from './vue/my-app.vue';
 import BootstrapVue, {IconsPlugin, ModalPlugin} from "bootstrap-vue";
 
+import * as monaco from 'monaco-editor';
+
+
 import './url-grammar-antlr'
 
 Vue.use(BootstrapVue);
