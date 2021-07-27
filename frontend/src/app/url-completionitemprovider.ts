@@ -5,32 +5,39 @@ import {ICapabilityStatement_SearchParam} from "@ahryman40k/ts-fhir-types/lib/R4
 import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 
+import conformanceStatement from "./fhir-metadata/example-conformance.json"
+import referenceTypes from "./fhir-metadata/structuredefinitions/reference-types-r4.json"
+import typeElements from "./fhir-metadata/structuredefinitions/type-elements-r4.json"
+
 export class URLCompletionItemProvider implements languages.CompletionItemProvider {
     triggerCharacters = ["?", "&", ":", "=", "."];
 
-    private conformanceStatement: R4.ICapabilityStatement = undefined;
+    // @ts-ignore
+    private conformanceStatement: R4.ICapabilityStatement = conformanceStatement;
 
     /**
      * e.g. {base:["Observation"],parameter:"subject",target:["Group","Device","Patient","Location"]}
      * means Observation?subject= references either Group, Device, Patient or Location
      */
-    private referenceTypes: { base: string[], parameter: string, target: string[] }[] = undefined;
+        // @ts-ignore
+    private referenceTypes: { base: string[], parameter: string, target: string[] }[] = referenceTypes;
 
     /**
      * e.g. "Patient":["id","meta",...] means, Patient has Patient.id, Patient.meta, ... as root elements
      * for Patient?_elements=<click> completion
      */
-    private typeElements: Record<string, string[]>;
+        //@ts-ignore
+    private typeElements: Record<string, string[]> = typeElements;
 
 
     constructor() {
-        fetch("example-conformance.json")
-            .then(res => res.json())
-            .then(res => this.conformanceStatement = res)
+        // fetch("example-conformance.json")
+        //     .then(res => res.json())
+        //     .then(res => this.conformanceStatement = res)
 
-        fetch("structuredefinitions/reference-types-r4.json")
-            .then(res => res.json())
-            .then(res => this.referenceTypes = res);
+        // fetch("structuredefinitions/reference-types-r4.json")
+        //     .then(res => res.json())
+        //     .then(res => this.referenceTypes = res);
 
         fetch(`structuredefinitions/type-elements-r4.json`)
             .then(res => res.json())

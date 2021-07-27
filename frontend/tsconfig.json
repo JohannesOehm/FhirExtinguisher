@@ -3,12 +3,13 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "noImplicitAny": false,
-    "module": "es6",
+    "module": "es2020",
     "moduleResolution": "node",
     "target": "es6",
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
+    "resolveJsonModule": true,
     "plugins": [
       {
         "name": "ts-vue-plugin"

@@ -1,18 +1,17 @@
 import {Column} from "./index";
 
+import structureDefinitionResourcesR4 from "./fhir-metadata/structuredefinitions/r4/profiles-resources.json"
+import structureDefinitionResourcesSTU3 from "./fhir-metadata/structuredefinitions/stu3/profiles-resources.json"
+import structureDefinitionsTypesR4 from "./fhir-metadata/structuredefinitions/r4/profiles-types.json"
+import structureDefinitionsTypesSTU3 from "./fhir-metadata/structuredefinitions/stu3/profiles-types.json"
+
 export class ResourceSuggestionService {
 
-    structureDefinitionsResource: any;
-    structureDefinitionsTypes: any;
-
-    constructor(fhirVersion: string) {
-        fetch(`structuredefinitions/${fhirVersion}/profiles-resources.json`)
-            .then(res => res.json())
-            .then(it => this.structureDefinitionsResource = it);
-        fetch(`structuredefinitions/${fhirVersion}/profiles-types.json`)
-            .then(res => res.json())
-            .then(it => this.structureDefinitionsTypes = it);
+    constructor(public fhirVersion: string) {
     }
+
+    structureDefinitionsResource: any = this.fhirVersion === "r4" ? structureDefinitionResourcesR4 : structureDefinitionResourcesSTU3;
+    structureDefinitionsTypes: any = this.fhirVersion === "r4" ? structureDefinitionsTypesR4 : structureDefinitionsTypesSTU3;
 
 
     getResourceNames(): string[] {

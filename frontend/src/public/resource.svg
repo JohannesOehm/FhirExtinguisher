@@ -9,6 +9,6 @@
           d="M -85,-20 l 20,-30  l 10,30 l 15,-40 l 20,10 l 5,20 l 10,10 l 5, -20 l 10,-10 l 10,-20 l 10,30 l 5,20
            l 15, -15 l 10, -20 l 10 35 z"/>
 
-    <circle cx="35" cy="70" r="15" stroke="black" stroke-width="10" fill="none"/>
-    <circle cx="-35" cy="70" r="15" stroke="black" stroke-width="10" fill="none"/>
+    <circle cx="35" cy="60" r="15" stroke="black" stroke-width="10" fill="none"/>
+    <circle cx="-35" cy="60" r="15" stroke="black" stroke-width="10" fill="none"/>
 </svg>
