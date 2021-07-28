@@ -27,22 +27,29 @@
                 </a>
             </div>
         </h6>
-        <div class="container-fluid">
-            <!--            <ul class="nav flex-column mb-2">-->
-            <draggable :list="columns">
-                <div class="nav-item d-flex justify-content-between align-items-center" style="padding: 10px;"
-                     v-for="(column, idx) in columns">
-                    <a class="" style="flex: 1 1 auto;" href="#" v-on:click="$emit('editColumn', idx)">
-                        <div class="">
-                            <span style="color:black;">{{column.name}}</span><span
-                                class="text-muted">@{{column.type}}</span><span v-if="column.subColumns"
-                                                                                class="text-muted">
-                                ({{column.subColumns.map(it => it.name).join(", ")}})
+      <div class="container-fluid sidebar-heading align-items-center px-4 mt-2 mb-1 text-muted">
+        <input type="checkbox" id="summary" :checked="summary" @click="$emit('toggleSummary')"><label for="summary">&nbsp;add
+        columns for summary elements</label>
+      </div>
+      <div class="container-fluid">
+        <!--            <ul class="nav flex-column mb-2">-->
+        <draggable :list="columns">
+          <div class="nav-item d-flex justify-content-between align-items-center" style="padding: 10px;"
+               v-for="(column, idx) in columns">
+            <a class="" style="flex: 1 1 auto; min-width: 0px;" href="#" v-on:click="$emit('editColumn', idx)">
+              <div style="display: flex; flex-direction: column">
+                <div style="flex: 1 1 auto;" class="text-truncate">
+                  <span style="color:black;">{{ column.name }}</span><span
+                    class="text-muted">@{{ column.type }}</span><span v-if="column.subColumns"
+                                                                      class="text-muted">
+                                ({{ column.subColumns.map(it => it.name).join(", ") }})
                             </span>
-                            <br>
-                            <span class="text-muted text-truncate d-inline-block" style="max-width: 300px;">{{column.expression}}</span>
-
-                        </div>
+                </div>
+                <div style="flex: 1 1 auto;">
+                  <span class="text-muted text-truncate d-inline-block"
+                        style="max-width: 300px;">{{ column.expression }}</span>
+                </div>
+              </div>
                     </a>
 
                     <div style="flex: 0 0 auto;">
