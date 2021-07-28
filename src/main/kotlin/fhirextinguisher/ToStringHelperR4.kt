@@ -157,12 +157,27 @@ object ToStringHelperR4 {
         return if (name.hasText()) {
             name.text
         } else {
-            listOf(
-                name.prefix.joinToString(" "),
-                name.given.joinToString(" "),
-                if (name.hasFamily()) name.family else "",
-                name.suffix.joinToString(" ")
-            ).joinToString(" ") + (if (name.hasUse()) " (${name.use.toCode()})" else "")
+            return buildString {
+                if (name.hasPrefix()) {
+                    append(name.prefix.joinToString(" "))
+                    append(" ")
+                }
+                if (name.hasGiven()) {
+                    append(name.given.joinToString(" "))
+                    append(" ")
+                }
+                if (name.hasFamily()) {
+                    append(name.family)
+                    append(" ")
+                }
+                if (name.hasSuffix()) {
+                    append(name.suffix)
+                }
+                if (name.hasUse()) {
+                    append(" (${name.use.toCode()})")
+                }
+            }.trim()
+
         }
     }
 
