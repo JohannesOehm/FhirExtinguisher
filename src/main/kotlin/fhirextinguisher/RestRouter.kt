@@ -127,7 +127,7 @@ fun application2(
         get("/info") {
             call.respond(buildJsonObject {
                 put("server", instanceConfiguration.fhirServerUrl)
-                put("version", instanceConfiguration.fhirVersion.version.version.fhirVersionString)
+                put("version", instanceConfiguration.fhirVersion.version.version.name.toLowerCase())
             }.toString())
         }
         get("/") {
