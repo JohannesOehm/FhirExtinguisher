@@ -5,6 +5,7 @@ export interface VmColumn {
     name: string,
     type: string,
     expression: string,
+    isSummary?: boolean,
     subColumns?: VmSubColumn[]
 }
 

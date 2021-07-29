@@ -13,7 +13,7 @@
        target="_blank">{{ endpointUrl }}</a>
     <div aria-label="Search" class="form-control form-control-dark w-100" id="searchbar"
          style="padding:0;margin:2px;">
-      <monaco-singleline v-model="value" :options="options" :editor-before-mount="onEditorBeforeMount"
+      <monaco-singleline v-model="value" :options="options" :editor-before-mount="onEditorBeforeMount" ref="editor"
                          :on-enter="onEnter"/>
     </div>
     <ul class="navbar-nav px-3">
@@ -33,7 +33,7 @@ import MonacoSingleline from "./monaco-singleline.vue"
 
 export default {
   name: 'Searchbar',
-  props: ['endpointUrl'],
+  props: ['endpointUrl', 'fhirVersion'],
   components: {MonacoSingleline},
   mounted: function () {
 
@@ -54,13 +54,16 @@ export default {
     getFhirSearchQuery: function () {
       return this.value;
     },
+    getValue: function () {
+      return this.$refs.editor.getValue();
+    },
     onEnter(url: string) {
       this.$emit('startRequest', url);
     },
     onEditorBeforeMount(monaco) {
       monaco.languages.register({id: 'url'});
       monaco.languages.setTokensProvider("url", new UrlTokensProvider());
-      monaco.languages.registerCompletionItemProvider("url", new URLCompletionItemProvider());
+      monaco.languages.registerCompletionItemProvider("url", new URLCompletionItemProvider(this.fhirVersion));
 
       let literalFg = '#000000';
       let idFg = '#344482';

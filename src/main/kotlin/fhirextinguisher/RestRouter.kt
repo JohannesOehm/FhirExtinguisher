@@ -157,61 +157,75 @@ fun isThisMyIpAddress(addr: InetAddress): Boolean {
  */
 fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData?, timeoutInMillis: Int) {
     route("$prefix/{...}") {
-        handle {
-            val client = HttpClient(Apache) {
-                engine {
-                    connectTimeout = timeoutInMillis
-                    socketTimeout = timeoutInMillis
-                    connectionRequestTimeout = timeoutInMillis
-                }
-                if (basicAuth != null) {
-                    install(Auth) {
-                        basic {
-                            username = basicAuth.username
-                            password = basicAuth.password
-                            sendWithoutRequest = true
-                        }
+        redirect(timeoutInMillis, basicAuth, target, prefix)
+    }
+    route("$prefix/") {
+        redirect(timeoutInMillis, basicAuth, target, prefix)
+    }
+
+}
+
+private fun Route.redirect(
+    timeoutInMillis: Int,
+    basicAuth: BasicAuthData?,
+    target: String,
+    prefix: String
+) {
+    handle {
+        val client = HttpClient(Apache) {
+            engine {
+                connectTimeout = timeoutInMillis
+                socketTimeout = timeoutInMillis
+                connectionRequestTimeout = timeoutInMillis
+            }
+            if (basicAuth != null) {
+                install(Auth) {
+                    basic {
+                        username = basicAuth.username
+                        password = basicAuth.password
+                        sendWithoutRequest = true
                     }
                 }
             }
+        }
 
-            val originalUri = call.request.uri
+        val originalUri = call.request.uri
 
-            val redirectUrl = target.dropLastWhile { it == '/' } + "/" + originalUri.substringAfter("$prefix/")
-            log.info { "redirecting to $redirectUrl" }
-            try {
-                val response = client.request<HttpResponse>(redirectUrl)
-                //TODO: Add Query Parameters
-                // Get the relevant headers of the client response.
-                val proxiedHeaders = response.headers
-                val location = proxiedHeaders[HttpHeaders.Location]
-                val contentType = proxiedHeaders[HttpHeaders.ContentType]
-                val contentLength = proxiedHeaders[HttpHeaders.ContentLength]
+        val redirectUrl = target.dropLastWhile { it == '/' } + "/" + originalUri.substringAfter("$prefix/")
+        log.info { "redirecting to $redirectUrl" }
+        try {
+            val response = client.request<HttpResponse>(redirectUrl)
+            //TODO: Add Query Parameters
+            // Get the relevant headers of the client response.
+            val proxiedHeaders = response.headers
+            val location = proxiedHeaders[HttpHeaders.Location]
+            val contentType = proxiedHeaders[HttpHeaders.ContentType]
+            val contentLength = proxiedHeaders[HttpHeaders.ContentLength]
 
-                // Propagates location header, removing the wikipedia domain from it
-                if (location != null) {
-                    call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
-                }
-                //TODO: Find a solution that works in tomcat behind AJP reverse proxy but does not block
-                val bytes = runBlocking { response.content.toByteArray() }
+            // Propagates location header, removing the wikipedia domain from it
+            if (location != null) {
+                call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
+            }
+            //TODO: Find a solution that works in tomcat behind AJP reverse proxy but does not block
+            val bytes = runBlocking { response.content.toByteArray() }
 
-                proxiedHeaders.filter { key, value ->
-                    !key.equals(HttpHeaders.ContentType, ignoreCase = true)
-                            && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
-                            && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)
-                }.forEach { key, value ->
-                    value.forEach { call.response.header(key, it) }
-                }
-                call.respondBytes(
-                    bytes = bytes,
-                    contentType = contentType?.let { ContentType.parse(it) },
-                    status = response.status
-                )
+            proxiedHeaders.filter { key, value ->
+                !key.equals(HttpHeaders.ContentType, ignoreCase = true)
+                        && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                        && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)
+            }.forEach { key, value ->
+                value.forEach { call.response.header(key, it) }
+            }
+            call.respondBytes(
+                bytes = bytes,
+                contentType = contentType?.let { ContentType.parse(it) },
+                status = response.status
+            )
 
 
-                // In the case of other content, we simply pipe it. We return a [OutgoingContent.WriteChannelContent]
-                // propagating the contentLength, the contentType and other headers, and simply we copy
-                // the ByteReadChannel from the HTTP client response, to the HTTP server ByteWriteChannel response.
+            // In the case of other content, we simply pipe it. We return a [OutgoingContent.WriteChannelContent]
+            // propagating the contentLength, the contentType and other headers, and simply we copy
+            // the ByteReadChannel from the HTTP client response, to the HTTP server ByteWriteChannel response.
 //                call.respond(object : OutgoingContent.ByteArrayContent() {
 //                    override val contentLength: Long? = contentLength?.toLong()
 //                    override val contentType: ContentType? =
@@ -227,22 +241,19 @@ fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData?, 
 //                        return bytes
 //                    }
 //                })
-            } catch (e: ServerResponseException) {
-                call.respondText(
-                    "Request got successfully redirected to '$redirectUrl', but server responded with '${e.response.status}'!\n\n${e.message}",
-                    status = HttpStatusCode.InternalServerError
-                )
-            } catch (e: Exception) {
-                call.respondText(
-                    "FhirExtinguisher/Ktor-Client-Exception: Cannot redirect to '$redirectUrl'!\n \n${e.stackTraceToString()}",
-                    status = HttpStatusCode.InternalServerError
-                )
-            }
-            client.close()
+        } catch (e: ServerResponseException) {
+            call.respondText(
+                "Request got successfully redirected to '$redirectUrl', but server responded with '${e.response.status}'!\n\n${e.message}",
+                status = HttpStatusCode.InternalServerError
+            )
+        } catch (e: Exception) {
+            call.respondText(
+                "FhirExtinguisher/Ktor-Client-Exception: Cannot redirect to '$redirectUrl'!\n \n${e.stackTraceToString()}",
+                status = HttpStatusCode.InternalServerError
+            )
         }
+        client.close()
     }
-
-
 }
 
 fun index_html(baseHref: String = "/") = """<!doctype html>

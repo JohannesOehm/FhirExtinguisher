@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.4.20"
-    kotlin("plugin.serialization") version "1.4.20"
+    kotlin("jvm") version "1.4.30"
+    kotlin("plugin.serialization") version "1.4.30"
     antlr
     id("com.github.johnrengelman.shadow") version "5.2.0"
     id("war")
@@ -25,35 +25,36 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.6.3"
+    version = "1.7.0"
 }
 
 
 subprojects {
-    version = "1.6.3"
+    version = "1.7.0"
 }
 
-val ktor_version = "1.5.0"
+val ktor_version = "1.6.1"
 val tomcat_version = "9.0.4"
+val hapi_version = "5.4.1"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     testImplementation("junit", "junit", "4.12")
     implementation("org.nanohttpd", "nanohttpd", "2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
     implementation("commons-cli", "commons-cli", "1.4")
     implementation("ch.qos.logback", "logback-classic", "1.2.3")
-    implementation("ca.uhn.hapi.fhir", "hapi-fhir-client", "5.2.1")
-    implementation("ca.uhn.hapi.fhir", "hapi-fhir-structures-r4", "5.2.1")
-    implementation("ca.uhn.hapi.fhir", "hapi-fhir-structures-dstu3", "5.2.1")
+    implementation("ca.uhn.hapi.fhir", "hapi-fhir-client", hapi_version)
+    implementation("ca.uhn.hapi.fhir", "hapi-fhir-structures-r4", hapi_version)
+    implementation("ca.uhn.hapi.fhir", "hapi-fhir-structures-dstu3", hapi_version)
 //    implementation("ca.uhn.hapi.fhir", "hapi-fhir-validation", "5.2.1")
 //    implementation("ca.uhn.hapi.fhir", "hapi-fhir-validation-resources-r4", "5.2.1")
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.3")
-    implementation("org.apache.commons", "commons-csv", "1.5")
+    implementation("org.apache.commons", "commons-csv", "1.8")
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-client:$ktor_version")

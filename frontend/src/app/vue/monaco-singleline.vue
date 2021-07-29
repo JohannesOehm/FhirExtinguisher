@@ -143,6 +143,9 @@ export default {
     onEditorBeforeMount(monaco) {
       this.editorBeforeMount(monaco)
     },
+    getValue() {
+      return this.editor.getValue();
+    },
     onEditorMounted(editor, monaco) {
       this.editor = editor
       window.myEditor = editor
@@ -153,8 +156,6 @@ export default {
       })
       // disable press `Enter` in case of producing line breaks
       editor.addCommand(monaco.KeyCode.Enter, () => {
-
-        console.log("Enter pressed!", this.editor)
         /**
          * Origin purpose: disable line breaks
          * Side Effect: If defining completions, will prevent `Enter` confirm selection
@@ -173,11 +174,11 @@ export default {
          * Finally, `acceptSelectedSuggestion` appears here:
          * - `editorExtensions.js` Line 288
          */
-        // if (this.editor._contentWidgets["editor.widget.suggestWidget"].widget.state !== 3) {
-        //   this.onEnter(this.editor.getValue());
-        // } else {
-        editor.trigger('', 'acceptSelectedSuggestion')
-        // }
+        if (this.editor._contentWidgets["editor.widget.suggestWidget"] && this.editor._contentWidgets["editor.widget.suggestWidget"].widget.state !== 3) {
+          this.onEnter(this.editor.getValue());
+        } else {
+          editor.trigger('', 'acceptSelectedSuggestion')
+        }
       })
       // deal with user paste
       // see: https://github.com/microsoft/monaco-editor/issues/2009#issue-63987720

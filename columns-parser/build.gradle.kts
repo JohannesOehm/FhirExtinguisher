@@ -2,11 +2,8 @@ plugins {
     kotlin("multiplatform")
 }
 
-//group = "de.unimuenster."
-//version = "1.0-SNAPSHOT"
 
 val antlrKotlinVersion = "0ad2c42952"
-
 
 buildscript {
     repositories {

@@ -6,8 +6,11 @@ import CompletionItem = languages.CompletionItem;
 import CompletionItemKind = languages.CompletionItemKind;
 
 import conformanceStatement from "./fhir-metadata/example-conformance.json"
-import referenceTypes from "./fhir-metadata/structuredefinitions/reference-types-r4.json"
-import typeElements from "./fhir-metadata/structuredefinitions/type-elements-r4.json"
+import referenceTypesR4 from "./fhir-metadata/structuredefinitions/reference-types-r4.json"
+import typeElementsR4 from "./fhir-metadata/structuredefinitions/type-elements-r4.json"
+import referenceTypesSTU3 from "./fhir-metadata/structuredefinitions/reference-types-stu3.json"
+import typeElementsSTU3 from "./fhir-metadata/structuredefinitions/type-elements-stu3.json"
+import {getResourceName} from "./vue/utils";
 
 export class URLCompletionItemProvider implements languages.CompletionItemProvider {
     triggerCharacters = ["?", "&", ":", "=", "."];
@@ -19,29 +22,26 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
      * e.g. {base:["Observation"],parameter:"subject",target:["Group","Device","Patient","Location"]}
      * means Observation?subject= references either Group, Device, Patient or Location
      */
-        // @ts-ignore
-    private referenceTypes: { base: string[], parameter: string, target: string[] }[] = referenceTypes;
+    private referenceTypes: { base: string[], parameter: string, target: string[] }[];
 
     /**
      * e.g. "Patient":["id","meta",...] means, Patient has Patient.id, Patient.meta, ... as root elements
      * for Patient?_elements=<click> completion
      */
-        //@ts-ignore
-    private typeElements: Record<string, string[]> = typeElements;
+    private typeElements: Record<string, string[]>;
+
+    constructor(fhirVersion: string) {
+        if (fhirVersion === "r4") {
+            // @ts-ignore
+            this.referenceTypes = referenceTypesR4;
+            this.typeElements = typeElementsR4;
+        } else {
+            // @ts-ignore
+            this.referenceTypes = referenceTypesSTU3;
+            this.typeElements = typeElementsSTU3;
+        }
 
 
-    constructor() {
-        // fetch("example-conformance.json")
-        //     .then(res => res.json())
-        //     .then(res => this.conformanceStatement = res)
-
-        // fetch("structuredefinitions/reference-types-r4.json")
-        //     .then(res => res.json())
-        //     .then(res => this.referenceTypes = res);
-
-        fetch(`structuredefinitions/type-elements-r4.json`)
-            .then(res => res.json())
-            .then(it => this.typeElements = it);
     }
 
     provideCompletionItems(model: editor.ITextModel, position: mPosition, context: languages.CompletionContext, token: CancellationToken): languages.CompletionList {
@@ -102,7 +102,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
 
 
     private getSearchParamSuggestions(fullText: string, range: IRange, textUntilPosition: string): CompletionItem[] {
-        let resourceNames = this.getResourceName(fullText);
+        let resourceNames = getResourceName(fullText);
         console.log("resourceNames = ", resourceNames);
 
         let suggestions: CompletionItem[] = [];
@@ -302,7 +302,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
      * Observation?subject:Patient.<click>
      */
     private getChainedSuggestions(fullText: string, range: IRange, textUntilPosition: string): CompletionItem[] {
-        let resourceName = this.getResourceName(textUntilPosition)[0];
+        let resourceName = getResourceName(textUntilPosition)[0];
         let paramName = textUntilPosition.substring(
             Math.max(textUntilPosition.lastIndexOf("?"), textUntilPosition.lastIndexOf("&")) + 1,
             textUntilPosition.lastIndexOf(".")
@@ -351,28 +351,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
     /**
      * null is wildcard (search is not constraining resource type(s))
      */
-    private getResourceName(textUntilPosition: string): string[] | null {
-        let resourceName: string;
-        if (textUntilPosition.indexOf("/") !== -1) {
-            resourceName = textUntilPosition.substring(0, textUntilPosition.indexOf("/"));
-        } else if (textUntilPosition.indexOf("?") !== -1) {
-            resourceName = textUntilPosition.substring(0, textUntilPosition.indexOf("?"));
-        }
 
-        if (resourceName === "") {
-            let idxOfQ = textUntilPosition.indexOf("?");
-            if (idxOfQ !== -1) {
-                let urlSearchParams = new URLSearchParams(textUntilPosition.substring(idxOfQ + 1));
-                if (urlSearchParams.has("_type")) {
-                    return urlSearchParams.get("_type").split(",");
-                }
-            }
-            return null;
-        } else {
-            return [resourceName];
-        }
-
-    }
 
     private getModifierSuggestions(fullText: string, range: IRange, textUntilPosition: string) {
         let paramName = textUntilPosition.substring(
@@ -397,7 +376,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
                 return this.getResourceNameSuggestions(range, ":");
             } else if (resourceNameTgt && !joinField) {
                 let definition = this.getDefinitionForResourceName(resourceNameTgt);
-                let resourceNames = this.getResourceName(fullText);
+                let resourceNames = getResourceName(fullText);
                 return definition.searchParam
                     .filter(it => it.type === "reference")
                     .filter(it => resourceNames === null || this.getReferenceType(resourceNameTgt, it.name).filter(it => resourceNames.includes(it)).length > 0)
@@ -429,7 +408,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             } // else if (resourceName && joinField && attribute === "_has"//TODO handle chain of ?_has:Observation:subject:_has:
         }
 
-        let resourceNames = this.getResourceName(fullText);
+        let resourceNames = getResourceName(fullText);
         let paramDefinition = this.getParamDefinitionFirstMatch(resourceNames, paramName);
 
         let additionalParams: CompletionItem[] = [];
@@ -622,7 +601,7 @@ export class URLCompletionItemProvider implements languages.CompletionItemProvid
             return FixedValuesHelper.returnTotal(range);
         }
 
-        let resourceNames = this.getResourceName(fullText);
+        let resourceNames = getResourceName(fullText);
 
         if (paramName === "_elements") {
             return resourceNames.map(it => this.typeElements[it])

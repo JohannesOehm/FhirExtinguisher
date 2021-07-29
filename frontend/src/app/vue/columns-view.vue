@@ -21,14 +21,15 @@
                          stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                          viewBox="0 0 24 24"
                          xmlns="http://www.w3.org/2000/svg">
-                        <line x1="12" x2="12" y1="0" y2="24"/>
-                        <line x1="0" x2="24" y1="12" y2="12"/>
+                      <line x1="12" x2="12" y1="0" y2="24"/>
+                      <line x1="0" x2="24" y1="12" y2="12"/>
                     </svg>
                 </a>
             </div>
         </h6>
       <div class="container-fluid sidebar-heading align-items-center px-4 mt-2 mb-1 text-muted">
-        <input type="checkbox" id="summary" :checked="summary" @click="$emit('toggleSummary')"><label for="summary">&nbsp;add
+        <input style="filter:grayscale(1);" type="checkbox" id="summary" :checked="summary"
+               @click="$emit('toggleSummary')"><label for="summary">&nbsp;add
         columns for summary elements</label>
       </div>
       <div class="container-fluid">
@@ -77,15 +78,15 @@
     type TableData = { records: string[][], fields: string[], metadata: any };
 
     export default {
-        name: "ColumnsView",
-        props: ['columns', 'rawData'],
-        methods: {
-            removeColumn: function (index: number) {
-                this.columns.splice(index, 1)
-            }
-        },
-        components: {
-            draggable
+      name: "ColumnsView",
+      props: ['columns', 'rawData', 'summary'],
+      methods: {
+        removeColumn: function (index: number) {
+          this.columns.splice(index, 1)
         }
+      },
+      components: {
+        draggable
+      }
     }
 </script>

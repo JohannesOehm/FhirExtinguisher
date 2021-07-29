@@ -1,16 +1,17 @@
 <template>
   <div id="app" style="display: flex;flex-direction: column;height:100%; max-height: 100%; overflow: hidden;">
-    <Searchbar :endpoint-url="endpointUrl" @startRequest="handleRequest" ref="searchbar" style="flex: 0 0 auto;"/>
+    <Searchbar :endpoint-url="endpointUrl" :fhir-version="fhirVersion" @startRequest="handleRequest" ref="searchbar"
+               style="flex: 0 0 auto;"/>
     <div id="content" style="flex: 1 0 auto; overflow: hidden;max-height: calc(100% - 40px);">
       <div class="bg-light sidebar" id="sidebar" style="width: 500px;">
         <div class="sidebar-sticky" style="">
-          <ColumnsView :columns="columns" @addColumn="handleAddColumn"
+          <ColumnsView :columns="columns" :summary="summary" @addColumn="handleAddColumn" @toggleSummary="toggleSummary"
                        @editColumn="handleEditColumn"/>
         </div>
       </div>
       <div id="separator" draggable="true"></div>
       <div id="tableOrRaw" role="main" style="overflow: auto">
-        <MyContentView :columns="columns" :fhir-query="fhirQuery" :rawData="rawData" :limit="limit"
+        <MyContentView :columns="columns2" :fhir-query="fhirQuery" :rawData="rawData" :limit="limit"
                        @update-columns="updateColumns" @update-limit="updateLimit" @import-link="importLink"
                        @show-resource="handleShowResource"
                        ref="content"/>
@@ -43,6 +44,7 @@ import DialogShowResource from './dialog-show-resource.vue';
 import DialogTestFhirpath from './dialog-test-fhirpath.vue';
 import DialogAbout from './dialog-about.vue';
 import DialogCheatSheet from "./dialog-cheat-sheet.vue";
+import {getSummaryColumns} from "../summary-columns";
 import {
   Column,
   ExplodeLong,
@@ -53,7 +55,7 @@ import {
   stringifyColumns
 } from "columns-parser";
 import {VmColumn, VmSubColumn} from "../ui-types";
-import {parseLink, columnsToString, convertToVmColumn} from "./utils";
+import {parseLink, columnsToString, convertToVmColumn, getResourceName} from "./utils";
 // import * as $ from ''
 
 // (<any>$("#sidebar")).resizable({handles: "e"});
@@ -81,7 +83,7 @@ type DialogConfig = {
 
 export default {
   name: "MyApp",
-  data: function (): { resource: string, fhirpathToTest: string, limit: number, columns: any[], rawData: string, endpointUrl: string, dialog: DialogConfig, fhirQuery: string, fhirVersion: "r4" | "stu3" } {
+  data: function () {
     return {
       columns: [{name: "id", type: 'join(" ")', expression: "getIdPart(id)"},
         {
@@ -94,6 +96,7 @@ export default {
           expression: "meta.lastUpdated"
         },
       ],
+      summary: true,
       rawData: null,
       endpointUrl: "http://url/to/fhir/endpoint",
       fhirVersion: "r4",
@@ -158,7 +161,7 @@ export default {
       }
     },
     handleRequest: function () {
-      this.$refs.content.loadBundle()
+      this.$refs.content.loadBundle();
     },
     handleShowResource: function (value: string) {
       this.resource = value;
@@ -183,6 +186,9 @@ export default {
     updateLimit: function (newLimit: number) {
       this.limit = newLimit;
     },
+    toggleSummary: function () {
+      this.summary = !this.summary;
+    },
     importLink: function (link: string) {
       try {
         this.updateUrl(parseLink(link).url);
@@ -204,7 +210,7 @@ export default {
     },
     getDownloadUrl: function (addParams: boolean = true) {
       let params = addParams ? `__limit=${this.limit}&__columns=${encodeURIComponent(columnsToString(this.columns))}` : "";
-      let fhirQuery = this.$refs.searchbar?.getFhirSearchQuery() ?? "";
+      let fhirQuery = this.getFhirSearchQuery();
       if (fhirQuery.endsWith("?")) {
         return "fhir/" + fhirQuery + params;
       } else if (fhirQuery.includes("?")) {
@@ -217,8 +223,27 @@ export default {
     getFhirSearchQuery: function (): string {
       return this.$refs.searchbar?.getFhirSearchQuery() ?? "";
     }
+
   },
-  computed: {},
+  computed: {
+    columns2: function () {
+      let url = this.$refs.searchbar?.getValue() ?? ""; //non-reactive way
+      if (this.summary) {
+        let resourceName = getResourceName(url);
+        let summaryPaths = getSummaryColumns(this.fhirVersion, resourceName);
+        let summaryColumns = summaryPaths.map(it => ({
+          name: it,
+          expression: it,
+          type: 'join("\\n\\n")',
+          isSummary: true
+        }))
+        return [...this.columns, ...summaryColumns];
+      } else {
+        return this.columns;
+      }
+    }
+
+  },
   mounted: function () {
     (<any>window).parseColumns = parseColumns;
 

@@ -88,3 +88,26 @@ export function parseLink(link: string): ParsedUrl {
         .join("&");
     return {url: `${url}?${query}`, columns, limit}
 }
+
+export function getResourceName(fhirsearch: string): string[] | null {
+    let resourceName: string;
+    if (fhirsearch.indexOf("/") !== -1) {
+        resourceName = fhirsearch.substring(0, fhirsearch.indexOf("/"));
+    } else if (fhirsearch.indexOf("?") !== -1) {
+        resourceName = fhirsearch.substring(0, fhirsearch.indexOf("?"));
+    }
+
+    if (!resourceName) {
+        let idxOfQ = fhirsearch.indexOf("?");
+        if (idxOfQ !== -1) {
+            let urlSearchParams = new URLSearchParams(fhirsearch.substring(idxOfQ + 1));
+            if (urlSearchParams.has("_type")) {
+                return urlSearchParams.get("_type").split(",");
+            }
+        }
+        return [fhirsearch];
+    } else {
+        return [resourceName];
+    }
+
+}
