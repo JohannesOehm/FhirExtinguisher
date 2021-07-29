@@ -1,17 +1,18 @@
 package fhirextinguisher
 
 import org.hl7.fhir.instance.model.api.IPrimitiveType
-import org.hl7.fhir.r4.model.*
-import org.hl7.fhir.r4.model.Enumeration
+import org.hl7.fhir.dstu3.model.*
+import org.hl7.fhir.dstu3.model.Enumeration
 import java.util.*
 
 /**
  * Collection of human-readable .toString()-functions for the complex FHIR types
  */
-object ToStringHelperR4 {
+object ToStringHelperSTU3 {
     fun convertToString(it: Base): String =
         when (it) {
-            is Enumeration<*> -> it.code
+            //Todo: code doesnt exist in base in dtsu3 (Enumeration case)
+            is Enumeration<*> -> it.toString()
             is Quantity -> getQuantityAsString(it)
             is DecimalType -> Objects.toString(it.value)
             is CodeableConcept -> getCodeableConceptAsString(it)
@@ -113,8 +114,22 @@ object ToStringHelperR4 {
         val sb = StringBuilder();
         sb.append(it.value)
 
-        if (it.hasCurrency()) {
-            sb.append(" " + it.currency)
+        //Read the currency from unit or code of Money
+        //it should be in there like in the example of the fhir documentation
+        //http://www.hl7.org/fhir/stu3/datatypes-examples.html#ratio
+        //<value value="103.50" />
+        //<unit value="US$" />
+        //<code value="USD" />
+        //<system value="urn:iso:std:iso:4217" />
+        if (it.hasUnit() || it.hasCode()) {
+            var currency = it?.unit?.toString()
+            if (currency == null || currency == "") {
+                currency = it?.code.toString()
+            }
+            if (currency != null && currency != "") {
+                sb.append(" " + currency)
+            }
+
         }
         return sb.toString()
     }

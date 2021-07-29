@@ -75,14 +75,7 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
         return engine.evaluate(base, expression.expression)
     }
 
-    private fun convertToStringInternal(it: Base): String =
-        when (it) {
-            is Enumeration<*> -> it.value.name
-            is Quantity -> ("${it.value} ${it.unit}")
-            is DecimalType -> Objects.toString(it.value)
-            is CodeableConcept -> if (it.text != null) it.text else it.coding.joinToString { it.code }
-            else -> it.toString()
-        }
+    private fun convertToStringInternal(it: Base): String = ToStringHelperSTU3.convertToString(it)
 }
 
 
