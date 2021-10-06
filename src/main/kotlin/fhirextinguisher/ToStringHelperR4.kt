@@ -9,8 +9,15 @@ import java.util.*
  * Collection of human-readable .toString()-functions for the complex FHIR types
  */
 object ToStringHelperR4 {
-    fun convertToString(it: Base): String =
-        when (it) {
+    fun convertToString(it: Base): String {
+        if (it is Element) {
+            val dataAbsentReason = it.getExtensionByUrl("http://hl7.org/fhir/StructureDefinition/data-absent-reason")
+            if (dataAbsentReason != null) {
+                return "data-absent-reason: " + dataAbsentReason.value
+            }
+        }
+
+        return when (it) {
             is Enumeration<*> -> it.code
             is Quantity -> getQuantityAsString(it)
             is DecimalType -> Objects.toString(it.value)
@@ -33,6 +40,7 @@ object ToStringHelperR4 {
             is org.hl7.fhir.r4.model.Annotation -> getAnnotationAsString(it)
             else -> it.toString()
         }
+    }
 
     private fun getSignatureAsString(it: Signature): String {
         return "Signature[" + it.type.joinToString { getCodingAsString(it) } + "]"
@@ -147,6 +155,13 @@ object ToStringHelperR4 {
             append(it.version).append('|')
         }
         append(it.code)
+
+        if (it.hasDisplayElement()) {
+            append(" (")
+            append(it.display)
+            append(")")
+        }
+
     }
 
 

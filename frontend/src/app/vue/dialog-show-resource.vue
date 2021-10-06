@@ -111,7 +111,7 @@ function removeDataType(pathelement: string): string {
     "normalCodedValueSet", "abnormalCodedValueSet", "criticalCodedValueSet", "birthDate", "paymentDate", "paymentIdentifier",
     "usedReference", "usedCode", "locationCode", "locationReference", "accessionIdentifier", "receivedTime", "organismId",
     "parentSubstanceId", "executionPeriod", "lockedDate", "validateCode", "postalCode", "maxDosePerPeriod", "contentReference",
-    "dateRange", "versionId"];
+    "dateRange", "versionId", "linkId"];
 
   let datatypes = ["Base64Binary", "Boolean", "Canonical", "Code", "Date", "DateTime", "Decimal", "Id", "Instant",
     "Integer", "Markdown", "Oid", "PositiveInt", "String", "Time", "UnsignedInt", "Uri", "Url", "Uuid", "Data Types",

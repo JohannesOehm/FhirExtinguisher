@@ -30,7 +30,7 @@
 
       </div>
     </div>
-    <!--    <div class="table-responsive" v-if="!showRaw">-->
+  <template v-if="!showRaw">
     <table class="table table-striped table-sm" style="white-space: pre;" v-if="!showRaw && tableData != null">
       <thead>
       <tr>
@@ -64,8 +64,8 @@
           <pre>{{ tableError }}</pre>
         </div>
       </div>
-    <!--    </div>-->
-    <div id="rawView" v-else>
+  </template>
+    <div id="rawView" v-if="showRaw">
       <div v-html="rawDataWithHighlighting" v-if="rawData != null">
       </div>
       <div v-else>
@@ -201,17 +201,30 @@ export default {
           }
         });
       } else {
-        let formData = new FormData();
-        formData.append("bundle", this.rawData);
-        formData.append("bundleFormat", resourceFormat);
-        formData.append("__limit", this.limit);
-        formData.append("__columns", columnsToString(this.columns));
+        /*      let formData = new FormData();
+              formData.append("bundle", this.rawData);
+              formData.append("bundleFormat", resourceFormat);
+              formData.append("__limit", this.limit);
+              formData.append("__columns", columnsToString(this.columns));
 
+              response = await fetch("processBundle", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  // "Content-Type": this.rawDataFormat == "json" ? "application/json" : "application/xml",
+                }
+              }); */
+        //TODO: Apparently, ktor has maximum characters for multipart data
         response = await fetch("processBundle", {
           method: 'POST',
-          body: formData,
+          body: JSON.stringify({
+            bundle: this.rawData,
+            bundleFormat: resourceFormat,
+            limit: this.limit,
+            columns: columnsToString(this.columns)
+          }),
           headers: {
-            // "Content-Type": this.rawDataFormat == "json" ? "application/json" : "application/xml",
+            "Content-Type": "application/columns+json",
           }
         });
       }

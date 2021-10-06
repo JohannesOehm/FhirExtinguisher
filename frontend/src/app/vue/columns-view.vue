@@ -1,7 +1,7 @@
 <template>
     <div id="columnsView">
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-            <span>Columns</span>
+            <span style="font-weight: bold;">Columns</span>
             <div class="d-flex align-items-center" style="display: inline;">
                 <span class="text-muted">IMPORT</span>&nbsp;
                 <a class="text-muted" href="#" title="Import default settings for a specific resource type"
@@ -30,7 +30,7 @@
       <div class="container-fluid sidebar-heading align-items-center px-4 mt-2 mb-1 text-muted">
         <input style="filter:grayscale(1);" type="checkbox" id="summary" :checked="summary"
                @click="$emit('toggleSummary')"><label for="summary">&nbsp;add
-        columns for summary elements</label>
+        columns for summary elements</label><a @click="$emit('addSummary')" style="font-weight: bold">&nbsp;&ldca;</a>
       </div>
       <div class="container-fluid">
         <!--            <ul class="nav flex-column mb-2">-->

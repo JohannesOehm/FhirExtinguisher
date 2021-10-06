@@ -7,10 +7,14 @@ import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.http.Parameters
+import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.Json.Default.encodeToString
 import mu.KotlinLogging
 import org.apache.commons.csv.CSVFormat
@@ -48,6 +52,14 @@ class FhirExtinguisher(
         val columns: List<Column>?
     )
 
+    @Serializable
+    data class PostParams(
+        val limit: Int,
+        val columns: String,
+        val bundle: String,
+        val bundleFormat: String
+    )
+
     /**
      * Process a bundle resource which is submitted with the users call
      */
@@ -59,11 +71,11 @@ class FhirExtinguisher(
         val myParams: MyParams
         val resourceType: String
         val resourceString: String
-        if (call.request.contentType().contentType == "multipart" && call.request.contentType().contentSubtype == "form-data") {
-            val receiveParameters = call.receiveParameters()
-            myParams = processQueryParams(receiveParameters).second
-            resourceType = receiveParameters["bundleFormat"] ?: throw Exception("bundleFormat parameter must be set!")
-            resourceString = receiveParameters["bundle"] ?: throw Exception("bundle must be set!")
+        if (call.request.contentType().contentType == "application" && call.request.contentType().contentSubtype == "columns+json") {
+            val postParams: PostParams = Json.decodeFromString(call.receive())
+            myParams = MyParams(CSVFormat.EXCEL, postParams.limit, parseColumns(postParams.columns).toList())
+            resourceType = postParams.bundleFormat
+            resourceString = postParams.bundle
         } else {
             myParams = processQueryParams(call.parameters).second
             if (contentType == null) {

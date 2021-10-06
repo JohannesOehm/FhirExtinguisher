@@ -6,7 +6,7 @@
       <div class="bg-light sidebar" id="sidebar" style="width: 500px;">
         <div class="sidebar-sticky" style="">
           <ColumnsView :columns="columns" :summary="summary" @addColumn="handleAddColumn" @toggleSummary="toggleSummary"
-                       @editColumn="handleEditColumn"/>
+                       @editColumn="handleEditColumn" @addSummary="addSummary"/>
         </div>
       </div>
       <div id="separator" draggable="true"></div>
@@ -98,6 +98,7 @@ export default {
       ],
       summary: true,
       rawData: null,
+      currentUrl: "", //changes only on reload, not on enter
       endpointUrl: "http://url/to/fhir/endpoint",
       fhirVersion: "r4",
       fhirQuery: "",
@@ -162,6 +163,7 @@ export default {
     },
     handleRequest: function () {
       this.$refs.content.loadBundle();
+      this.currentUrl = this.$refs.searchbar?.getValue() ?? "";
     },
     handleShowResource: function (value: string) {
       this.resource = value;
@@ -185,6 +187,17 @@ export default {
     },
     updateLimit: function (newLimit: number) {
       this.limit = newLimit;
+    },
+    addSummary: function () {
+      this.summary = false;
+      let summaryPaths = getSummaryColumns(this.fhirVersion, getResourceName(this.currentUrl));
+      let summaryColumns = summaryPaths.map(it => ({
+        name: it,
+        expression: it,
+        type: 'join("\\n\\n")',
+        isSummary: true
+      }))
+      this.columns = [...this.columns, ...summaryColumns];
     },
     toggleSummary: function () {
       this.summary = !this.summary;
@@ -227,7 +240,7 @@ export default {
   },
   computed: {
     columns2: function () {
-      let url = this.$refs.searchbar?.getValue() ?? ""; //non-reactive way
+      let url = this.currentUrl;
       if (this.summary) {
         let resourceName = getResourceName(url);
         let summaryPaths = getSummaryColumns(this.fhirVersion, resourceName);

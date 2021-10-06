@@ -1,5 +1,6 @@
 <template>
-  <b-modal @abort="handleAbort" @ok="handleOk" id="modal-questionnaire" title="Import Questionnaire">
+  <b-modal @abort="handleAbort" @ok="handleOk" @shown="handleShown" id="modal-questionnaire"
+           title="Import Questionnaire">
     <form>
       <div class="form-group">
         <div class="form-check">
@@ -17,7 +18,6 @@
             file...</label>
         </div>
       </div>
-      <hr/>
       <div class="form-group">
         <div class="form-check">
           <input class="form-check-input" id="serverRadio" name="serverOrFile" type="radio"
@@ -26,7 +26,6 @@
             Select from server:
           </label>
         </div>
-        <label for="questionnaireId">Select from server:</label>
         <div class="input-group">
           <div class="input-group-prepend">
             <label class="input-group-text" for="questionnaireId">Resource:</label>
@@ -34,12 +33,24 @@
           <select :disabled="serverOrFile !== 'server'" class="custom-select" id="questionnaireId"
                   v-model="questionnaireSelected">
             <option v-bind:value="data.id" v-for="data in questionnaires">
-              {{ data.id }} - {{ data.title }} {{ data.url ? " (" + data.url + ")" : "" }}
+              {{ data.id }}{{ data.title ? " - " + data.title : "" }} {{ data.url ? " (" + data.url + ")" : "" }}
             </option>
           </select>
         </div>
       </div>
       <hr/>
+      <div class="form-group">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <label class="input-group-text" for="columnName">Column names:</label>
+          </div>
+          <select class="custom-select" id="columnName"
+                  v-model="columnNameSelected">
+            <option value="linkId">item.linkId</option>
+            <option value="text">item.text</option>
+          </select>
+        </div>
+      </div>
       <div class="form-group">
         <div class="custom-control custom-checkbox">
           <input class="custom-control-input" id="addOrReplace" type="checkbox" v-model="replace">
@@ -70,19 +81,26 @@ type QuestionnaireSummary = {
   fullUrl: string
 }
 
-function getItems(items: any[], path: string[]): Column[] {
+function getItems(items: any[], path: string[], nameS: "linkId" | "text"): Column[] {
   let result: Column[] = [];
   for (let item of items) {
     if (item.type && item.type !== "group" && item.type !== "display") {
       let fullPath = path.concat(item.linkId);
+      let name;
+      if (nameS === "linkId") {
+        name = item.linkId;
+      } else if (nameS === "text") {
+        name = item.name ?? item.linkId;
+      }
+
       result.push({
-        name: "items/" + fullPath.join("/"),
+        name: "item-" + name, //fullPath.join("/"), use only latest linkId since linkIds should be unique
         type: 'join(", ")',
         expression: "QuestionnaireResponse." + (fullPath.map(it => `item.where(linkId='${it}')`).join(".")) + ".answer.value"
       });
     }
     if (item.item) {
-      let results2 = getItems(item.item, path.concat(item.linkId));
+      let results2 = getItems(item.item, path.concat(item.linkId), nameS);
       for (let result2 of results2) { //TODO: addAll()
         result.push(result2);
       }
@@ -93,14 +111,15 @@ function getItems(items: any[], path: string[]): Column[] {
 
 export default {
   name: "DialogQuestionnaireTs",
-  data: function (): { questionnaires: QuestionnaireSummary[], questionnaireSelected: string, replace: boolean, changeQuery: boolean, execute: boolean, serverOrFile: "file" | "server" } {
+  data: function (): any {
     return {
       questionnaires: [],
       questionnaireSelected: null,
       replace: true,
       changeQuery: true,
       execute: true,
-      serverOrFile: "file"
+      serverOrFile: "file",
+      columnNameSelected: "linkId",
     };
   },
   methods: {
@@ -149,7 +168,7 @@ export default {
       (<HTMLInputElement>document.getElementById("questionnaireFile")).value = null;
     },
     convertQuestionnaire: function (questionnaire: any) {
-      let result: Column[] = getItems(questionnaire.item, []);
+      let result: Column[] = getItems(questionnaire.item, [], this.columnNameSelected);
       result.unshift(
           {name: "id", type: 'join("")', expression: "getIdPart(id)"},
           {name: "basedOn", type: 'join(" ")', expression: "basedOn"},
@@ -166,23 +185,23 @@ export default {
           this.$emit("start-request", url);
         }
       }
+    },
+    handleShown: function () {
+      fetch("redirect/Questionnaire?_summary=true")
+          .then(res => res.json())
+          .then(bundle => {
+            if (bundle.total === 0) { //res.entry might be undefined in this case just use a empty list
+              this.questionnaires = [];
+            } else {
+              this.questionnaires = bundle.entry.map((it: any) => ({
+                id: it.resource.id,
+                url: it.resource.url,
+                title: it.resource.title,
+                fullUrl: it.fullUrl
+              }));
+            }
+          });
     }
-  },
-  mounted: function () {
-    fetch("redirect/Questionnaire?_summary=true")
-        .then(res => res.json())
-        .then(bundle => {
-          if (bundle.total === 0) { //res.entry might be undefined in this case just use a empty list
-            this.questionnaires = [];
-          } else {
-            this.questionnaires = bundle.entry.map((it: any) => ({
-              id: it.resource.id,
-              url: it.resource.url,
-              title: it.resource.title,
-              fullUrl: it.fullUrl
-            }));
-          }
-        });
   }
 }
 

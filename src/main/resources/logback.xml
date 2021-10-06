@@ -6,6 +6,9 @@
     </appender>
     <logger name="org.apache.http" level="WARN"/>
     <logger name="ca.uhn.fhir.context.ModelScanner" level="WARN"/>
+    <logger name="ca.uhn.fhir.context.FhirContext" level="ERROR"/>
+    <logger name="ca.uhn.fhir.util.VersionUtil" level="ERROR"/>
+    <logger name="ca.uhn.fhir.util.XmlUtil" level="ERROR"/>
     <logger name="ktor.application" level="ERROR"/>
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
