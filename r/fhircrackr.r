@@ -2,6 +2,12 @@ library(fhircrackr)
 
 #create example bundle with multiple entries
 
+
+response <- httr::POST(url = 'http://lilly:8080/baseR4/Patient/_search'
+  , body = '_id=VHF00003,VHF00002'
+  , accept_xml()
+  , encode = "form")
+
 bundle <- xml2::read_xml(
   "<Bundle>
 
