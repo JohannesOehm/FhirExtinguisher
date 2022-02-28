@@ -3,6 +3,7 @@ package fhirextinguisher
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor
 import mu.KotlinLogging
 import java.io.File
 
@@ -12,6 +13,7 @@ data class InstanceConfigDTO(
     val fhirServerUrl: String,
     val fhirVersion: String? = null,
     val basicAuth: String?,
+    val tokenAuth: String?,
     val timeoutInMillis: Int,
     val blockExternalRequests: Boolean,
     val queryStorageFile: String,
@@ -23,13 +25,17 @@ data class InstanceConfigDTO(
             else -> throw Exception("Invalid FHIR version string '$fhirVersion'. Valid values are 'stu3', 'dstu3', 'r4'!")
         }
 
-        val (interceptors, basicAuth) = if (basicAuth != null) {
+        val auth = if (basicAuth != null) {
             if (!basicAuth.contains(':')) {
                 throw Exception("Basic auth credentials must be of format 'username:password'!")
             }
             val (username, passwd) = basicAuth.split(':', limit = 2)
-            listOf(BasicAuthInterceptor(username, passwd)) to BasicAuthData(username, passwd)
-        } else emptyList<IClientInterceptor>() to null
+            BasicAuthData(username, passwd)
+        } else if (tokenAuth != null) {
+            BearerAuthData(tokenAuth)
+        } else null
+
+        val interceptors = auth?.let { listOf(it.toInterceptor()) } ?: emptyList()
 
         fhirContext.restfulClientFactory.connectTimeout = timeoutInMillis
         fhirContext.restfulClientFactory.socketTimeout = timeoutInMillis
@@ -46,7 +52,7 @@ data class InstanceConfigDTO(
             fhirServerUrl,
             fhirContext,
             interceptors,
-            basicAuth,
+            auth,
             timeoutInMillis,
             blockExternalRequests,
             File(queryStorageFile)
@@ -54,16 +60,29 @@ data class InstanceConfigDTO(
     }
 }
 
+sealed class AuthData {
+    abstract fun toInterceptor(): IClientInterceptor
+}
+
 data class BasicAuthData(
     val username: String,
-    val password: String
-)
+    val password: String,
+) : AuthData() {
+    override fun toInterceptor() = BasicAuthInterceptor(username, password)
+}
+
+data class BearerAuthData(
+    val token: String,
+) : AuthData() {
+    override fun toInterceptor() = BearerTokenAuthInterceptor(token)
+}
+
 
 data class InstanceConfiguration(
     val fhirServerUrl: String,
     val fhirVersion: FhirContext,
     val interceptors: List<IClientInterceptor>,
-    val basicAuth: BasicAuthData?,
+    val authData: AuthData?,
     val timeoutInMillis: Int,
     val blockExternalRequests: Boolean,
     val queryStorageFile: File

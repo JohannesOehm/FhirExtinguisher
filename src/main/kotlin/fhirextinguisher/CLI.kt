@@ -26,6 +26,12 @@ fun main(args: Array<String>) {
             true,
             "Basic Authorization required to connect to the FHIR server (if any). \"username:password\"!"
         )
+        .addOption(
+            "at",
+            "authorizationToken",
+            true,
+            "Bearer Authorization required to connect to the FHIR server (if any)."
+        )
         .addOption("p", "portNumber", true, "The port number for this server to use.")
         .addOption("t", "timeout", true, "The timeout in seconds for queries to the FHIR server (defaults to 60s)")
         .addOption(
@@ -46,6 +52,7 @@ fun main(args: Array<String>) {
     val fhirServerUrl: String? = cmd.getOptionValue("fhirServer")?.dropLastWhile { it == '/' }
     val fhirVersion: String? = cmd.getOptionValue("fhirVersion")
     val authorization: String? = cmd.getOptionValue("authorization")
+    val authorizationToken: String? = cmd.getOptionValue("authorizationToken")
     val timeoutstr: String? = cmd.getOptionValue("timeout")
     val external: Boolean = cmd.hasOption("allowExternalConnection")
 
@@ -75,6 +82,7 @@ fun main(args: Array<String>) {
         fhirServerUrl = fhirServerUrl,
         blockExternalRequests = !external,
         basicAuth = authorization,
+        tokenAuth = authorizationToken,
         queryStorageFile = "savedQueries.csv",
         timeoutInMillis = timeout
     ).toInstanceConfiguration()

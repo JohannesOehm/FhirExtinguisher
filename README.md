@@ -65,6 +65,7 @@ Available command line options:
 * `-f [url]` FHIR server URL
 * `-v ["r4"|"stu3"]` FHIR version of the server
 * `-a [username]:[password]` Basic authentication credentials, if required by FHIR server
+* `-at [token]` Bearer token, if required by the FHIR server
 * `-p [portnumber]` Port number on your local machine to open, e.g. with `-p 8080`, the GUI will be available
   at `http://localhost:8080/`
 * `-t 30` Set timeout for FHIR server in seconds (60 is default)

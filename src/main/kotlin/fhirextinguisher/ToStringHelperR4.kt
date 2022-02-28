@@ -94,7 +94,12 @@ object ToStringHelperR4 {
             sb.append(it.country).append("\n")
         }
         if (it.hasUse() || it.hasType() || it.hasPeriod()) {
-            sb.append("(" + it.use + ", " + it.type + ", " + getPeriodAsString(it.period) + ")")
+            sb.append("(" + it.use?.toCode() + ", " + it.type?.toCode())
+            if (it.hasPeriod()) {
+                sb.append(", ").append(getPeriodAsString(it.period))
+            }
+
+            sb.append(")")
         }
         return sb.toString()
     }
@@ -102,15 +107,15 @@ object ToStringHelperR4 {
     private fun getQuantityAsString(it: Quantity) = ("${it.value} '${it.unit}'")
 
     private fun getRangeAsString(it: Range): String {
-        return if (it.low != null) getQuantityAsString(it.low) else "" +
+        return if (it.hasLow()) getQuantityAsString(it.low) else "" +
                 " .. " +
-                if (it.high != null) getQuantityAsString(it.high) else ""
+                if (it.hasHigh()) getQuantityAsString(it.high) else ""
     }
 
     private fun getRatioAsString(it: Ratio): String {
-        return if (it.numerator != null) getQuantityAsString(it.numerator) else "" +
+        return if (it.hasNumerator()) getQuantityAsString(it.numerator) else "" +
                 " / " +
-                if (it.denominator != null) getQuantityAsString(it.denominator) else ""
+                if (it.hasDenominator()) getQuantityAsString(it.denominator) else ""
     }
 
     private fun getPeriodAsString(it: Period): String {

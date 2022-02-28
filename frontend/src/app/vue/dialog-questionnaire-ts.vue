@@ -72,7 +72,7 @@
 
 
 <script lang="ts">
-import {Column} from "../index";
+import {Column, SubColumn} from "../index";
 
 type QuestionnaireSummary = {
   id: string,
@@ -93,11 +93,24 @@ function getItems(items: any[], path: string[], nameS: "linkId" | "text"): Colum
         name = item.name ?? item.linkId;
       }
 
-      result.push({
-        name: "item-" + name, //fullPath.join("/"), use only latest linkId since linkIds should be unique
-        type: 'join(", ")',
-        expression: "QuestionnaireResponse." + (fullPath.map(it => `item.where(linkId='${it}')`).join(".")) + ".answer.value"
-      });
+      if(item.type == "choice") {
+        result.push({
+          name: "item-" + name, //fullPath.join("/"), use only latest linkId since linkIds should be unique
+          type: 'explodeLong',
+          expression: "QuestionnaireResponse." + (fullPath.map(it => `item.where(linkId='${it}')`).join(".")) + ".answer.value",
+          subColumns: [
+            {name: "system", expression: "system"},
+            {name: "code", expression: "code"},
+            {name: "display", expression: "display"}
+          ]
+        });
+      } else {
+        result.push({
+          name: "item-" + name, //fullPath.join("/"), use only latest linkId since linkIds should be unique
+          type: 'join(", ")',
+          expression: "QuestionnaireResponse." + (fullPath.map(it => `item.where(linkId='${it}')`).join(".")) + ".answer.value"
+        });
+      }
     }
     if (item.item) {
       let results2 = getItems(item.item, path.concat(item.linkId), nameS);

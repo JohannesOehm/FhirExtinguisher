@@ -15,10 +15,7 @@ import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import io.ktor.util.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -44,6 +41,7 @@ fun Application.application() {
         fhirServerUrl = myConfig.propertyOrNull("fhirServerUrl")?.getString()!!,
         fhirVersion = myConfig.propertyOrNull("fhirVersion")?.getString()!!,
         basicAuth = myConfig.propertyOrNull("authorization")?.getString(),
+        tokenAuth = null,
         queryStorageFile = myConfig.propertyOrNull("queryStorage")?.getString()!!,
         timeoutInMillis = 60_000,
         blockExternalRequests = false
@@ -75,7 +73,7 @@ fun application2(
         redirect(
             "/redirect",
             instanceConfiguration.fhirServerUrl,
-            instanceConfiguration.basicAuth,
+            instanceConfiguration.authData,
             instanceConfiguration.timeoutInMillis
         )
         savedQueries("/query-storage", instanceConfiguration.queryStorageFile)
@@ -155,19 +153,18 @@ fun isThisMyIpAddress(addr: InetAddress): Boolean {
 /**
  * Reverse proxy method
  */
-fun Routing.redirect(prefix: String, target: String, basicAuth: BasicAuthData?, timeoutInMillis: Int) {
+fun Routing.redirect(prefix: String, target: String, authData: AuthData?, timeoutInMillis: Int) {
     route("$prefix/{...}") {
-        redirect(timeoutInMillis, basicAuth, target, prefix)
+        redirect(timeoutInMillis, authData, target, prefix)
     }
     route("$prefix/") {
-        redirect(timeoutInMillis, basicAuth, target, prefix)
+        redirect(timeoutInMillis, authData, target, prefix)
     }
-
 }
 
 private fun Route.redirect(
     timeoutInMillis: Int,
-    basicAuth: BasicAuthData?,
+    authData: AuthData?,
     target: String,
     prefix: String
 ) {
@@ -178,12 +175,18 @@ private fun Route.redirect(
                 socketTimeout = timeoutInMillis
                 connectionRequestTimeout = timeoutInMillis
             }
-            if (basicAuth != null) {
+            if (authData != null) {
                 install(Auth) {
-                    basic {
-                        username = basicAuth.username
-                        password = basicAuth.password
-                        sendWithoutRequest = true
+                    if (authData is BasicAuthData) {
+                        basic {
+                            sendWithoutRequest { true }
+                            credentials { BasicAuthCredentials(authData.username, authData.password) }
+                        }
+                    } else if (authData is BearerAuthData) {
+                        bearer {
+                            sendWithoutRequest { true }
+                            loadTokens { BearerTokens(authData.token, authData.token) }
+                        }
                     }
                 }
             }
@@ -202,14 +205,13 @@ private fun Route.redirect(
             val contentType = proxiedHeaders[HttpHeaders.ContentType]
             val contentLength = proxiedHeaders[HttpHeaders.ContentLength]
 
-            // Propagates location header, removing the wikipedia domain from it
             if (location != null) {
                 call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
             }
             //TODO: Find a solution that works in tomcat behind AJP reverse proxy but does not block
             val bytes = runBlocking { response.content.toByteArray() }
 
-            proxiedHeaders.filter { key, value ->
+            proxiedHeaders.filter { key, _ ->
                 !key.equals(HttpHeaders.ContentType, ignoreCase = true)
                         && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
                         && !key.equals(HttpHeaders.TransferEncoding, ignoreCase = true)
