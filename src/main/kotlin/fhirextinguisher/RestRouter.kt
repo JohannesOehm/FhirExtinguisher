@@ -117,7 +117,7 @@ fun application2(
                 call.respondText(json.toString(), contentType = ContentType.Application.Json)
             }
         }
-        route("/fhir/*") {
+        route("/fhir/{...}") {
             handle {
                 fhirExtinguisher.processUrl(call)
             }
