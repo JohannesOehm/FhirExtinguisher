@@ -189,7 +189,7 @@ class SubTable() {
         val maxLength = mutableMapOf<String, Int>()
         for ((r, value) in this.data.entries) {
             val columnName = r.second
-            maxLength[columnName] = max(columnName.length, value.map { it?.length ?: "null".length }.max()!!)
+            maxLength[columnName] = columnName.length.coerceAtLeast(value.maxOf { it?.length ?: "null".length })
         }
         return buildString {
             append("RDataTypes = ").append(dataType.toString()).append("\n\n")
