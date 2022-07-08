@@ -1,15 +1,19 @@
+import org.panteleyev.jpackage.JPackageTask
+
 plugins {
-    kotlin("jvm") version "1.6.0"
-    kotlin("plugin.serialization") version "1.4.30"
+    kotlin("jvm") version "1.7.10"
+    kotlin("plugin.serialization") version "1.7.10"
     antlr
     id("com.github.johnrengelman.shadow") version "5.2.0"
     id("war")
+    id("org.panteleyev.jpackageplugin") version "1.3.1"
 //    id("com.bmuschko.tomcat") version "2.5"
 }
 
 war {
     webAppDirName = "webapp"
 }
+
 
 //tomcat {
 //    contextPath = "/"
@@ -25,23 +29,23 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.7.4"
+    version = "1.7.5"
 }
 
 
 subprojects {
-    version = "1.7.4"
+    version = "1.7.5"
 }
 
-val ktor_version = "1.6.1"
+val ktor_version = "1.6.8"
 val tomcat_version = "9.0.4"
-val hapi_version = "6.0.0"
+val hapi_version = "6.0.1"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     testImplementation("junit", "junit", "4.12")
     implementation("org.nanohttpd", "nanohttpd", "2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
@@ -89,11 +93,59 @@ tasks {
             attributes("Main-Class" to "fhirextinguisher.CLIKt")
         }
     }
+    shadowJar {
+//        mainClass = "fhirextinguisher.CLIKt"
+    }
     generateGrammarSource {
         arguments = arguments + listOf("-visitor")
     }
 }
 
 
+//FOLLOWING TASKS CREATE SYSTEM DEPENDENT BINARY WITH JRE
+task("copyDependencies", Copy::class) {
+    from(configurations.runtimeClasspath).into("$buildDir/jars")
+}
+
+task("copyJar", Copy::class) {
+    dependsOn(tasks.shadowJar)
+    from(tasks.shadowJar).into("$buildDir/jars")
+}
+
+
+
+tasks.register<JPackageTask>("CreateAppImage") {
+    dependsOn("copyJar")
+
+    input = "$buildDir/jars"
+    destination = "$buildDir/dist"
+
+    appName = "FhirExtinguisher"
+
+    mainJar = tasks.shadowJar.get().archiveFileName.get()
+    mainClass = "fhirextinguisher.CLIKt"
+
+    javaOptions = listOf("-Dfile.encoding=UTF-8", "-Dcli.mode=interactive")
+    type = org.panteleyev.jpackage.ImageType.APP_IMAGE
+}
+
+tasks.register<JPackageTask>("CreateEXE") {
+    dependsOn("copyJar")
+
+    input = "$buildDir/jars"
+    destination = "$buildDir/dist"
+
+    appName = "FhirExtinguisher"
+
+    mainJar = tasks.shadowJar.get().archiveFileName.get()
+    mainClass = "fhirextinguisher.CLIKt"
+
+    javaOptions = listOf("-Dfile.encoding=UTF-8", "-Dcli.mode=interactive")
+    type = org.panteleyev.jpackage.ImageType.EXE
+
+    winDirChooser = true
+    winMenu = true
+    winConsole = true
+}
 
 

@@ -154,6 +154,7 @@ class SubTable() {
                     }
                 }
             }
+            null -> TODO()
         }
         colIdx++
     }

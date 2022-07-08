@@ -11,6 +11,12 @@ import org.apache.commons.cli.Options
 
 private val log = KotlinLogging.logger {}
 
+fun askUser(message: String): String {
+    println(message)
+    print("> ")
+    return readLine()!!.substringAfter("> ")
+}
+
 fun main(args: Array<String>) {
     val options = Options()
         .addOption("f", "fhirServer", true, "The endpoint URL of the FHIR server to call.")
@@ -41,11 +47,37 @@ fun main(args: Array<String>) {
             "Allow external (non-localhost) connections (might be a security issue)"
         )
 
+    if (args.isEmpty() && System.getProperty("cli.mode") == "interactive") {
+        println(
+            """
+___________.__    .__      ___________         __  .__                     .__       .__                  
+\_   _____/|  |__ |__|_____\_   _____/__  ____/  |_|__| ____    ____  __ __|__| _____|  |__   ___________ 
+ |    __)  |  |  \|  \_  __ \    __)_\  \/  /\   __\  |/    \  / ___\|  |  \  |/  ___/  |  \_/ __ \_  __ \
+ |     \   |   Y  \  ||  | \/        \>    <  |  | |  |   |  \/ /_/  >  |  /  |\___ \|   Y  \  ___/|  | \/
+ \___  /   |___|  /__||__| /_______  /__/\_ \ |__| |__|___|  /\___  /|____/|__/____  >___|  /\___  >__|   
+     \/         \/                 \/      \/              \//_____/               \/     \/     \/       
+
+"""
+        )
+        val serverUrl = askUser("Please enter the URL of your FHIR server: ")
+        val authRequired = askUser("Does the server require authentication? [y/N]")
+        val credentials = if (authRequired.isNotBlank() && authRequired == "y") {
+            askUser("Please enter the Basic Auth credentials in the format username:password")
+        } else null
+        val instanceConfiguration = InstanceConfigDTO(
+            fhirServerUrl = serverUrl,
+            basicAuth = credentials
+        ).toInstanceConfiguration()
+        println("Application is running on port 8080! Open http://localhost:8080 in your browser! Press Ctrl+C in terminal to stop!")
+        embeddedServer(Netty, 8080, module = application2(instanceConfiguration)).start(wait = true)
+
+
+    }
+
     if (args.isEmpty()) {
         HelpFormatter().printHelp("FhirExtinguisher", options)
         return
     }
-
     val cmd = DefaultParser().parse(options, args)
 
     val portnumber: Int? = cmd.getOptionValue("portNumber")?.toInt()

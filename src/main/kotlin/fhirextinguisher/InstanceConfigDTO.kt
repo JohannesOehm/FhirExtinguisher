@@ -12,11 +12,11 @@ private val log = KotlinLogging.logger {}
 data class InstanceConfigDTO(
     val fhirServerUrl: String,
     val fhirVersion: String? = null,
-    val basicAuth: String?,
-    val tokenAuth: String?,
-    val timeoutInMillis: Int,
-    val blockExternalRequests: Boolean,
-    val queryStorageFile: String,
+    val basicAuth: String? = null,
+    val tokenAuth: String? = null,
+    val timeoutInMillis: Int = 60_000,
+    val blockExternalRequests: Boolean = true,
+    val queryStorageFile: String = "savedQueries.csv",
 ) {
     fun toInstanceConfiguration(): InstanceConfiguration {
         val fhirContext = when (fhirVersion) {
