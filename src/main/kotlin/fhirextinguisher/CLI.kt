@@ -6,6 +6,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import mu.KotlinLogging
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
+import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 
 
@@ -37,6 +38,14 @@ fun main(args: Array<String>) {
             "authorizationToken",
             true,
             "Bearer Authorization required to connect to the FHIR server (if any)."
+        )
+        .addOption(
+            Option(
+                "h",
+                "header",
+                true,
+                "Additional header to add to requests"
+            ).apply { isRequired = false }
         )
         .addOption("p", "portNumber", true, "The port number for this server to use.")
         .addOption("t", "timeout", true, "The timeout in seconds for queries to the FHIR server (defaults to 60s)")
@@ -85,6 +94,7 @@ ___________.__    .__      ___________         __  .__                     .__  
     val fhirVersion: String? = cmd.getOptionValue("fhirVersion")
     val authorization: String? = cmd.getOptionValue("authorization")
     val authorizationToken: String? = cmd.getOptionValue("authorizationToken")
+    val headers: Array<String>? = cmd.getOptionValues("header")
     val timeoutstr: String? = cmd.getOptionValue("timeout")
     val external: Boolean = cmd.hasOption("allowExternalConnection")
 
@@ -116,6 +126,7 @@ ___________.__    .__      ___________         __  .__                     .__  
         basicAuth = authorization,
         tokenAuth = authorizationToken,
         queryStorageFile = "savedQueries.csv",
+        headers = headers?.toList() ?: emptyList(),
         timeoutInMillis = timeout
     ).toInstanceConfiguration()
 

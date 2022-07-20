@@ -1,9 +1,12 @@
 package fhirextinguisher
 
 import ca.uhn.fhir.context.FhirContext
+import ca.uhn.fhir.interceptor.api.Interceptor
+import ca.uhn.fhir.rest.client.apache.ApacheRestfulClientFactory
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor
+import ca.uhn.fhir.rest.client.interceptor.SimpleRequestHeaderInterceptor
 import mu.KotlinLogging
 import java.io.File
 
@@ -15,6 +18,7 @@ data class InstanceConfigDTO(
     val basicAuth: String? = null,
     val tokenAuth: String? = null,
     val timeoutInMillis: Int = 60_000,
+    val headers: List<String> = emptyList(),
     val blockExternalRequests: Boolean = true,
     val queryStorageFile: String = "savedQueries.csv",
 ) {
@@ -43,6 +47,7 @@ data class InstanceConfigDTO(
         try {
             val client = fhirContext.newRestfulGenericClient(fhirServerUrl)
             interceptors.forEach { client.registerInterceptor(it) }
+            headers.forEach { client.registerInterceptor(SimpleRequestHeaderInterceptor(it)) }
             client.forceConformanceCheck()
         } catch (e: Exception) {
             log.error { "Error with servers conformance statement: ${e.message}" }
