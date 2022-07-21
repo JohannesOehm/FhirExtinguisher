@@ -2,7 +2,6 @@ package fhirextinguisher
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.withTimeoutOrNull
 import mu.KotlinLogging
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
@@ -47,6 +46,7 @@ fun main(args: Array<String>) {
                 "Additional header to add to requests"
             ).apply { isRequired = false }
         )
+        .addOption("nocheck", "no-conformance-check", false, "Do not enforce FHIR server conformance check at startup")
         .addOption("p", "portNumber", true, "The port number for this server to use.")
         .addOption("t", "timeout", true, "The timeout in seconds for queries to the FHIR server (defaults to 60s)")
         .addOption(
@@ -97,6 +97,7 @@ ___________.__    .__      ___________         __  .__                     .__  
     val headers: Array<String>? = cmd.getOptionValues("header")
     val timeoutstr: String? = cmd.getOptionValue("timeout")
     val external: Boolean = cmd.hasOption("allowExternalConnection")
+    val noConformanceCheck: Boolean = cmd.hasOption("no-conformance-check")
 
     if (portnumber == null) {
         println("Please provide a portnumber for the local server to start!")
@@ -127,7 +128,8 @@ ___________.__    .__      ___________         __  .__                     .__  
         tokenAuth = authorizationToken,
         queryStorageFile = "savedQueries.csv",
         headers = headers?.toList() ?: emptyList(),
-        timeoutInMillis = timeout
+        timeoutInMillis = timeout,
+        noConformanceCheck = noConformanceCheck
     ).toInstanceConfiguration()
 
     embeddedServer(Netty, portnumber, module = application2(instanceConfiguration)).start(wait = true)

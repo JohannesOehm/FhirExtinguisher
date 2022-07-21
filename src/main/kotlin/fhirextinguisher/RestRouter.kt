@@ -42,9 +42,9 @@ fun Application.application() {
         fhirVersion = myConfig.propertyOrNull("fhirVersion")?.getString()!!,
         basicAuth = myConfig.propertyOrNull("authorization")?.getString(),
         tokenAuth = null,
-        queryStorageFile = myConfig.propertyOrNull("queryStorage")?.getString()!!,
         timeoutInMillis = 60_000,
-        blockExternalRequests = false
+        blockExternalRequests = false,
+        queryStorageFile = myConfig.propertyOrNull("queryStorage")?.getString()!!,
     ).toInstanceConfiguration()
     application2(instanceConfiguration)()
 }

@@ -1,8 +1,6 @@
 package fhirextinguisher
 
 import ca.uhn.fhir.context.FhirContext
-import ca.uhn.fhir.interceptor.api.Interceptor
-import ca.uhn.fhir.rest.client.apache.ApacheRestfulClientFactory
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor
@@ -21,6 +19,7 @@ data class InstanceConfigDTO(
     val headers: List<String> = emptyList(),
     val blockExternalRequests: Boolean = true,
     val queryStorageFile: String = "savedQueries.csv",
+    val noConformanceCheck: Boolean = false,
 ) {
     fun toInstanceConfiguration(): InstanceConfiguration {
         val fhirContext = when (fhirVersion) {
@@ -48,7 +47,9 @@ data class InstanceConfigDTO(
             val client = fhirContext.newRestfulGenericClient(fhirServerUrl)
             interceptors.forEach { client.registerInterceptor(it) }
             headers.forEach { client.registerInterceptor(SimpleRequestHeaderInterceptor(it)) }
-            client.forceConformanceCheck()
+            if (!noConformanceCheck) {
+                client.forceConformanceCheck()
+            }
         } catch (e: Exception) {
             log.error { "Error with servers conformance statement: ${e.message}" }
         }

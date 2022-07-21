@@ -29,17 +29,17 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.7.6"
+    version = "1.7.7"
 }
 
 
 subprojects {
-    version = "1.7.6"
+    version = "1.7.7"
 }
 
 val ktor_version = "1.6.8"
 val tomcat_version = "9.0.4"
-val hapi_version = "6.0.1"
+val hapi_version = "6.0.3"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

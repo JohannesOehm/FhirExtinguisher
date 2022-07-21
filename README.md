@@ -71,6 +71,7 @@ Available command line options:
   at `http://localhost:8080/`
 * `-t 30` Set timeout for FHIR server in seconds (60 is default)
 * `-ext` Allow connections of non-localhost machines
+* `--no-conformance-check` Do not validate FHIR server URL at startup
 
 To stop the FhirExtinguisher, press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the command line window!
 
