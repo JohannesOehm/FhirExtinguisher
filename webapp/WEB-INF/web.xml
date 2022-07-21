@@ -15,10 +15,9 @@
             <param-value>application.conf</param-value>
         </init-param>
 
-        <!-- required! -->
         <async-supported>true</async-supported>
 
-        <!-- 100mb max file upload, optional -->
+        <!-- 100mb max file upload -->
         <multipart-config>
             <max-file-size>304857600</max-file-size>
             <max-request-size>304857600</max-request-size>
