@@ -166,6 +166,11 @@ the Ktor version as soon as these issues are resolved.
 
 * **Johannes Oehm** | (+49) 251 / 83-5 82 47 | johannes.oehm@uni-muenster.de
 
+## Citation
+
+* Oehm J, Storck M, Fechner M, Brix TJ, Yildirim K, Dugas M. FhirExtinguisher: A FHIR Resource Flattening Tool Using
+  FHIRPath. Stud Health Technol Inform. 2021 May 27;281:1112-1113. doi: 10.3233/SHTI210369. PMID: 34042862.
+
 ## License
 
 Apache Licence 2.0
