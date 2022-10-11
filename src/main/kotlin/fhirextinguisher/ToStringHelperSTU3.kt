@@ -13,6 +13,7 @@ object ToStringHelperSTU3 {
         when (it) {
             //Todo: code doesnt exist in base in dtsu3 (Enumeration case)
             is Enumeration<*> -> it.toString()
+            is Money -> getMoneyAsString(it)
             is Quantity -> getQuantityAsString(it)
             is DecimalType -> Objects.toString(it.value)
             is CodeableConcept -> getCodeableConceptAsString(it)
@@ -22,7 +23,6 @@ object ToStringHelperSTU3 {
             is Reference -> getReferenceAsString(it)
             is Attachment -> getAttachmentAsString(it)
             is Coding -> getCodingAsString(it)
-            is Money -> getMoneyAsString(it)
             is Range -> getRangeAsString(it)
             is Ratio -> getRatioAsString(it)
             is Period -> getPeriodAsString(it)
@@ -31,7 +31,7 @@ object ToStringHelperSTU3 {
             is ContactPoint -> getContactPointAsString(it)
             is Timing -> getTimingAsString(it)
             is Signature -> getSignatureAsString(it)
-            is org.hl7.fhir.r4.model.Annotation -> getAnnotationAsString(it)
+            is Annotation -> getAnnotationAsString(it)
             else -> it.toString()
         }
 
@@ -39,8 +39,9 @@ object ToStringHelperSTU3 {
         return "Signature[" + it.type.joinToString { getCodingAsString(it) } + "]"
     }
 
-    private fun getAnnotationAsString(it: org.hl7.fhir.r4.model.Annotation): String {
-        return it.text
+    private fun getAnnotationAsString(it: Annotation): String {
+//        return it.
+        return it.toString()
     }
 
     private fun getContactPointAsString(it: ContactPoint): String {
@@ -92,7 +93,15 @@ object ToStringHelperSTU3 {
         return sb.toString()
     }
 
-    private fun getQuantityAsString(it: Quantity) = ("${it.value} '${it.unit}'")
+    private fun getQuantityAsString(it: Quantity) = buildString {
+        if (it.hasComparator()) {
+            append(it.comparator.toCode())
+            append(" ")
+        }
+
+        append("${it.value} '${it.unit}'")
+    }
+
 
     private fun getRangeAsString(it: Range): String {
         return if (it.low != null) getQuantityAsString(it.low) else "" +
@@ -110,9 +119,8 @@ object ToStringHelperSTU3 {
         return "${it.start} .. ${it.end}"
     }
 
-    private fun getMoneyAsString(it: Money): String {
-        val sb = StringBuilder();
-        sb.append(it.value)
+    private fun getMoneyAsString(it: Money) = buildString {
+        append(it.value)
 
         //Read the currency from unit or code of Money
         //it should be in there like in the example of the fhir documentation
@@ -122,31 +130,28 @@ object ToStringHelperSTU3 {
         //<code value="USD" />
         //<system value="urn:iso:std:iso:4217" />
         if (it.hasUnit() || it.hasCode()) {
-            var currency = it?.unit?.toString()
+            var currency = it.unit
             if (currency == null || currency == "") {
-                currency = it?.code.toString()
+                currency = it.code.toString()
             }
-            if (currency != null && currency != "") {
-                sb.append(" " + currency)
+            if (currency != "") {
+                append(" $currency")
             }
-
         }
-        return sb.toString()
     }
 
-    private fun getAttachmentAsString(it: Attachment): String {
-        val sb = StringBuilder("Attachment")
+    private fun getAttachmentAsString(it: Attachment) = buildString {
+        append("Attachment")
         if (it.hasContentType() && it.hasUrl()) {
-            sb.append("[" + it.contentType + "," + it.url)
+            append("[" + it.contentType + "," + it.url)
         } else if (it.hasContentType()) {
-            sb.append("[" + it.contentType + "]")
+            append("[" + it.contentType + "]")
         } else if (it.hasUrl()) {
-            sb.append("[" + it.url + "]")
+            append("[" + it.url + "]")
         }
         if (it.hasTitle()) {
-            sb.append(" " + it.title)
+            append(" " + it.title)
         }
-        return sb.toString()
     }
 
     private fun getSampledDataAsString(it: SampledData) =

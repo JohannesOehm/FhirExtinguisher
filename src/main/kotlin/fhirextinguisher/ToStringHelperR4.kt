@@ -13,7 +13,7 @@ object ToStringHelperR4 {
         if (it is Element) {
             val dataAbsentReason = it.getExtensionByUrl("http://hl7.org/fhir/StructureDefinition/data-absent-reason")
             if (dataAbsentReason != null) {
-                return "data-absent-reason: " + dataAbsentReason.value
+                return "data-absent-reason[" + dataAbsentReason.value + "]"
             }
         }
 
@@ -104,7 +104,14 @@ object ToStringHelperR4 {
         return sb.toString()
     }
 
-    private fun getQuantityAsString(it: Quantity) = ("${it.value} '${it.unit}'")
+    private fun getQuantityAsString(it: Quantity) = buildString {
+        if (it.hasComparator()) {
+            append(it.comparator.toCode())
+            append(" ")
+        }
+
+        append("${it.value} '${it.unit}'")
+    }
 
     private fun getRangeAsString(it: Range): String {
         return if (it.hasLow()) getQuantityAsString(it.low) else "" +
