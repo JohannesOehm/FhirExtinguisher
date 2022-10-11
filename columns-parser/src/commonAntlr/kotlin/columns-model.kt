@@ -6,15 +6,13 @@ data class Column(
     val expression: String,
     val type: ListProcessingMode? = null,
 ) {
-    override fun toString(): String {
-        return buildString {
-            append(name.replace("\\", "\\\\").replace(":", "\\:"))
-            append(":")
-            append(expression.replace("\\", "\\\\").replace("@", "\\@").replace(",", "\\,"))
-            if (type != null) {
-                append("@")
-                append(type)
-            }
+    override fun toString() = buildString {
+        append(name.replace("\\", "\\\\").replace(":", "\\:"))
+        append(":")
+        append(expression.replace("\\", "\\\\").replace("@", "\\@").replace(",", "\\,"))
+        if (type != null) {
+            append("@")
+            append(type)
         }
     }
 }
@@ -27,9 +25,7 @@ sealed class ListProcessingMode
  */
 @JsExport
 data class Join(val delimiter: String) : ListProcessingMode() {
-    override fun toString(): String {
-        return "join(\"${delimiter.replace("\n", "\\n")}\")"
-    }
+    override fun toString() = "join(\"${delimiter.replace("\n", "\\n")}\")"
 }
 
 /**
@@ -37,9 +33,8 @@ data class Join(val delimiter: String) : ListProcessingMode() {
  */
 @JsExport
 data class ExplodeWide(val discriminator: String, val subcolumns: Array<Column>) : ListProcessingMode() {
-    override fun toString(): String {
-        return "explodeWide(" + Column("\$disc", discriminator) + "," + subcolumns.joinToString(",") + ")"
-    }
+    override fun toString() =
+        "explodeWide(" + Column("\$disc", discriminator) + "," + subcolumns.joinToString(",") + ")"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -65,10 +60,9 @@ data class ExplodeWide(val discriminator: String, val subcolumns: Array<Column>)
  */
 @JsExport
 data class ExplodeLong(val subcolumns: Array<Column>) : ListProcessingMode() {
-    override fun toString(): String {
-        return "explodeLong(" + subcolumns.joinToString(",") + ")"
-    }
+    override fun toString() = "explodeLong(" + subcolumns.joinToString(",") + ")"
 
+    //TODO: Brauche ich das überhaupt? Ist schließlich eine data-class
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -87,7 +81,5 @@ data class ExplodeLong(val subcolumns: Array<Column>) : ListProcessingMode() {
 
 @JsExport
 object Singleton : ListProcessingMode() {
-    override fun toString(): String {
-        return "singleton"
-    }
+    override fun toString() = "singleton"
 }
