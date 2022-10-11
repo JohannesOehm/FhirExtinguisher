@@ -39,7 +39,7 @@ subprojects {
 
 val ktor_version = "1.6.8"
 val tomcat_version = "9.0.4"
-val hapi_version = "6.0.3"
+val hapi_version: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
