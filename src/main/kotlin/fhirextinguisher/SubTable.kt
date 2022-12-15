@@ -65,8 +65,10 @@ fun main() {
 }
 
 
-class SubTable() {
+class SubTable {
     val data = LinkedHashMap<Pair<Int, String>, List<String?>>()
+
+    //    val foo = mutableMapOf<String, MutableSet<RDataType>>().withDefault { key -> mutableSetOf() } TODO: Does retrieving a default value mutate the map?
     val dataType = object : HashMap<String, MutableSet<RDataType>>() {
         override fun get(key: String): MutableSet<RDataType>? {
             return if (super.containsKey(key)) {

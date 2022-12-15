@@ -1,20 +1,22 @@
 package fhirextinguisher
 
 
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.client.*
+import io.ktor.client.call.body
 import io.ktor.client.engine.apache.*
-import io.ktor.client.features.*
-import io.ktor.client.features.auth.*
-import io.ktor.client.features.auth.providers.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.features.*
+import io.ktor.server.plugins.*
 import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.http.content.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -25,6 +27,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import mu.KotlinLogging
 import org.hl7.fhir.exceptions.FHIRException
+import org.hl7.fhir.r4.model.Base
+import org.hl7.fhir.r4.model.PrimitiveType
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -86,7 +90,7 @@ fun application2(
                 call.respondText("GET-param 'expr' must be set!", status = HttpStatusCode.BadRequest)
             } else {
                 try {
-                    fhirExtinguisher.fhirPathEngine.parseExpression(expr)
+                    val exp = fhirExtinguisher.fhirPathEngine.parseExpression(expr)
                     call.respondText("OK", contentType = ContentType.Text.Plain)
                 } catch (e: FHIRException) {
                     call.respondText(e.message ?: e.toString(), ContentType.Text.Plain, HttpStatusCode.BadRequest)
@@ -125,7 +129,7 @@ fun application2(
         get("/info") {
             call.respond(buildJsonObject {
                 put("server", instanceConfiguration.fhirServerUrl)
-                put("version", instanceConfiguration.fhirVersion.version.version.name.toLowerCase())
+                put("version", instanceConfiguration.fhirVersion.version.version.name.lowercase())
             }.toString())
         }
         get("/") {
@@ -195,9 +199,9 @@ private fun Route.redirect(
         val originalUri = call.request.uri
 
         val redirectUrl = target.dropLastWhile { it == '/' } + "/" + originalUri.substringAfter("$prefix/")
-        log.info { "redirecting to $redirectUrl" }
+        log.debug { "redirecting '$originalUri' to '$redirectUrl'" }
         try {
-            val response = client.request<HttpResponse>(redirectUrl)
+            val response = client.request(redirectUrl)
             //TODO: Add Query Parameters
             // Get the relevant headers of the client response.
             val proxiedHeaders = response.headers
@@ -209,7 +213,7 @@ private fun Route.redirect(
                 call.response.header(HttpHeaders.Location, location.removePrefix(prefix))
             }
             //TODO: Find a solution that works in tomcat behind AJP reverse proxy but does not block
-            val bytes = runBlocking { response.content.toByteArray() }
+            val bytes = runBlocking { response.readBytes() }
 
             proxiedHeaders.filter { key, _ ->
                 !key.equals(HttpHeaders.ContentType, ignoreCase = true)

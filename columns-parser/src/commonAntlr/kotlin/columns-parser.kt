@@ -42,7 +42,6 @@ private fun parseType(columnType: ColumnsTokens.ColumnTypeContext): ListProcessi
             val separator = columnType.findTypeParam()?.text?.drop(1)?.dropLast(1)
             Join(separator?.replace("\\n", "\n") ?: ", ") //TODO: support \n as separator
         }
-
         "explodeLong" -> ExplodeLong(parseColumns(columnType.findTypeParam()?.text ?: ""))
         "explodeWide" -> {
             val subColumns = parseColumns(columnType.findTypeParam()?.text ?: "")

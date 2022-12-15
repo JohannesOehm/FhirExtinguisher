@@ -37,7 +37,7 @@ subprojects {
     version = "1.7.8"
 }
 
-val ktor_version = "1.6.8"
+//val ktor_version = "1.6.8"
 val tomcat_version = "9.0.4"
 val hapi_version: String by project
 
@@ -46,6 +46,13 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("io.ktor:ktor-server-core-jvm:2.2.1")
+    implementation("io.ktor:ktor-server-netty-jvm:2.2.1")
+    implementation("io.ktor:ktor-client-jvm:2.2.1")
+    implementation("io.ktor:ktor-client-apache-jvm:2.2.1")
+    implementation("io.ktor:ktor-server-servlet-jvm:2.2.1")
+    implementation("io.ktor:ktor-server-call-logging:2.2.1")
+    implementation("io.ktor:ktor-client-auth-jvm:2.2.1")
     testImplementation("junit", "junit", "4.12")
     implementation("org.nanohttpd", "nanohttpd", "2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
@@ -59,12 +66,6 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.3")
     implementation("org.apache.commons", "commons-csv", "1.8")
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-client:$ktor_version")
-    implementation("io.ktor:ktor-client-apache:$ktor_version")
-    implementation("io.ktor:ktor-client-auth-jvm:$ktor_version")
-    implementation("io.ktor:ktor-server-servlet:$ktor_version")
     antlr("org.antlr:antlr4:4.8")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")

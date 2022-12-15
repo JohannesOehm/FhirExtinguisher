@@ -4,12 +4,12 @@ import Column
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.http.*
 import io.ktor.http.Parameters
-import io.ktor.http.content.*
-import io.ktor.request.*
-import io.ktor.response.*
+import io.ktor.server.http.content.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -92,7 +92,7 @@ class FhirExtinguisher(
             fhirContext.newXmlParser().parseResource(resourceString)
         }
 
-        log.info { "Received bundle to process with params = $myParams" }
+        log.debug { "Received bundle to process with params = $myParams" }
 
         //TODO: Abort when user cancels request
         val printer = CSVPrinter(sb, myParams.csvFormat)
