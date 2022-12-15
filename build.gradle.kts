@@ -1,8 +1,8 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.7.20"
-    kotlin("plugin.serialization") version "1.7.20"
+    kotlin("jvm") version "1.7.21"
+    kotlin("plugin.serialization") version "1.7.21"
     antlr
     id("com.github.johnrengelman.shadow") version "5.2.0"
     id("war")
@@ -29,12 +29,12 @@ repositories {
 
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.7.7"
+    version = "1.7.8"
 }
 
 
 subprojects {
-    version = "1.7.7"
+    version = "1.7.8"
 }
 
 val ktor_version = "1.6.8"
@@ -44,7 +44,7 @@ val hapi_version: String by project
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     testImplementation("junit", "junit", "4.12")
     implementation("org.nanohttpd", "nanohttpd", "2.2.0")
