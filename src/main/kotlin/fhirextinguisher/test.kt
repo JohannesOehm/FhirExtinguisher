@@ -31,14 +31,14 @@ fun main() {
         ): TypeDetails =
             TODO("not implemented")
 
-        override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): Base =
+        override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): List<Base> =
             TODO("not implemented")
 
         override fun log(argument: String?, focus: MutableList<Base>?): Boolean {
             return true
         }
 
-        override fun resolveReference(appContext: Any?, url: String): Base? = TODO()
+        override fun resolveReference(appContext: Any?, url: String, refContext: Base?): Base? = TODO()
 
         override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
             TODO("not implemented")

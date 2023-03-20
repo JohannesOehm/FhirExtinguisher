@@ -142,11 +142,11 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             ): TypeDetails =
                 TODO("not implemented")
 
-            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): Base? {
+            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): List<Base>? {
                 val result = variables[name]
                 return when (result) {
-                    is String -> StringType(result)
-                    is Int -> org.hl7.fhir.r4.model.IntegerType(result)
+                    is String -> listOf(StringType(result))
+                    is Int -> listOf(IntegerType(result))
                     else -> null
                 }
             }
@@ -156,7 +156,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                 return true
             }
 
-            override fun resolveReference(appContext: Any?, url: String): Base? = resolve(url) as Base
+            override fun resolveReference(appContext: Any?, url: String, refContext: Base?) = resolve(url) as Base
 
             override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
                 TODO("not implemented")
@@ -197,7 +197,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
             override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
 
 
-            override fun resolveReference(appContext: Any?, url: String): Base? {
+            override fun resolveReference(appContext: Any?, url: String, refContext: Base?): Base? {
                 references.add(url)
                 return null
             }
