@@ -1,10 +1,10 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.7.21"
-    kotlin("plugin.serialization") version "1.7.21"
+    kotlin("jvm") version "1.8.10"
+    kotlin("plugin.serialization") version "1.8.10"
     antlr
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
     id("war")
     id("org.panteleyev.jpackageplugin") version "1.3.1"
 //    id("com.bmuschko.tomcat") version "2.5"
@@ -46,13 +46,13 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
-    implementation("io.ktor:ktor-server-core-jvm:2.2.1")
-    implementation("io.ktor:ktor-server-netty-jvm:2.2.1")
-    implementation("io.ktor:ktor-client-jvm:2.2.1")
-    implementation("io.ktor:ktor-client-apache-jvm:2.2.1")
-    implementation("io.ktor:ktor-server-servlet-jvm:2.2.1")
-    implementation("io.ktor:ktor-server-call-logging:2.2.1")
-    implementation("io.ktor:ktor-client-auth-jvm:2.2.1")
+    implementation("io.ktor:ktor-server-core-jvm:2.2.4")
+    implementation("io.ktor:ktor-server-netty-jvm:2.2.4")
+    implementation("io.ktor:ktor-client-jvm:2.2.4")
+    implementation("io.ktor:ktor-client-apache-jvm:2.2.4")
+    implementation("io.ktor:ktor-server-servlet-jvm:2.2.4")
+    implementation("io.ktor:ktor-server-call-logging:2.2.4")
+    implementation("io.ktor:ktor-client-auth-jvm:2.2.4")
     testImplementation("junit", "junit", "4.12")
     implementation("org.nanohttpd", "nanohttpd", "2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
