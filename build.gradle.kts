@@ -1,8 +1,8 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.8.10"
-    kotlin("plugin.serialization") version "1.8.10"
+    kotlin("jvm") version "1.8.20"
+    kotlin("plugin.serialization") version "1.8.20"
     antlr
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("war")
@@ -61,8 +61,8 @@ dependencies {
     implementation("ca.uhn.hapi.fhir:hapi-fhir-client:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:$hapi_version")
-//    implementation("ca.uhn.hapi.fhir:api-fhir-validation:.2.1")
-//    implementation("ca.uhn.hapi.fhir", "hapi-fhir-validation-resources-r4", "5.2.1")
+    implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:$hapi_version")
+    implementation("ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:$hapi_version")
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.3")
     implementation("org.apache.commons:commons-csv:1.8")
