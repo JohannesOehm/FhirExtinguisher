@@ -132,7 +132,7 @@ Custom functions introduced by FhirExtinguisher:
 
 ## Building
 
-Requirements: **Java 8, npm 6.13.x**
+Requirements: **Java 11, npm 6.13.x**
 
 Use `./gradlew shadowJar` to compile the project. The resulting .jar file will be in `/build/libs/`.
 
