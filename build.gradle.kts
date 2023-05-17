@@ -1,8 +1,8 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.8.20"
-    kotlin("plugin.serialization") version "1.8.20"
+    kotlin("jvm") version "1.8.21"
+    kotlin("plugin.serialization") version "1.8.21"
     antlr
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("war")
@@ -37,26 +37,26 @@ subprojects {
     version = "1.7.8"
 }
 
-//val ktor_version = "1.6.8"
+val ktor_version = "2.3.0"
 val tomcat_version = "9.0.4"
 val hapi_version: String by project
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
-    implementation("io.ktor:ktor-server-core-jvm:2.2.4")
-    implementation("io.ktor:ktor-server-netty-jvm:2.2.4")
-    implementation("io.ktor:ktor-client-jvm:2.2.4")
-    implementation("io.ktor:ktor-client-apache-jvm:2.2.4")
-    implementation("io.ktor:ktor-server-servlet-jvm:2.2.4")
-    implementation("io.ktor:ktor-server-call-logging:2.2.4")
-    implementation("io.ktor:ktor-client-auth-jvm:2.2.4")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-client-jvm:$ktor_version")
+    implementation("io.ktor:ktor-client-apache-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-servlet-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
+    implementation("io.ktor:ktor-client-auth-jvm:$ktor_version")
     testImplementation("junit:junit:4.12")
     implementation("org.nanohttpd:nanohttpd:2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
-    implementation("commons-cli:commons-cli:1.4")
+    implementation("commons-cli:commons-cli:1.5.0")
     implementation("ch.qos.logback:logback-classic:1.4.6")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-client:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$hapi_version")
@@ -82,12 +82,12 @@ val copyStaticPages by tasks.creating(Copy::class) {
 tasks {
     compileKotlin {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
         }
         dependsOn(copyStaticPages, generateGrammarSource)
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
     }
     jar {
         manifest {

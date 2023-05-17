@@ -4,6 +4,7 @@ package fhirextinguisher
 import io.ktor.server.application.*
 import io.ktor.client.*
 import io.ktor.client.call.body
+import io.ktor.client.call.body
 import io.ktor.client.engine.apache.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
