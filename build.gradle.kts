@@ -37,7 +37,7 @@ subprojects {
     version = "1.7.8"
 }
 
-val ktor_version = "2.3.0"
+val ktor_version = "2.3.1"
 val tomcat_version = "9.0.4"
 val hapi_version: String by project
 
