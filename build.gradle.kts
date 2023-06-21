@@ -1,8 +1,8 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.8.21"
-    kotlin("plugin.serialization") version "1.8.21"
+    kotlin("jvm") version "1.8.22"
+    kotlin("plugin.serialization") version "1.8.22"
     antlr
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("war")
@@ -43,7 +43,7 @@ val hapi_version: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.22")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
@@ -54,7 +54,7 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
     implementation("io.ktor:ktor-client-auth-jvm:$ktor_version")
     testImplementation("junit:junit:4.12")
-    implementation("org.nanohttpd:nanohttpd:2.2.0")
+//    implementation("org.nanohttpd:nanohttpd:2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
     implementation("commons-cli:commons-cli:1.5.0")
     implementation("ch.qos.logback:logback-classic:1.4.6")
