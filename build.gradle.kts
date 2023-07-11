@@ -1,8 +1,8 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.8.22"
-    kotlin("plugin.serialization") version "1.8.22"
+    kotlin("jvm") version "1.9.0"
+    kotlin("plugin.serialization") version "1.9.0"
     antlr
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("war")
@@ -43,7 +43,7 @@ val hapi_version: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.22")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
