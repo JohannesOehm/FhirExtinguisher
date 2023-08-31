@@ -37,15 +37,15 @@ subprojects {
     version = "1.7.8"
 }
 
-val ktor_version = "2.3.1"
+val ktor_version = "2.3.3"
 val tomcat_version = "9.0.4"
 val hapi_version: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-jvm:$ktor_version")
@@ -57,7 +57,7 @@ dependencies {
 //    implementation("org.nanohttpd:nanohttpd:2.2.0")
     implementation("io.github.microutils:kotlin-logging:1.7.7")
     implementation("commons-cli:commons-cli:1.5.0")
-    implementation("ch.qos.logback:logback-classic:1.4.6")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-client:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:$hapi_version")
