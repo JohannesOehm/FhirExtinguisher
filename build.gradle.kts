@@ -1,12 +1,12 @@
 import org.panteleyev.jpackage.JPackageTask
 
 plugins {
-    kotlin("jvm") version "1.9.0"
-    kotlin("plugin.serialization") version "1.9.0"
+    kotlin("jvm") version "1.9.10"
+    kotlin("plugin.serialization") version "1.9.10"
     antlr
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("war")
-    id("org.panteleyev.jpackageplugin") version "1.3.1"
+    id("org.panteleyev.jpackageplugin") version "1.5.2"
 //    id("com.bmuschko.tomcat") version "2.5"
 }
 
@@ -37,13 +37,13 @@ subprojects {
     version = "1.7.8"
 }
 
-val ktor_version = "2.3.3"
+val ktor_version = "2.3.5"
 val tomcat_version = "9.0.4"
 val hapi_version: String by project
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
@@ -53,9 +53,9 @@ dependencies {
     implementation("io.ktor:ktor-server-servlet-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
     implementation("io.ktor:ktor-client-auth-jvm:$ktor_version")
-    testImplementation("junit:junit:4.12")
+    testImplementation("junit:junit:4.13.1")
 //    implementation("org.nanohttpd:nanohttpd:2.2.0")
-    implementation("io.github.microutils:kotlin-logging:1.7.7")
+    implementation("io.github.microutils:kotlin-logging:3.0.5")
     implementation("commons-cli:commons-cli:1.5.0")
     implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-client:$hapi_version")
@@ -64,8 +64,8 @@ dependencies {
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:$hapi_version")
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
-    implementation("org.fhir:ucum:1.0.3")
-    implementation("org.apache.commons:commons-csv:1.8")
+    implementation("org.fhir:ucum:1.0.8")
+    implementation("org.apache.commons:commons-csv:1.10.0")
     antlr("org.antlr:antlr4:4.8")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")
