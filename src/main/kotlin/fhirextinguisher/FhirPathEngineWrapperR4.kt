@@ -5,8 +5,11 @@ import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.context.SimpleWorkerContext
+import org.hl7.fhir.r4.fhirpath.ExpressionNode
+import org.hl7.fhir.r4.fhirpath.FHIRPathEngine
+import org.hl7.fhir.r4.fhirpath.FHIRPathUtilityClasses
+import org.hl7.fhir.r4.fhirpath.TypeDetails
 import org.hl7.fhir.r4.model.*
-import org.hl7.fhir.r4.utils.FHIRPathEngine
 
 /*fun main() {
     val ctx = FhirContext.forR4()
@@ -96,23 +99,29 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
     init {
         engine.hostServices = object : FHIRPathEngine.IEvaluationContext {
-            override fun resolveFunction(functionName: String?): FHIRPathEngine.IEvaluationContext.FunctionDetails? {
+            override fun resolveFunction(
+                engine: FHIRPathEngine,
+                functionName: String?
+            ): FHIRPathUtilityClasses.FunctionDetails? {
                 return when (functionName) {
-                    "getIdPart" -> FHIRPathEngine.IEvaluationContext.FunctionDetails(
+                    "getIdPart" -> FHIRPathUtilityClasses.FunctionDetails(
                         "Tries to string the id to a more human-readable string.",
                         1,
                         1
                     )
-                    "getChildFields" -> FHIRPathEngine.IEvaluationContext.FunctionDetails(
+
+                    "getChildFields" -> FHIRPathUtilityClasses.FunctionDetails(
                         "Returns the possible children names of a type",
                         1,
                         1
                     )
-                    "stringify" -> FHIRPathEngine.IEvaluationContext.FunctionDetails(
+
+                    "stringify" -> FHIRPathUtilityClasses.FunctionDetails(
                         "Writes the result as serialized JSON object",
                         1,
                         1
                     )
+
                     else -> null
                 }
 
@@ -121,6 +130,7 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
 
             override fun executeFunction(
+                engine: FHIRPathEngine,
                 appContext: Any?,
                 focus: MutableList<Base>?,
                 functionName: String?,
@@ -136,17 +146,24 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
 
 
             override fun checkFunction(
+                engine: FHIRPathEngine?,
                 appContext: Any?,
                 functionName: String?,
+                focus: TypeDetails?,
                 parameters: MutableList<TypeDetails>?
-            ): TypeDetails =
+            ): TypeDetails? =
                 TODO("not implemented")
 
-            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): List<Base>? {
-                val result = variables[name]
-                return when (result) {
-                    is String -> listOf(StringType(result))
-                    is Int -> listOf(IntegerType(result))
+            override fun resolveConstant(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                name: String?,
+                beforeContext: Boolean,
+                explicitConstant: Boolean
+            ): MutableList<Base>? {
+                return when (val result = variables[name]) {
+                    is String -> mutableListOf(StringType(result))
+                    is Int -> mutableListOf(IntegerType(result))
                     else -> null
                 }
             }
@@ -156,49 +173,96 @@ class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClie
                 return true
             }
 
-            override fun resolveReference(appContext: Any?, url: String, refContext: Base?) = resolve(url) as Base
+            override fun resolveReference(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                url: String?,
+                refContext: Base?
+            ): Base? = resolve(url) as Base
 
-            override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
+            override fun conformsToProfile(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                item: Base?,
+                url: String?
+            ): Boolean =
                 TODO("not implemented")
 
-            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails {
+            override fun resolveConstantType(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                name: String?,
+                explicitConstant: Boolean
+            ): TypeDetails? {
                 println("resolveConstantType(appContext=$appContext, name=$name)")
                 val typeDetails = TypeDetails(ExpressionNode.CollectionStatus.SINGLETON, "name")
                 return typeDetails
                 TODO("not implemented")
             }
 
-            override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
+            override fun resolveValueSet(engine: FHIRPathEngine?, appContext: Any?, url: String?): ValueSet? =
+                TODO("not implemented")
 
 
         }
 
         engine2.hostServices = object : FHIRPathEngine.IEvaluationContext {
-            override fun resolveFunction(functionName: String?) = null
+            override fun resolveFunction(
+                engine: FHIRPathEngine?,
+                functionName: String?
+            ): FHIRPathUtilityClasses.FunctionDetails? = null
             override fun executeFunction(
+                engine: FHIRPathEngine?,
                 appContext: Any?,
                 focus: MutableList<Base>?,
                 functionName: String?,
-                parameters: MutableList<MutableList<Base>>
-            ) = mutableListOf<Base>()
+                parameters: MutableList<MutableList<Base>>?
+            ): MutableList<Base>? = mutableListOf<Base>()
 
             override fun checkFunction(
+                engine: FHIRPathEngine?,
                 appContext: Any?,
                 functionName: String?,
+                focus: TypeDetails?,
                 parameters: MutableList<TypeDetails>?
             ): TypeDetails? = null
 
-            override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean) = null
+            override fun resolveConstant(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                name: String?,
+                beforeContext: Boolean,
+                explicitConstant: Boolean
+            ): MutableList<Base>? = null
             override fun log(argument: String?, focus: MutableList<Base>?): Boolean = true
-            override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
+            override fun conformsToProfile(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                item: Base?,
+                url: String?
+            ): Boolean =
                 true
 
-            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails = TODO("not implemented")
-            override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
+            override fun resolveConstantType(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                name: String?,
+                explicitConstant: Boolean
+            ): TypeDetails? = TODO("not implemented")
+
+            override fun resolveValueSet(engine: FHIRPathEngine?, appContext: Any?, url: String?): ValueSet? =
+                TODO("not implemented")
 
 
-            override fun resolveReference(appContext: Any?, url: String, refContext: Base?): Base? {
-                references.add(url)
+            override fun resolveReference(
+                engine: FHIRPathEngine?,
+                appContext: Any?,
+                url: String?,
+                refContext: Base?
+            ): Base? {
+                if (url != null) {
+                    references.add(url)
+                }
                 return null
             }
 

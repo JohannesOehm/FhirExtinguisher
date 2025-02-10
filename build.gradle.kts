@@ -57,7 +57,7 @@ dependencies {
     testImplementation("junit:junit:4.13.1")
 //    implementation("org.nanohttpd:nanohttpd:2.2.0")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
-    implementation("commons-cli:commons-cli:1.5.0")
+    implementation("commons-cli:commons-cli:1.9.0")
     implementation("ch.qos.logback:logback-classic:1.5.16")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-client:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$hapi_version")
@@ -66,7 +66,7 @@ dependencies {
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:$hapi_version")
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.9")
-    implementation("org.apache.commons:commons-csv:1.10.0")
+    implementation("org.apache.commons:commons-csv:1.13.0")
     antlr("org.antlr:antlr4:4.8")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")
@@ -104,12 +104,12 @@ tasks {
 
 //FOLLOWING TASKS CREATE SYSTEM DEPENDENT BINARY WITH JRE
 task("copyDependencies", Copy::class) {
-    from(configurations.runtimeClasspath).into("$buildDir/jars")
+    from(configurations.runtimeClasspath).into("${layout.buildDirectory}/jars")
 }
 
 task("copyJar", Copy::class) {
     dependsOn(tasks.shadowJar)
-    from(tasks.shadowJar).into("$buildDir/jars")
+    from(tasks.shadowJar).into("${layout.buildDirectory}/jars")
 }
 
 
@@ -117,8 +117,8 @@ task("copyJar", Copy::class) {
 tasks.register<JPackageTask>("CreateAppImage") {
     dependsOn("copyJar")
 
-    input = "$buildDir/jars"
-    destination = "$buildDir/dist"
+    input = "${layout.buildDirectory}/jars"
+    destination = "${layout.buildDirectory}/dist"
 
     appName = "FhirExtinguisher"
 
@@ -132,8 +132,8 @@ tasks.register<JPackageTask>("CreateAppImage") {
 tasks.register<JPackageTask>("CreateEXE") {
     dependsOn("copyJar")
 
-    input = "$buildDir/jars"
-    destination = "$buildDir/dist"
+    input = "${layout.buildDirectory}/jars"
+    destination = "${layout.buildDirectory}/dist"
 
     appName = "FhirExtinguisher"
 

@@ -1,56 +1,80 @@
 package fhirextinguisher
 
 import org.hl7.fhir.r4.context.SimpleWorkerContext
+import org.hl7.fhir.r4.fhirpath.ExpressionNode
+import org.hl7.fhir.r4.fhirpath.FHIRPathEngine
+import org.hl7.fhir.r4.fhirpath.FHIRPathUtilityClasses
+import org.hl7.fhir.r4.fhirpath.TypeDetails
 import org.hl7.fhir.r4.model.Base
-import org.hl7.fhir.r4.model.ExpressionNode
-import org.hl7.fhir.r4.model.TypeDetails
 import org.hl7.fhir.r4.model.ValueSet
-import org.hl7.fhir.r4.utils.FHIRPathEngine
 
 fun main() {
 
     val engine = FHIRPathEngine(SimpleWorkerContext())
     engine.hostServices = object : FHIRPathEngine.IEvaluationContext {
-        override fun resolveFunction(functionName: String?): org.hl7.fhir.r4.utils.FHIRPathEngine.IEvaluationContext.FunctionDetails? {
+        override fun resolveFunction(
+            engine: FHIRPathEngine?,
+            functionName: String?
+        ): FHIRPathUtilityClasses.FunctionDetails? {
             return null
         }
 
         override fun executeFunction(
+            engine: FHIRPathEngine?,
             appContext: Any?,
             focus: MutableList<Base>?,
             functionName: String?,
-            parameters: MutableList<MutableList<Base>>
-        ): MutableList<Base> {
+            parameters: MutableList<MutableList<Base>>?
+        ): MutableList<Base>? {
             return mutableListOf<Base>()
         }
 
         override fun checkFunction(
+            engine: FHIRPathEngine?,
             appContext: Any?,
             functionName: String?,
+            focus: TypeDetails?,
             parameters: MutableList<TypeDetails>?
-        ): TypeDetails =
+        ): TypeDetails? =
             TODO("not implemented")
 
-        override fun resolveConstant(appContext: Any?, name: String?, beforeContext: Boolean): List<Base> =
+        override fun resolveConstant(
+            engine: FHIRPathEngine?,
+            appContext: Any?,
+            name: String?,
+            beforeContext: Boolean,
+            explicitConstant: Boolean
+        ): MutableList<Base>? =
             TODO("not implemented")
 
         override fun log(argument: String?, focus: MutableList<Base>?): Boolean {
             return true
         }
 
-        override fun resolveReference(appContext: Any?, url: String, refContext: Base?): Base? = TODO()
+        override fun resolveReference(
+            engine: FHIRPathEngine?,
+            appContext: Any?,
+            url: String?,
+            refContext: Base?
+        ): Base? = TODO()
 
-        override fun conformsToProfile(appContext: Any?, item: Base?, url: String?): Boolean =
+        override fun conformsToProfile(engine: FHIRPathEngine?, appContext: Any?, item: Base?, url: String?): Boolean =
             TODO("not implemented")
 
-        override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails {
+        override fun resolveConstantType(
+            engine: FHIRPathEngine?,
+            appContext: Any?,
+            name: String?,
+            explicitConstant: Boolean
+        ): TypeDetails? {
             println("resolveConstantType(appContext=$appContext, name=$name)")
             val typeDetails = TypeDetails(ExpressionNode.CollectionStatus.SINGLETON, name)
             return typeDetails
             TODO("not implemented")
         }
 
-        override fun resolveValueSet(appContext: Any?, url: String?): ValueSet = TODO("not implemented")
+        override fun resolveValueSet(engine: FHIRPathEngine?, appContext: Any?, url: String?): ValueSet? =
+            TODO("not implemented")
 
     }
     engine.hostServices

@@ -3,9 +3,12 @@ package fhirextinguisher
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import org.hl7.fhir.dstu3.context.SimpleWorkerContext
+import org.hl7.fhir.dstu3.fhirpath.ExpressionNode
+import org.hl7.fhir.dstu3.fhirpath.FHIRPathEngine
+import org.hl7.fhir.dstu3.fhirpath.FHIRPathUtilityClasses
+import org.hl7.fhir.dstu3.fhirpath.TypeDetails
 import org.hl7.fhir.dstu3.model.*
 import org.hl7.fhir.dstu3.model.Enumeration
-import org.hl7.fhir.dstu3.utils.FHIRPathEngine
 import org.hl7.fhir.instance.model.api.IBase
 import java.util.*
 
@@ -16,8 +19,8 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
     val variables = mutableMapOf<String, Any>()
 
     init {
-        engine.hostServices = object : org.hl7.fhir.dstu3.utils.FHIRPathEngine.IEvaluationContext {
-            override fun resolveConstantType(appContext: Any?, name: String?): org.hl7.fhir.dstu3.model.TypeDetails {
+        engine.hostServices = object : FHIRPathEngine.IEvaluationContext {
+            override fun resolveConstantType(appContext: Any?, name: String?): TypeDetails {
                 TODO("not implemented")
             }
 
@@ -30,15 +33,15 @@ class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericCl
                 }
             }
 
-            override fun resolveFunction(functionName: String?): FHIRPathEngine.IEvaluationContext.FunctionDetails {
+            override fun resolveFunction(functionName: String?): FHIRPathUtilityClasses.FunctionDetails {
                 TODO("not implemented")
             }
 
             override fun checkFunction(
                 appContext: Any?,
                 functionName: String?,
-                parameters: MutableList<org.hl7.fhir.dstu3.model.TypeDetails>?
-            ): org.hl7.fhir.dstu3.model.TypeDetails {
+                parameters: MutableList<TypeDetails>?
+            ): TypeDetails {
                 TODO("not implemented")
             }
 
