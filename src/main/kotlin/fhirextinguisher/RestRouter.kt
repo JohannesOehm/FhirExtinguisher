@@ -13,11 +13,12 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.server.plugins.*
 import io.ktor.http.*
+import io.ktor.server.application.ApplicationCallPipeline.ApplicationPhase.Plugins
 import io.ktor.server.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.plugins.callloging.CallLogging
+//import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -54,12 +55,25 @@ fun Application.application() {
     application2(instanceConfiguration)()
 }
 
+private val OnlyLocalhostPlugin = createRouteScopedPlugin("OnlyLocalhostPlugin") {
+    onCall { call ->
+        val ip = InetAddress.getByName(call.request.local.remoteHost)
+        if (!isThisMyIpAddress(ip)) {
+            call.respondText(
+                text = "The request origin '$ip' is not a localhost address. Please start the FhirExtinguisher with '-ext'!",
+                status = HttpStatusCode.Unauthorized
+            )
+        }
+    }
+}
+
+
 fun application2(
     instanceConfiguration: InstanceConfiguration
 ): Application.() -> Unit = {
-    install(CallLogging) {
-        level = Level.INFO
-    }
+//    install(CallLogging) {
+//        level = Level.INFO
+//    }
 
     val fhirExtinguisher = FhirExtinguisher(
         instanceConfiguration.fhirServerUrl,
@@ -67,12 +81,8 @@ fun application2(
         instanceConfiguration.interceptors
     )
     routing {
-        intercept(ApplicationCallPipeline.Features) {
-            val ip = call.request.local.remoteHost
-            if (instanceConfiguration.blockExternalRequests && !isThisMyIpAddress(InetAddress.getByName(ip))) {
-                call.respondText("The request origin '$ip' is not a localhost address. Please start the FhirExtinguisher with '-ext'!")
-                this.finish()
-            }
+        if (instanceConfiguration.blockExternalRequests) {
+            install(OnlyLocalhostPlugin)
         }
 
         redirect(
@@ -134,7 +144,7 @@ fun application2(
             }.toString())
         }
         get("/") {
-            call.respondText(index_html(context.request.uri), contentType = ContentType.Text.Html)
+            call.respondText(index_html(call.request.uri), contentType = ContentType.Text.Html)
         }
         static("/") {
             resources("static")

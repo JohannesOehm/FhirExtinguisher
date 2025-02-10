@@ -1,3 +1,3 @@
 rootProject.name = "FhirExtinguisher"
-include("frontend")
+//include("frontend")
 include("columns-parser")

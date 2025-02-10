@@ -19,12 +19,12 @@ fun parseColumns(inputStr: String): Array<Column> {
     return buildList {
         try {
             val root = parser.columns()
-            for (column in root.findColumn()) {
+            for (column in root.column()) {
                 add(
                     Column(
-                        name = (column.findColumnName()?.text ?: "").replace("\\:", ":").replace("\\\\", "\\"),
-                        type = column.findColumnType()?.let { parseType(it) },
-                        expression = column.findFhirpathExpression()!!.text.replace("\\@", "@").replace("\\,", ",")
+                        name = (column.columnName()?.text ?: "").replace("\\:", ":").replace("\\\\", "\\"),
+                        type = column.columnType()?.let { parseType(it) },
+                        expression = column.fhirpathExpression()!!.text.replace("\\@", "@").replace("\\,", ",")
                             .replace("\\\\", "\\")
                     )
                 )
@@ -36,15 +36,16 @@ fun parseColumns(inputStr: String): Array<Column> {
 }
 
 private fun parseType(columnType: ColumnsTokens.ColumnTypeContext): ListProcessingMode? {
-    return when (columnType.findTypeName()?.text) {
+    return when (columnType.typeName()?.text) {
         "singleton" -> Singleton
         "join" -> {
-            val separator = columnType.findTypeParam()?.text?.drop(1)?.dropLast(1)
+            val separator = columnType.typeParam()?.text?.drop(1)?.dropLast(1)
             Join(separator?.replace("\\n", "\n") ?: ", ") //TODO: support \n as separator
         }
-        "explodeLong" -> ExplodeLong(parseColumns(columnType.findTypeParam()?.text ?: ""))
+
+        "explodeLong" -> ExplodeLong(parseColumns(columnType.typeParam()?.text ?: ""))
         "explodeWide" -> {
-            val subColumns = parseColumns(columnType.findTypeParam()?.text ?: "")
+            val subColumns = parseColumns(columnType.typeParam()?.text ?: "")
             ExplodeWide(
                 discriminator = subColumns.find { it.name == "\$disc" }!!.expression,
                 subcolumns = subColumns.filter { it.name != "\$disc" }.toTypedArray()

@@ -1,20 +1,20 @@
-plugins {
-    kotlin("multiplatform")
-}
-
-
-val antlrKotlinVersion = "0ad2c42952"
+import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
 
 buildscript {
     repositories {
-        maven("https://jitpack.io")
-    }
-
-    dependencies {
-        // add the plugin to the classpath
-        classpath("com.strumenta.antlr-kotlin:antlr-kotlin-gradle-plugin:0ad2c42952")
+        mavenCentral()
     }
 }
+
+
+plugins {
+    kotlin("multiplatform")
+    id("com.strumenta.antlr-kotlin") version "1.0.0"
+}
+
+
+val antlrKotlinVersion = "1.0.0"
+
 
 repositories {
     mavenLocal()
@@ -32,9 +32,12 @@ kotlin {
         }
     }
     js(IR) {
-        browser {
-        }
         binaries.library()
+        browser {
+            webpackTask {
+                output.libraryTarget = "commonjs" // "commonjs", "module", "var", etc.
+            }
+        }
         compilations["main"].packageJson {
 //            customField("name" to "columns-parser")
 //            customField("version" to "1.0.0")
@@ -44,23 +47,13 @@ kotlin {
 
 
     sourceSets {
-        val commonAntlr by creating {
+        commonMain {
             dependencies {
-                api(kotlin("stdlib-common"))
-                // add antlr-kotlin-runtime
-                // otherwise, the generated sources will not compile
-                api("com.strumenta.antlr-kotlin:antlr-kotlin-runtime:0ad2c42952")
-                // antlr-kotlin-runtime-jvm is automatically added as an jvm dependency by gradle
+                implementation("com.strumenta:antlr-kotlin-runtime:1.0.0")
+                kotlin {
+                    srcDir(layout.buildDirectory.dir("generatedAntlr"))
+                }
             }
-            // you have to add the generated sources the to the kotlin compiler source directory list
-            // this is not required if you use src/commonAntlr/kotlin
-            // and want to add the generated sources to version control
-            kotlin.srcDir("build/generated-src/commonAntlr/kotlin")
-        }
-
-
-        val commonMain by getting {
-            dependsOn(commonAntlr)
         }
         val commonTest by getting {
             dependencies {
@@ -86,19 +79,10 @@ kotlin {
 
 // in antlr-kotlin-plugin <0.0.5, the configuration was applied by the plugin.
 // starting from verison 0.0.5, you have to apply it manually:
-tasks.register<com.strumenta.antlrkotlin.gradleplugin.AntlrKotlinTask>("generateKotlinCommonGrammarSource") {
-    // the classpath used to run antlr code generation
-    antlrClasspath = configurations.detachedConfiguration(
-        // antlr itself
-        // antlr is transitive added by antlr-kotlin-target,
-        // add another dependency if you want to choose another antlr4 version (not recommended)
-        // project.dependencies.create("org.antlr:antlr4:$antlrVersion"),
-
-        // antlr target, required to create kotlin code
-        project.dependencies.create("com.strumenta.antlr-kotlin:antlr-kotlin-target:0ad2c42952")
-    )
+val generateKotlinCommonGrammarSource = tasks.register<AntlrKotlinTask>("generateKotlinCommonGrammarSource") {
     maxHeapSize = "64m"
-    packageName = "com.strumenta.antlrkotlin.examples"
+    val _packageName = "com.strumenta.antlrkotlin.examples"
+    packageName = _packageName
     arguments = listOf("-no-visitor", "-no-listener")
     source = project.objects
         .sourceDirectorySet("antlr", "antlr")
@@ -107,10 +91,12 @@ tasks.register<com.strumenta.antlrkotlin.gradleplugin.AntlrKotlinTask>("generate
         }
     // outputDirectory is required, put it into the build directory
     // if you do not want to add the generated sources to version control
-    outputDirectory = File("build/generated-src/commonAntlr/kotlin")
+    outputDirectory = layout.buildDirectory.dir(
+        "generatedAntlr/${_packageName.replace(".", "/")}"
+    ).get().asFile
     // use this settings if you want to add the generated sources to version control
     // outputDirectory = File("src/commonAntlr/kotlin")
 }
 
-tasks.getByName("compileKotlinJvm").dependsOn("generateKotlinCommonGrammarSource")
-tasks.getByName("compileKotlinJs").dependsOn("generateKotlinCommonGrammarSource")
+tasks.getByName("compileKotlinJvm").dependsOn(generateKotlinCommonGrammarSource)
+tasks.getByName("compileKotlinJs").dependsOn(generateKotlinCommonGrammarSource)

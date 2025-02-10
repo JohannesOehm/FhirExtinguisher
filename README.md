@@ -15,6 +15,7 @@ There are alternative ways to do this:
 into a flatter format. However, the result is still a JSON, and the GraphQL API must be supported by the server.
 * [fhircrackr](https://cran.r-project.org/web/packages/fhircrackr/index.html) and FHIRton, which are XML-based implementations 
 for usage with R or Python. 
+* [Firely Query Language](https://simplifier.net/docs/fql)
 
 ## How does this work?
 This project is a simple WebServer, that connects to a FHIR server and forwards the requests. This way you can use all 
