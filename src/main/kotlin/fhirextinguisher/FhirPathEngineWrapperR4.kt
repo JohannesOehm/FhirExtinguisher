@@ -91,8 +91,8 @@ private val log = KotlinLogging.logger {}
 
 class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClient) :
     FhirPathEngineWrapper(fhirContext, fhirClient) {
-    val engine = FHIRPathEngine(SimpleWorkerContext())
-    val engine2 = FHIRPathEngine(SimpleWorkerContext())
+    private val engine = FHIRPathEngine(SimpleWorkerContext())
+    private val engine2 = FHIRPathEngine(SimpleWorkerContext())
     val references = mutableListOf<String>()
 
     val variables = mutableMapOf<String, Any>()

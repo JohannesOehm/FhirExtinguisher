@@ -16,10 +16,13 @@ class MaxSizeHashMap<K, V>(private val maxSize: Int) : LinkedHashMap<K, V>() {
     }
 }
 
+
+abstract class ExpressionWrapper
+
 /**
  * There is also the {@link FhirContext#fluentPath}
  */
-abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClient: IGenericClient) {
+abstract class FhirPathEngineWrapper(private val fhirContext: FhirContext, private val fhirClient: IGenericClient) {
     abstract fun parseExpression(expression: String): ExpressionWrapper
     abstract fun evaluateToBase(
         base: IBase,
@@ -42,16 +45,12 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
 
 
     fun resolve(url: String?): IBaseResource? {
-        if (url == null) {
-            return null
-        }
+        if (url == null) return null
 
         try {
-            val reference = if (url.startsWith(fhirClient.serverBase)) {
-                url.substring(fhirClient.serverBase.length) //Vonk includes servername in references
-            } else {
-                url
-            }.dropWhile { it == '/' } //remove any leading slashes
+            val reference =
+                url.removePrefix(fhirClient.serverBase) //Vonk includes servername in references
+                    .dropWhile { it == '/' } //remove any leading slashes
 
             return if (cache.containsKey(reference)) {
                 log.debug { "Resolving reference '$url' from cache" }
@@ -68,7 +67,7 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
 
         } catch (e: Exception) {
             log.error(e) { "Cannot resolve reference $url!" }
-            throw RuntimeException("Failed to resolve reference '$url'!", e)
+            throw Exception("Failed to resolve reference '$url'!", e)
         }
 
     }
@@ -76,8 +75,6 @@ abstract class FhirPathEngineWrapper(val fhirContext: FhirContext, val fhirClien
 
 
 
-abstract class ExpressionWrapper() {
 
-}
 
 

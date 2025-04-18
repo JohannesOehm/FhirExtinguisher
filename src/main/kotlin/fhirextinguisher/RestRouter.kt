@@ -68,6 +68,16 @@ private val OnlyLocalhostPlugin = createRouteScopedPlugin("OnlyLocalhostPlugin")
 }
 
 
+private fun isThisMyIpAddress(addr: InetAddress): Boolean {
+    // Check if the address is a valid special local or loop back
+    return if (addr.isAnyLocalAddress || addr.isLoopbackAddress) true else try {
+        // Check if the address is defined on any interface
+        NetworkInterface.getByInetAddress(addr) != null
+    } catch (e: SocketException) {
+        false
+    }
+}
+
 fun application2(
     instanceConfiguration: InstanceConfiguration
 ): Application.() -> Unit = {
@@ -154,15 +164,6 @@ fun application2(
 }
 
 
-fun isThisMyIpAddress(addr: InetAddress): Boolean {
-    // Check if the address is a valid special local or loop back
-    return if (addr.isAnyLocalAddress || addr.isLoopbackAddress) true else try {
-        // Check if the address is defined on any interface
-        NetworkInterface.getByInetAddress(addr) != null
-    } catch (e: SocketException) {
-        false
-    }
-}
 
 
 /**

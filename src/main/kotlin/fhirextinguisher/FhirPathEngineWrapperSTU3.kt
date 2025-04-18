@@ -14,7 +14,7 @@ import java.util.*
 
 class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericClient) :
     FhirPathEngineWrapper(fhirContext, fhirClient) {
-    val engine = FHIRPathEngine(SimpleWorkerContext())
+    private val engine = FHIRPathEngine(SimpleWorkerContext())
 
     val variables = mutableMapOf<String, Any>()
 

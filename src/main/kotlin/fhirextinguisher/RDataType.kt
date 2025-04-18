@@ -31,11 +31,9 @@ fun parseFhirType(base: IBase) =
 
 fun parseFhirTypes(bases: List<IBase>): RDataType {
     val datatypes = bases.map(::parseFhirType).distinct().toSet()
-    if (datatypes.size == 1) {
-        return datatypes.single()
-    } else if (datatypes == setOf(RDataType.NUMERIC, RDataType.INTEGER)) {
-        return RDataType.NUMERIC
-    } else {
-        return RDataType.CHARACTER
+    return when {
+        datatypes.size == 1 -> datatypes.single()
+        datatypes == setOf(RDataType.NUMERIC, RDataType.INTEGER) -> RDataType.NUMERIC
+        else -> RDataType.CHARACTER
     }
 }

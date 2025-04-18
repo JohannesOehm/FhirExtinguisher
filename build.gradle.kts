@@ -37,7 +37,7 @@ subprojects {
     version = "1.7.8"
 }
 
-val ktor_version = "3.0.3"
+val ktor_version = "3.1.0"
 val tomcat_version = "9.0.4"
 val hapi_version: String by project
 
@@ -64,7 +64,7 @@ dependencies {
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:$hapi_version")
-    implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
+//    implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.9")
     implementation("org.apache.commons:commons-csv:1.13.0")
     antlr("org.antlr:antlr4:4.8")

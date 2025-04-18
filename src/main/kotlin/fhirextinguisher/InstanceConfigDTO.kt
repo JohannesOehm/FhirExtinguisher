@@ -25,12 +25,12 @@ data class InstanceConfigDTO(
         val fhirContext = when (fhirVersion) {
             "stu3", "dstu3" -> FhirContext.forDstu3()
             "r4", null -> FhirContext.forR4()
-            else -> throw Exception("Invalid FHIR version string '$fhirVersion'. Valid values are 'stu3', 'dstu3', 'r4'!")
+            else -> error("Invalid FHIR version string '$fhirVersion'. Valid values are 'stu3', 'dstu3', 'r4'!")
         }
 
         val auth = if (basicAuth != null) {
-            if (!basicAuth.contains(':')) {
-                throw Exception("Basic auth credentials must be of format 'username:password'!")
+            if (':' !in basicAuth) {
+                error("Basic auth credentials must be of format 'username:password'!")
             }
             val (username, passwd) = basicAuth.split(':', limit = 2)
             BasicAuthData(username, passwd)
