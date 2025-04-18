@@ -1,4 +1,6 @@
 import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon
 
 buildscript {
     repositories {
@@ -93,6 +95,17 @@ val generateKotlinCommonGrammarSource = tasks.register<AntlrKotlinTask>("generat
     ).get().asFile
     // use this settings if you want to add the generated sources to version control
     // outputDirectory = File("src/commonAntlr/kotlin")
+}
+
+
+tasks.withType<KotlinCompileCommon> {
+    dependsOn(generateKotlinCommonGrammarSource)
+    inputs.files(generateKotlinCommonGrammarSource.get().outputs.files)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    dependsOn(generateKotlinCommonGrammarSource)
+    inputs.files(generateKotlinCommonGrammarSource.get().outputs.files)
 }
 
 tasks.getByName("compileKotlinJvm").dependsOn(generateKotlinCommonGrammarSource)
