@@ -104,12 +104,12 @@ tasks {
 
 //FOLLOWING TASKS CREATE SYSTEM DEPENDENT BINARY WITH JRE
 task("copyDependencies", Copy::class) {
-    from(configurations.runtimeClasspath).into("${layout.buildDirectory}/jars")
+    from(configurations.runtimeClasspath).into("${layout.buildDirectory.get()}/jars")
 }
 
 task("copyJar", Copy::class) {
     dependsOn(tasks.shadowJar)
-    from(tasks.shadowJar).into("${layout.buildDirectory}/jars")
+    from(tasks.shadowJar).into("${layout.buildDirectory.get()}/jars")
 }
 
 
@@ -117,8 +117,8 @@ task("copyJar", Copy::class) {
 tasks.register<JPackageTask>("CreateAppImage") {
     dependsOn("copyJar")
 
-    input = "${layout.buildDirectory}/jars"
-    destination = "${layout.buildDirectory}/dist"
+    input = "${layout.buildDirectory.get()}/jars"
+    destination = "${layout.buildDirectory.get()}/dist"
 
     appName = "FhirExtinguisher"
 
@@ -127,13 +127,15 @@ tasks.register<JPackageTask>("CreateAppImage") {
 
     javaOptions = listOf("-Dfile.encoding=UTF-8", "-Dcli.mode=interactive")
     type = org.panteleyev.jpackage.ImageType.APP_IMAGE
+
+    winConsole = true
 }
 
 tasks.register<JPackageTask>("CreateEXE") {
     dependsOn("copyJar")
 
-    input = "${layout.buildDirectory}/jars"
-    destination = "${layout.buildDirectory}/dist"
+    input = "${layout.buildDirectory.get()}/jars"
+    destination = "${layout.buildDirectory.get()}/dist"
 
     appName = "FhirExtinguisher"
 
