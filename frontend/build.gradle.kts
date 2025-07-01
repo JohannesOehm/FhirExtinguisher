@@ -8,7 +8,11 @@ task("webpack", Exec::class) {
         // I have no clue why invoking it directly does not work on my system
         commandLine("cmd", "/c", "$projectDir/node_modules/.bin/webpack")
     } else {
-        commandLine("$projectDir/node_modules/.bin/webpack")
+        val nvmDir = System.getenv("HOME") + "/.nvm"
+        val nodeVersion = "v16.20.2"
+        val nvmScript = "$nvmDir/nvm.sh"
+        commandLine("$nvmScript use $nodeVersion")
+        commandLine("${nvmDir}/versions/node/$nodeVersion/bin/node", "$projectDir/node_modules/webpack/bin/webpack.js")
     }
 }.dependsOn(":columns-parser:jsBrowserProductionLibraryDistribution")
 
