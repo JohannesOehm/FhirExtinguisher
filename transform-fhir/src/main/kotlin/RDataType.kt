@@ -1,5 +1,3 @@
-package fhirextinguisher
-
 import kotlinx.serialization.Serializable
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.model.*
