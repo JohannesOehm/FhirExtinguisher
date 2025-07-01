@@ -153,4 +153,12 @@ tasks.register<JPackageTask>("CreateEXE") {
     winConsole = true
 }
 
+allprojects {
+    apply(plugin = "maven-publish")
+}
+
+tasks.register("publishAllModules") {
+    dependsOn(":transform-fhir:publish", ":columns-parser:publish")
+}
+
 

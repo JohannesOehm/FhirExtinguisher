@@ -8,10 +8,13 @@ buildscript {
     }
 }
 
+group = "de.unimuenster.imi.fhir"
+version = "1.7.8"
 
 plugins {
     kotlin("multiplatform")
     id("com.strumenta.antlr-kotlin") version "1.0.0"
+    id("maven-publish")
 }
 
 
@@ -110,3 +113,33 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.getByName("compileKotlinJvm").dependsOn(generateKotlinCommonGrammarSource)
 tasks.getByName("compileKotlinJs").dependsOn(generateKotlinCommonGrammarSource)
+
+publishing {
+    publications {
+        withType<MavenPublication> {
+            pom {
+                name.set("FhirExtinguisherColumnsParser")
+                description.set("A module for transforming data into tabular format")
+                url.set("https://github.com/JohannesOehm/FhirExtinguisher")
+
+                licenses {
+                    license {
+                        name.set("Apache-2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0")
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/JohannesOehm/FhirExtinguisher")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: "unknown"
+                password = System.getenv("GITHUB_TOKEN") ?: "unknown"
+            }
+        }
+    }
+}
