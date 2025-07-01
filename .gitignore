@@ -1,6 +1,8 @@
 *.iml
 .gradle
+.kotlin
 /local.properties
+frontend/src/antlr/src/antlr
 /.idea
 .DS_Store
 /build

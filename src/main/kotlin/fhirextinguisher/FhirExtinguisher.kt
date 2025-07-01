@@ -1,19 +1,24 @@
 package fhirextinguisher
 
+import BundleTransformer
+import BundleWrapper
 import Column
+import FhirPathEngineWrapperR4
+import FhirPathEngineWrapperSTU3
+import ResultTable
+import SubTable
+import TransformationParameters
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
 import io.ktor.server.application.*
 import io.ktor.http.*
 import io.ktor.http.Parameters
-import io.ktor.server.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.Json.Default.encodeToString
 import mu.KotlinLogging
@@ -34,6 +39,7 @@ class FhirExtinguisher(
 ) {
 
     val fhirClient = fhirContext.newRestfulGenericClient(fhirServerUrl)
+    private val bundleTransformer = BundleTransformer(fhirContext)
 
     val fhirPathEngine = if (fhirContext.version.version == FhirVersionEnum.DSTU3) {
         FhirPathEngineWrapperSTU3(fhirContext, fhirClient)
@@ -45,12 +51,6 @@ class FhirExtinguisher(
     init {
         interceptors.forEach { fhirClient.registerInterceptor(it) }
     }
-
-    data class MyParams(
-        val csvFormat: CSVFormat,
-        val limit: Int?,
-        val columns: List<Column>?
-    )
 
     @Serializable
     data class PostParams(
@@ -68,16 +68,16 @@ class FhirExtinguisher(
         val sb = StringBuilder()
         val contentType = call.request.headers["Content-Type"]
 
-        val myParams: MyParams
+        val transformationParameters: TransformationParameters
         val resourceType: String
         val resourceString: String
         if (call.request.contentType().contentType == "application" && call.request.contentType().contentSubtype == "columns+json") {
             val postParams: PostParams = Json.decodeFromString(call.receive())
-            myParams = MyParams(CSVFormat.EXCEL, postParams.limit, parseColumns(postParams.columns).toList())
+            transformationParameters = TransformationParameters(CSVFormat.EXCEL, postParams.limit, parseColumns(postParams.columns).toList())
             resourceType = postParams.bundleFormat
             resourceString = postParams.bundle
         } else {
-            myParams = processQueryParams(call.parameters).second
+            transformationParameters = processQueryParams(call.parameters).second
             if (contentType == null) {
                 log.info { "Content-Type is null" }
                 throw Exception("Content-Type header must be set and either xml, json or formData!")
@@ -92,18 +92,18 @@ class FhirExtinguisher(
             fhirContext.newXmlParser().parseResource(resourceString)
         }
 
-        log.debug { "Received bundle to process with params = $myParams" }
+        log.debug { "Received bundle to process with params = $transformationParameters" }
 
         //TODO: Abort when user cancels request
-        val printer = CSVPrinter(sb, myParams.csvFormat)
+        val printer = CSVPrinter(sb, transformationParameters.csvFormat)
 
         val bundleDefinition = fhirContext.getResourceDefinition("Bundle")
         val bundleWrapper = BundleWrapper(bundleDefinition, resource)
-        cacheBundleReference(bundleWrapper, myParams.columns!!)
+        cacheBundleReference(bundleWrapper, transformationParameters.columns!!)
         val resultTables = mutableListOf<SubTable>()
         for (bundleEntry in bundleWrapper.entry) {
-            resultTables += processBundleEntry(
-                myParams.columns,
+            resultTables += bundleTransformer.processBundleEntry(
+                transformationParameters.columns!!,
                 bundleEntry,
                 jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource)
             )
@@ -126,12 +126,12 @@ class FhirExtinguisher(
         fhirPathEngine.clearCache()
         val bundleUrl = Url(call.request.uri.substringAfter("/fhir/")).encodedPath
 
-        val (fhirParams, myParams) = if (call.request.httpMethod == HttpMethod.Post) {
+        val (fhirParams, transformationParameters) = if (call.request.httpMethod == HttpMethod.Post) {
             processQueryParams(call.receiveParameters())
         } else {
             processQueryParams(call.parameters)
         }
-        if (myParams.columns == null) {
+        if (transformationParameters.columns == null) {
             call.respond(HttpStatusCode.BadGateway, "Please set __columns parameter!")
             return
         }
@@ -139,7 +139,7 @@ class FhirExtinguisher(
 
         try {
 
-            val resultTable = processWithColumns(bundleUrl, fhirParams, myParams.limit, myParams.columns)
+            val resultTable = processWithColumns(bundleUrl, fhirParams, transformationParameters.limit, transformationParameters.columns!!)
             call.response.header(
                 HttpHeaders.ContentDisposition, attachment("${defaultCsvFileName(bundleUrl, fhirParams)}.csv")
             )
@@ -149,7 +149,7 @@ class FhirExtinguisher(
             )
 
             val sb = StringBuilder()
-            val printer = CSVPrinter(sb, myParams.csvFormat)
+            val printer = CSVPrinter(sb, transformationParameters.csvFormat)
             resultTable.print(printer)
             call.respondText(text = sb.toString(), contentType = ContentType.Text.CSV)
         } catch (e: Exception) {
@@ -192,7 +192,7 @@ class FhirExtinguisher(
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
             cacheBundleReference(bundleWrapper, columns)
             for (bundleEntry in bundleWrapper.entry) {
-                subtables += processBundleEntry(columns, bundleEntry)
+                subtables += bundleTransformer.processBundleEntry(columns, bundleEntry)
                 count++
                 if (limit != null && count >= limit) {
                     break@myloop;
@@ -231,29 +231,9 @@ class FhirExtinguisher(
     }
 
 
-    private fun processBundleEntry(
-        columns: List<Column>,
-        bundleEntry: BundleEntryComponentWrapper,
-        addRaw: String? = null
-    ): SubTable {
-        val table = SubTable()
-        if (addRaw != null) {
-            table.addColumn("\$raw", addRaw)
-        }
 
-        for (column in columns) {
-            try {
-                table.addColumn(column, bundleEntry.resource!!, fhirPathEngine)
-            } catch (e: Exception) {
-                table.addColumn(column.name, e.message ?: "ERROR")
-            }
-        }
-        return table
-//        table.print(printer)
-    }
-
-    private fun processQueryParams(parameters: Parameters): Pair<String, MyParams> {
-        val (myParams, passThruParams) = parameters.entries()
+    private fun processQueryParams(parameters: Parameters): Pair<String, TransformationParameters> {
+        val (transformationParameters, passThruParams) = parameters.entries()
             .partition {
                 listOf("__csvFormat", "__limit", "__columns").any { prefix -> it.key.startsWith(prefix) }
             }
@@ -263,11 +243,11 @@ class FhirExtinguisher(
                 appendAll(passThruParam.key, passThruParam.value)
             }
         }.formUrlEncode()
-        return fhirParams to parseMyParams(myParams)
+        return fhirParams to parseTransformationParameters(transformationParameters)
     }
 
 
-    private fun parseMyParams(stringsToParse: List<Map.Entry<String, List<String>>>): MyParams {
+    private fun parseTransformationParameters(stringsToParse: List<Map.Entry<String, List<String>>>): TransformationParameters {
         val map = stringsToParse.map { it.key to it.value }.toMap()
 
         val csvFormat = map["__csvFormat"]?.let {
@@ -282,7 +262,7 @@ class FhirExtinguisher(
         val columnsStr = map["__columns"]?.get(0)
         val columns = if (columnsStr != null) parseColumns(columnsStr) else null
 
-        return MyParams(csvFormat, limit, columns?.toList())
+        return TransformationParameters(csvFormat, limit, columns?.toList())
     }
 
 
