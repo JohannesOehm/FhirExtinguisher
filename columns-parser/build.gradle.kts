@@ -115,6 +115,7 @@ tasks.getByName("compileKotlinJvm").dependsOn(generateKotlinCommonGrammarSource)
 tasks.getByName("compileKotlinJs").dependsOn(generateKotlinCommonGrammarSource)
 tasks.getByName("jsSourcesJar").dependsOn(generateKotlinCommonGrammarSource)
 tasks.getByName("jvmSourcesJar").dependsOn(generateKotlinCommonGrammarSource)
+tasks.getByName("sourcesJar").dependsOn(generateKotlinCommonGrammarSource)
 
 
 publishing {
