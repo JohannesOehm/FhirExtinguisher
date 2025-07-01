@@ -113,6 +113,7 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.getByName("compileKotlinJvm").dependsOn(generateKotlinCommonGrammarSource)
 tasks.getByName("compileKotlinJs").dependsOn(generateKotlinCommonGrammarSource)
+tasks.getByName("jsSourcesJar").dependsOn(generateKotlinCommonGrammarSource)
 
 publishing {
     publications {
