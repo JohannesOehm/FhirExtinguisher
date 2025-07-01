@@ -5,7 +5,7 @@ plugins {
     kotlin("plugin.serialization") version "2.1.10"
     antlr
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    war
+    id("war")
     id("org.panteleyev.jpackageplugin") version "1.6.0"
 //    id("com.bmuschko.tomcat") version "2.5"
 }
@@ -51,7 +51,9 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-apache-jvm:$ktor_version")
-    implementation("io.ktor:ktor-server-servlet-jvm:$ktor_version")
+//    implementation("io.ktor:ktor-server-servlet-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-servlet-jakarta:$ktor_version")
+    implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
     implementation("io.ktor:ktor-client-auth-jvm:$ktor_version")
     testImplementation("junit:junit:4.13.1")
@@ -70,14 +72,15 @@ dependencies {
     antlr("org.antlr:antlr4:4.8")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version")
 //    tomcat("org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version")
+    implementation(project(":transform-fhir"))
     implementation(project(":columns-parser"))
 }
 
 
 val copyStaticPages by tasks.creating(Copy::class) {
-//    from("frontend/dist")
-//    into("${layout.buildDirectory}/resources/main/static")
-//    dependsOn(":frontend:webpack")
+    from("frontend/dist")
+    into(layout.buildDirectory.dir("resources/main/static"))
+    dependsOn(":frontend:webpack")
 }
 
 kotlin {
