@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - extinguisher-module
   workflow_dispatch:
 
 jobs:
@@ -21,8 +22,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Publish transform-fhir module
+      - name: Publish all modules
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew :transform-fhir:publish
+        run: ./gradlew publishAllModules
