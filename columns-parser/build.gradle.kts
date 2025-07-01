@@ -8,8 +8,10 @@ buildscript {
     }
 }
 
+val projectVersion: String by project
+
 group = "de.unimuenster.imi.fhir"
-version = "1.7.8"
+version = projectVersion
 
 plugins {
     kotlin("multiplatform")

@@ -4,8 +4,10 @@ plugins {
     id("maven-publish")
 }
 
+val projectVersion: String by project
+
 group = "de.unimuenster.imi.fhir"
-version = "1.7.8"
+version = projectVersion
 
 repositories {
     mavenCentral()
@@ -30,6 +32,13 @@ dependencies {
     implementation("org.fhir:ucum:1.0.9")
     implementation("org.apache.commons:commons-csv:1.13.0")
     implementation(project(":columns-parser"))
+    dependencies {
+        if (project.hasProperty("usePublishedDependencies") && project.property("usePublishedDependencies") == "true") {
+            implementation("de.unimuenster.imi.fhir:columns-parser:$version")
+        } else {
+            implementation(project(":columns-parser"))
+        }
+    }
 }
 
 tasks.test {

@@ -27,14 +27,16 @@ repositories {
     maven("https://jitpack.io") //Kotlin-ANTLR
 }
 
+val projectVersion: String by project
+
 kotlin {
     group = "de.unimuenster.imi.fhir"
-    version = "1.7.8"
+    version = projectVersion
 }
 
 
 subprojects {
-    version = "1.7.8"
+    version = projectVersion
 }
 
 val ktor_version = "3.1.0"
