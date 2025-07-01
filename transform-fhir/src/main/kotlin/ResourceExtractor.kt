@@ -2,6 +2,7 @@ import ca.uhn.fhir.context.FhirContext
 import org.hl7.fhir.dstu3.hapi.ctx.FhirDstu3
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.hapi.ctx.FhirR4
+import java.io.InputStream
 
 abstract class ResourceExtractor {
     companion object {
@@ -47,7 +48,7 @@ abstract class ResourceExtractor {
 
     abstract fun getResourceFieldsForEntriesInBundle(rawBundle: String): List<Column>
 
-    abstract fun loadBundleFromFile(filePath: String): IBase
+    abstract fun loadBundleFromFile(resourceStream: InputStream): IBase
 
     abstract fun loadStructureDefinitionsResource(): IBase
 

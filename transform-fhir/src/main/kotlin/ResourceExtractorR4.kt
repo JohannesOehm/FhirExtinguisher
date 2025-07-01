@@ -2,7 +2,7 @@ import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.parser.IParser
 import mu.KotlinLogging
 import org.hl7.fhir.r4.model.*
-import java.io.File
+import java.io.InputStream
 
 
 class ResourceExtractorR4: ResourceExtractor() {
@@ -146,18 +146,28 @@ class ResourceExtractorR4: ResourceExtractor() {
             .firstOrNull { it.name == dataTypeName }
     }
 
-    override fun loadBundleFromFile(filePath: String): Bundle {
+    override fun loadBundleFromFile(resourceStream: InputStream): Bundle {
         val parser: IParser = fhirContext.newJsonParser()
-        return parser.parseResource(Bundle::class.java, File(filePath).readText())
+        val fileContent = resourceStream.bufferedReader().use { it.readText() }
+        return parser.parseResource(Bundle::class.java, fileContent)
     }
 
     override fun loadStructureDefinitionsResource(): Bundle {
-        val filePath = "transform-fhir/src/main/resources/fhir/r4/profiles-resources.json"
-        return loadBundleFromFile(filePath)
+        val resourcePath = "fhir/r4/profiles-resources.json"
+
+        val resourceStream = this::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: throw IllegalArgumentException("Resource not found: $resourcePath")
+
+        return loadBundleFromFile(resourceStream)
     }
 
+
     override fun loadStructureDefinitionsTypes(): Bundle {
-        val filePath = "transform-fhir/src/main/resources/fhir/r4/profiles-types.json"
-        return loadBundleFromFile(filePath)
+        val resourcePath = "fhir/r4/profiles-types.json"
+
+        val resourceStream = this::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: throw IllegalArgumentException("Resource not found: $resourcePath")
+
+        return loadBundleFromFile(resourceStream)
     }
 }
