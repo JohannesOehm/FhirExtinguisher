@@ -1,15 +1,15 @@
-name: Publish Transform-FHIR Module
+name: Publish Standalone Modules
 
 on:
   push:
     branches:
-      - main
-      - extinguisher-module
+      - master
+      - extinguisher-module #Remove before merging with master
   workflow_dispatch:
 
 jobs:
   publish:
-    name: Publish Transform-FHIR Module
+    name: Publish Standalone Modules
     runs-on: ubuntu-latest
 
     steps:
