@@ -1,7 +1,16 @@
+package de.unimuenster.imi.fhir.transform
+
+import de.unimuenster.imi.fhir.columns_parser.ExplodeLong
+import de.unimuenster.imi.fhir.columns_parser.ExplodeWide
+import de.unimuenster.imi.fhir.columns_parser.Join
 import ca.uhn.fhir.context.FhirContext
+import de.unimuenster.imi.fhir.columns_parser.Column
+import de.unimuenster.imi.fhir.columns_parser.ListProcessingMode
+import mu.KLogger
 import org.hl7.fhir.dstu3.hapi.ctx.FhirDstu3
 import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.r4.hapi.ctx.FhirR4
+import org.hl7.fhir.r4.model.Resource
 import java.io.InputStream
 
 abstract class ResourceExtractor {
@@ -24,6 +33,8 @@ abstract class ResourceExtractor {
     }
 
     lateinit var processingMode: ListProcessingMode
+    lateinit var fpe: FhirPathEngineWrapper
+    lateinit var log: KLogger
 
     fun setJoin(delimiter: String = " ") {
         this.processingMode = Join(delimiter)
@@ -40,6 +51,17 @@ abstract class ResourceExtractor {
     fun removeResourceName(expression: String): String {
         val index = expression.indexOf(".")
         return if (index != -1) expression.substring(index + 1) else expression
+    }
+
+    fun isFieldPresentInResource(resource: Resource, fhirPath: String): Boolean {
+        fun String.expr() = fpe.parseExpression(this)
+        try {
+            val evaluationResult = fpe.evaluateToBase(resource, fhirPath.expr())
+            return evaluationResult.isNotEmpty()
+        } catch (e: Exception) {
+            log.error(e) { "Error evaluating FHIR path expression: $fhirPath" }
+            return false
+        }
     }
 
     abstract fun getResourceNames(): List<String>

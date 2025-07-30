@@ -1,14 +1,15 @@
+package de.unimuenster.imi.fhir.transform
+
+import de.unimuenster.imi.fhir.columns_parser.Column
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.parser.IParser
 import mu.KotlinLogging
-import org.hl7.fhir.dstu3.model.*
+import org.hl7.fhir.r4.model.*
 import java.io.InputStream
 
 
-class ResourceExtractorSTU3: ResourceExtractor() {
-    private val log = KotlinLogging.logger("ResourceExtractorSTU3")
-
-    private val fhirContext = FhirContext.forDstu3()
+class ResourceExtractorR4: ResourceExtractor() {
+    private val fhirContext = FhirContext.forR4()
     private val jsonParser = fhirContext.newJsonParser()
     private val structureDefinitionsResource: Bundle
     private val structureDefinitionsTypes: Bundle
@@ -18,6 +19,9 @@ class ResourceExtractorSTU3: ResourceExtractor() {
         structureDefinitionsResource = loadStructureDefinitionsResource()
         structureDefinitionsTypes = loadStructureDefinitionsTypes()
         this.setExplodeWide()
+        this.log = KotlinLogging.logger("de.unimuenster.imi.fhir.transform.ResourceExtractorR4")
+        this.fpe = FhirPathEngineWrapperR4(this.fhirContext,
+            this.fhirContext.newRestfulGenericClient("http://example.com"))
     }
 
 
@@ -63,12 +67,17 @@ class ResourceExtractorSTU3: ResourceExtractor() {
     override fun getResourceFieldsForEntriesInBundle(rawBundle: String): List<Column> {
         val bundle = this.jsonParser.parseResource(rawBundle) as Bundle
 
-        val typesToExtract = bundle.entry
-            .mapNotNull { it.resource?.resourceType?.toString() }
-            .distinct()
+        return bundle.entry
+            .mapNotNull { it.resource } // Get all non-null resources in the bundle
+            .flatMap { resource ->
+                val resourceType = resource.resourceType.toString()
 
-        return typesToExtract
-            .flatMap { resourceType -> getResourceFields(resourceType) }
+                // Filter fields based on their presence in the resource
+                getResourceFields(resourceType).filter { column ->
+                    isFieldPresentInResource(resource, column.expression)
+                }
+            }
+            .distinct() // Ensure only unique fields are collected
             .toMutableList()
     }
 
@@ -133,9 +142,9 @@ class ResourceExtractorSTU3: ResourceExtractor() {
         dataType?.snapshot?.element?.forEach { elementDefinition ->
             val subPath = removeResourceName(elementDefinition.path)
             if (elementDefinition.base?.path != "Element.id" && elementDefinition.path != dataType.id) {
-                val expression = "$expression.$subPath"
+                val expression2 = "$expression.$subPath"
                 val newName = "$name.$subPath"
-                result.add(Column(removeResourceName(newName), expression, this.processingMode))
+                result.add(Column(removeResourceName(newName), expression2, this.processingMode))
             }
         }
     }
@@ -153,25 +162,21 @@ class ResourceExtractorSTU3: ResourceExtractor() {
     }
 
     override fun loadStructureDefinitionsResource(): Bundle {
-        val resourcePath = "fhir/stu3/profiles-resources.json"
+        val resourcePath = "fhir/r4/profiles-resources.json"
 
-        // Get the resource as a stream
         val resourceStream = this::class.java.classLoader.getResourceAsStream(resourcePath)
             ?: throw IllegalArgumentException("Resource not found: $resourcePath")
 
-        // Load the bundle from the resource stream
         return loadBundleFromFile(resourceStream)
     }
 
 
     override fun loadStructureDefinitionsTypes(): Bundle {
-        val resourcePath = "fhir/stu3/profiles-types.json"
+        val resourcePath = "fhir/r4/profiles-types.json"
 
-        // Get the resource as a stream
         val resourceStream = this::class.java.classLoader.getResourceAsStream(resourcePath)
             ?: throw IllegalArgumentException("Resource not found: $resourcePath")
 
-        // Load the bundle from the resource stream
         return loadBundleFromFile(resourceStream)
     }
 }

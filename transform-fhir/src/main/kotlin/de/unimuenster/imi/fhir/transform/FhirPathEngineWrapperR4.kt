@@ -1,15 +1,19 @@
+package de.unimuenster.imi.fhir.transform
+
 import ca.uhn.fhir.context.FhirContext
+import ca.uhn.fhir.context.support.DefaultProfileValidationSupport
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import mu.KotlinLogging
 import org.hl7.fhir.instance.model.api.IBase
-import org.hl7.fhir.r4.context.SimpleWorkerContext
 import org.hl7.fhir.r4.fhirpath.ExpressionNode
 import org.hl7.fhir.r4.fhirpath.FHIRPathEngine
 import org.hl7.fhir.r4.fhirpath.FHIRPathUtilityClasses
 import org.hl7.fhir.r4.fhirpath.TypeDetails
+import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext
 import org.hl7.fhir.r4.model.*
+import kotlin.collections.get
 
-/*fun main() {
+/*fun de.unimuenster.imi.fhir.transform.main() {
     val ctx = FhirContext.forR4()
     val simpleWorkerContext = SimpleWorkerContext()
     println(simpleWorkerContext.listStructures())
@@ -41,8 +45,8 @@ import org.hl7.fhir.r4.model.*
             return null
         }
 
-        override fun log(argument: String?, focus: MutableList<Base>?): Boolean {
-            log.info { "argument = $argument, focus = $focus" }
+        override fun de.unimuenster.imi.fhir.transform.log(argument: String?, focus: MutableList<Base>?): Boolean {
+            de.unimuenster.imi.fhir.transform.log.info { "argument = $argument, focus = $focus" }
             return true
         }
 
@@ -89,8 +93,12 @@ private val log = KotlinLogging.logger {}
 
 class FhirPathEngineWrapperR4(fhirContext: FhirContext, fhirClient: IGenericClient) :
     FhirPathEngineWrapper(fhirContext, fhirClient) {
-    private val engine = FHIRPathEngine(SimpleWorkerContext())
-    private val engine2 = FHIRPathEngine(SimpleWorkerContext())
+    private val engine = FHIRPathEngine(HapiWorkerContext(fhirContext,
+        DefaultProfileValidationSupport(fhirContext)
+    ))
+    private val engine2 = FHIRPathEngine(HapiWorkerContext(fhirContext,
+        DefaultProfileValidationSupport(fhirContext)
+    ))
     val references = mutableListOf<String>()
 
     val variables = mutableMapOf<String, Any>()

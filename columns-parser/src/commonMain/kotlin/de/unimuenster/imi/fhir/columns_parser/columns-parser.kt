@@ -1,3 +1,5 @@
+package de.unimuenster.imi.fhir.columns_parser
+
 import com.strumenta.antlrkotlin.examples.ColumnsLexer
 import com.strumenta.antlrkotlin.examples.ColumnsTokens
 import org.antlr.v4.kotlinruntime.CharStreams

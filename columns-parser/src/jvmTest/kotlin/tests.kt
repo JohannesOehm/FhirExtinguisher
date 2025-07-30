@@ -1,3 +1,10 @@
+import de.unimuenster.imi.fhir.columns_parser.Column
+import de.unimuenster.imi.fhir.columns_parser.ExplodeLong
+import de.unimuenster.imi.fhir.columns_parser.ExplodeWide
+import de.unimuenster.imi.fhir.columns_parser.Join
+import de.unimuenster.imi.fhir.columns_parser.Singleton
+import de.unimuenster.imi.fhir.columns_parser.parseColumns
+import de.unimuenster.imi.fhir.columns_parser.stringifyColumns
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -46,12 +53,13 @@ class Tests {
 
     @Test
     fun explodeLong() {
-        val columns = parseColumns("name:Patient.name@explodeLong(given:this.given,family:family),gender:gender")
+        val columns =
+            parseColumns("name:Patient.name@explodeLong(given:this.given,family:family),gender:gender")
         assertEquals(
-                Column(
-                        name = "name",
-                        type = ExplodeLong(
-                                arrayOf(
+            Column(
+                name = "name",
+                type = ExplodeLong(
+                    arrayOf(
                         Column("given", "this.given", null),
                         Column("family", "family", null)
                     )

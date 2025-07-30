@@ -6,7 +6,7 @@ plugins {
 
 val projectVersion: String by project
 
-group = "de.unimuenster.imi.fhir"
+group = "de.unimuenster.imi.fhir.transform"
 version = projectVersion
 
 repositories {
@@ -27,6 +27,7 @@ dependencies {
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation:$hapi_version")
+    implementation("ca.uhn.hapi.fhir:hapi-fhir-caching-caffeine:$hapi_version")
     implementation("ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:$hapi_version")
 //    implementation("com.github.ben-manes.caffeine:caffeine:2.8.8")
     implementation("org.fhir:ucum:1.0.9")

@@ -1,16 +1,17 @@
 package fhirextinguisher
 
-import BundleTransformer
-import BundleWrapper
-import Column
-import FhirPathEngineWrapperR4
-import FhirPathEngineWrapperSTU3
-import ResultTable
-import SubTable
-import TransformationParameters
+import de.unimuenster.imi.fhir.transform.BundleTransformer
+import de.unimuenster.imi.fhir.transform.BundleWrapper
+import de.unimuenster.imi.fhir.columns_parser.Column
+import de.unimuenster.imi.fhir.transform.FhirPathEngineWrapperR4
+import de.unimuenster.imi.fhir.transform.FhirPathEngineWrapperSTU3
+import de.unimuenster.imi.fhir.transform.ResultTable
+import de.unimuenster.imi.fhir.transform.SubTable
+import de.unimuenster.imi.fhir.transform.TransformationParameters
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import ca.uhn.fhir.rest.client.api.IClientInterceptor
+import de.unimuenster.imi.fhir.transform.RDataType
 import io.ktor.server.application.*
 import io.ktor.http.*
 import io.ktor.http.Parameters
@@ -26,7 +27,7 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.hl7.fhir.instance.model.api.IBaseResource
 import org.hl7.fhir.r4.model.*
-import parseColumns
+import de.unimuenster.imi.fhir.columns_parser.parseColumns
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -103,7 +104,7 @@ class FhirExtinguisher(
         val resultTables = mutableListOf<SubTable>()
         for (bundleEntry in bundleWrapper.entry) {
             resultTables += bundleTransformer.processBundleEntry(
-                transformationParameters.columns!!,
+                transformationParameters,
                 bundleEntry,
                 jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource)
             )
@@ -139,7 +140,7 @@ class FhirExtinguisher(
 
         try {
 
-            val resultTable = processWithColumns(bundleUrl, fhirParams, transformationParameters.limit, transformationParameters.columns!!)
+            val resultTable = processWithColumns(bundleUrl, fhirParams, transformationParameters)
             call.response.header(
                 HttpHeaders.ContentDisposition, attachment("${defaultCsvFileName(bundleUrl, fhirParams)}.csv")
             )
@@ -174,8 +175,7 @@ class FhirExtinguisher(
     private fun processWithColumns(
         uri: String?,
         fhirParams: String,
-        limit: Int?,
-        columns: List<Column>
+        transformationParameters: TransformationParameters
     ): ResultTable {
         var count = 0
         var nextUrl: String? = "$uri?$fhirParams"
@@ -190,11 +190,11 @@ class FhirExtinguisher(
             val bundle = fhirClient.fetchResourceFromUrl(bundleClass, nextUrl)
             val bundleWrapper = BundleWrapper(bundleDefintion, bundle)
             nextUrl = bundleWrapper.link.find { it.relation == "next" }?.url
-            cacheBundleReference(bundleWrapper, columns)
+            cacheBundleReference(bundleWrapper, transformationParameters.columns!!)
             for (bundleEntry in bundleWrapper.entry) {
-                subtables += bundleTransformer.processBundleEntry(columns, bundleEntry)
+                subtables += bundleTransformer.processBundleEntry(transformationParameters, bundleEntry)
                 count++
-                if (limit != null && count >= limit) {
+                if (transformationParameters.limit != null && count >= transformationParameters.limit as Int) {
                     break@myloop;
                 }
             }

@@ -10,7 +10,7 @@ buildscript {
 
 val projectVersion: String by project
 
-group = "de.unimuenster.imi.fhir"
+group = "de.unimuenster.imi.fhir.columns_parser"
 version = projectVersion
 
 plugins {

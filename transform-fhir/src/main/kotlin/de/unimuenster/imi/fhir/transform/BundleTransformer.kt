@@ -1,3 +1,5 @@
+package de.unimuenster.imi.fhir.transform
+
 import ca.uhn.fhir.context.FhirContext
 import ca.uhn.fhir.context.FhirVersionEnum
 import mu.KotlinLogging
@@ -6,7 +8,7 @@ import org.hl7.fhir.instance.model.api.IBase
 import org.hl7.fhir.instance.model.api.IBaseResource
 
 class BundleTransformer(private val fhirContext: FhirContext) {
-    private val log = KotlinLogging.logger("BundleTransformer")
+    private val log = KotlinLogging.logger("de.unimuenster.imi.fhir.transform.BundleTransformer")
     private val fhirClient = fhirContext.newRestfulGenericClient("http://local/fhir")
     private val fhirPathEngine = if (fhirContext.version.version == FhirVersionEnum.DSTU3) {
         FhirPathEngineWrapperSTU3(fhirContext, fhirClient)
@@ -15,15 +17,14 @@ class BundleTransformer(private val fhirContext: FhirContext) {
     }
 
     fun processBundle(
-        resourceString: String,
-        transformationParameters: TransformationParameters
+        resourceString: String, transformationParameters: TransformationParameters
     ): String {
         val jsonParser = fhirContext.newJsonParser()
 
         val resource: IBase
         try {
-             resource = jsonParser.parseResource(resourceString)
-        } catch(e: Exception) {
+            resource = jsonParser.parseResource(resourceString)
+        } catch (e: Exception) {
             log.error("Could not convert resource to Bundle instance: ", e)
             throw Exception("ConversionError")
         }
@@ -34,9 +35,9 @@ class BundleTransformer(private val fhirContext: FhirContext) {
         val resultTables = mutableListOf<SubTable>()
         for (bundleEntry in bundleWrapper.entry) {
             resultTables += processBundleEntry(
-                transformationParameters.columns!!,
+                transformationParameters,
                 bundleEntry,
-                jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource)
+                if (transformationParameters.addRaw) jsonParser.encodeResourceToString(bundleEntry.resource as IBaseResource) else null
             )
         }
 
@@ -49,20 +50,34 @@ class BundleTransformer(private val fhirContext: FhirContext) {
     }
 
     fun processBundleEntry(
-        columns: List<Column>,
+        transformationParameters: TransformationParameters,
         bundleEntry: BundleEntryComponentWrapper,
         addRaw: String? = null
     ): SubTable {
         val table = SubTable()
         if (addRaw != null) {
-            table.addColumn("\$raw", addRaw)
+            if (transformationParameters.addResourceNameToColumn) {
+                table.addColumn("${bundleEntry.resource?.fhirType()}.\$raw", addRaw)
+            } else table.addColumn("\$raw", addRaw)
         }
 
-        for (column in columns) {
+        for (column in transformationParameters.columns!!) {
             try {
-                table.addColumn(column, bundleEntry.resource!!, fhirPathEngine)
+                table.addColumn(
+                    column,
+                    bundleEntry.resource!!,
+                    fhirPathEngine,
+                    transformationParameters.addResourceNameToColumn
+                )
             } catch (e: Exception) {
-                table.addColumn(column.name, e.message ?: "ERROR")
+                if (transformationParameters.addResourceNameToColumn) {
+                    table.addColumn(
+                        "${bundleEntry.resource?.fhirType()}.${column.name}",
+                        e.message ?: "ERROR"
+                    )
+                } else {
+                    table.addColumn(column.name, e.message ?: "ERROR")
+                }
             }
         }
         return table

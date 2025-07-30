@@ -1,3 +1,5 @@
+package de.unimuenster.imi.fhir.transform
+
 import ca.uhn.fhir.context.BaseRuntimeElementCompositeDefinition
 import org.hl7.fhir.instance.model.api.IBase
 import java.beans.Introspector

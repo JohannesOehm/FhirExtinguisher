@@ -1,17 +1,22 @@
+package de.unimuenster.imi.fhir.transform
+
 import ca.uhn.fhir.context.FhirContext
+import ca.uhn.fhir.context.support.DefaultProfileValidationSupport
 import ca.uhn.fhir.rest.client.api.IGenericClient
-import org.hl7.fhir.dstu3.context.SimpleWorkerContext
 import org.hl7.fhir.dstu3.fhirpath.ExpressionNode
 import org.hl7.fhir.dstu3.fhirpath.FHIRPathEngine
 import org.hl7.fhir.dstu3.fhirpath.FHIRPathUtilityClasses
 import org.hl7.fhir.dstu3.fhirpath.TypeDetails
+import org.hl7.fhir.dstu3.hapi.ctx.HapiWorkerContext
 import org.hl7.fhir.dstu3.model.*
 import org.hl7.fhir.instance.model.api.IBase
-import java.util.*
+import kotlin.collections.get
 
 class FhirPathEngineWrapperSTU3(fhirContext: FhirContext, fhirClient: IGenericClient) :
     FhirPathEngineWrapper(fhirContext, fhirClient) {
-    private val engine = FHIRPathEngine(SimpleWorkerContext())
+    private val engine = FHIRPathEngine(HapiWorkerContext(fhirContext,
+        DefaultProfileValidationSupport(fhirContext)
+    ))
 
     val variables = mutableMapOf<String, Any>()
 

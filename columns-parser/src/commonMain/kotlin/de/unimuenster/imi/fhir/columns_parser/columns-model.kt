@@ -1,3 +1,5 @@
+package de.unimuenster.imi.fhir.columns_parser
+
 import kotlin.js.JsExport
 
 @JsExport
