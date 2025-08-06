@@ -6,7 +6,7 @@ plugins {
 
 val projectVersion: String by project
 
-group = "de.unimuenster.imi.fhir.transform"
+group = "de.unimuenster.imi.fhir"
 version = projectVersion
 
 repositories {
@@ -35,7 +35,7 @@ dependencies {
     implementation(project(":columns-parser"))
     dependencies {
         if (project.hasProperty("usePublishedDependencies") && project.property("usePublishedDependencies") == "true") {
-            implementation("de.unimuenster.imi.fhir.columns_parser:columns-parser:$version")
+            implementation("de.unimuenster.imi.fhir:columns-parser:$version")
         } else {
             implementation(project(":columns-parser"))
         }
