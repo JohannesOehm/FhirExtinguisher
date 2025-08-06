@@ -12,7 +12,6 @@ class BundleTransformer(private val fhirContext: FhirContext) {
     private val log = KotlinLogging.logger("de.unimuenster.imi.fhir.transform.BundleTransformer")
     private val fhirClient = fhirContext.newRestfulGenericClient("http://local/fhir")
     private val jsonParser = fhirContext.newJsonParser()
-    private var resourceCache: IBaseResource? = null
     private val fhirPathEngine = if (fhirContext.version.version == FhirVersionEnum.DSTU3) {
         FhirPathEngineWrapperSTU3(fhirContext, fhirClient)
     } else {
@@ -62,20 +61,14 @@ class BundleTransformer(private val fhirContext: FhirContext) {
 
 
     private fun readInResource(resourceString: String): IBaseResource {
-        if (resourceCache != null) {
-            return resourceCache!!
-        } else {
-            val resource: IBaseResource
-            try {
-                resource = jsonParser.parseResource(resourceString)
-            } catch (e: Exception) {
-                log.error("Could not convert resource to Bundle instance: ", e)
-                throw Exception("ConversionError")
-            }
-
-            this.resourceCache = resource
-            return resource
+        val resource: IBaseResource
+        try {
+            resource = jsonParser.parseResource(resourceString)
+        } catch (e: Exception) {
+            log.error("Could not convert resource to Bundle instance: ", e)
+            throw Exception("ConversionError")
         }
+        return resource
     }
 
     private fun processBundleEntry(
