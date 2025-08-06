@@ -248,6 +248,17 @@ class SubTable {
 
 
 class ResultTable(val subtables: List<SubTable>) {
+    override fun toString(): String {
+        return this.toString(CSVFormat.EXCEL)
+    }
+
+    fun toString(csvFormat: CSVFormat): String {
+        val sb = StringBuilder()
+        val printer = CSVPrinter(sb, csvFormat)
+
+        this.print(printer)
+        return sb.toString()
+    }
 
     fun print(printer: CSVPrinter) {
         val colNames = getAllColumnNames()
